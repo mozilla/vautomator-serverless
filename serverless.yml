@@ -15,11 +15,25 @@ service: vautomator-serverless # NOTE: update this with your service name
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-# frameworkVersion: "=X.X.X"
+frameworkVersion: ">=1.2.0 <2.0.0"
 
 provider:
   name: aws
   runtime: python3.7
+  region: us-west-2
+  # To use the bucket specified, we will need permissions
+  iamRoleStatements:
+   - Effect: "Allow"
+     Action:
+       - "s3:PutObject"
+       - "s3:PutObjectAcl"
+     Resource: 
+      Fn::Join:
+        - ""
+        - - Fn::GetAtt:
+            - S3BucketResults
+            - Arn
+          - "/*"
 
 # you can overwrite defaults here
 #  stage: dev
@@ -55,8 +69,36 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
+  cronPortScan:
+    handler: handler.runPortScan
+    events:
+      # Invoke Lambda function every 15 mins
+      - schedule: rate(15 minutes)
+  cronObservatoryScan:
+    handler: handler.runObsScan
+    events:
+      # Invoke Lambda function every 5 mins
+      - schedule: rate(5 minutes)
+
   hello:
     handler: handler.hello
+
+plugins:
+  - serverless-python-requirements
+
+# We will need a bucket to store the results of a scheduled scan
+resources:
+  Resources:
+    S3BucketResults:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.cfg.s3BucketName}
+
+
+cfg:
+  - s3BucketName: "vautomatorResultsBucket"
+pythonRequirements:
+  - dockerizePip: non-linux
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
