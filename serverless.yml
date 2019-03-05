@@ -66,9 +66,6 @@ functions:
       # Invoke Lambda function every 5 mins
       - schedule: rate(5 minutes)
 
-  hello:
-    handler: handler.hello
-
 plugins:
   - serverless-python-requirements
 
@@ -82,7 +79,7 @@ resources:
 
 
 cfg:
-  - s3BucketName: "vautomatorResultsBucket"
+  - s3BucketName: "vautomator-results"
 pythonRequirements:
   - dockerizePip: non-linux
 
