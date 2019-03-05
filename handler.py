@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 def run(event, context):
 
     # Test out S3 upload capability
-    url = 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
+    url = 'https://raw.githubusercontent.com/mozilla/vautomator-serverless/scheduled-scans/hostlist.json'
     randomizer = Randomizer(url)
     scanner = HTTPObservatoryScanner()
     destination = Target(randomizer.next())
