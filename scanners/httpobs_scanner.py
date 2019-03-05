@@ -12,12 +12,12 @@ class HTTPObservatoryScanner():
     def scan(self, host):
         # Initiate the scan
         results = {}
-        analyze_url = self.api_url + '/analyze?host=' + host
+        analyze_url = self.api_url + '/analyze?host=' + host.targetname
         results['scan'] = self.session.post(analyze_url, data=None).json()
 
         # Wait for the scan to complete, polling every second
         results['tests'] = self.__poll(results['scan']['scan_id'])
-        results['host'] = host
+        results['host'] = host.targetname
         return results
 
     def __poll(self, scan_id):

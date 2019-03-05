@@ -8,7 +8,7 @@ client = boto3.client('s3')
 
 def send_to_s3(hostname, scan_json):
     key = "{}.{}".format(hostname, "json")
-    bucket = 'observatoryresults3'
+    bucket = "vautomator-results"
 
     client.put_object(Body=json.dumps(scan_json), Bucket=bucket,
                       Key=key, ACL='public-read')

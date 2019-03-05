@@ -7,7 +7,7 @@ frameworkVersion: ">=1.2.0 <2.0.0"
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.6
   region: us-west-2
   # To use the bucket specified, we will need permissions
   iamRoleStatements:
@@ -65,6 +65,9 @@ functions:
     events:
       # Invoke Lambda function every 5 mins
       - schedule: rate(5 minutes)
+      - s3:
+        bucket: ${self:custom.cfg.s3BucketName}
+        event: s3:ObjectCreated:*
 
 plugins:
   - serverless-python-requirements
@@ -78,10 +81,11 @@ resources:
         BucketName: ${self:custom.cfg.s3BucketName}
 
 
-cfg:
-  - s3BucketName: "vautomator-results"
-pythonRequirements:
-  - dockerizePip: non-linux
+custom:
+  cfg:
+    s3BucketName: "vautomator-results"
+  pythonRequirements:
+    dockerizePip: non-linux
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events

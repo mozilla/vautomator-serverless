@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def run(event, context):
+def runObsScan(event, context):
 
     # Test out S3 upload capability
     url = 'https://raw.githubusercontent.com/mozilla/vautomator-serverless/scheduled-scans/hostlist.json'
@@ -27,4 +27,4 @@ def run(event, context):
     else:
         scan_result = scanner.scan(destination)
         logger.info(scan_result)
-        send_to_s3(destination, scan_result)
+        send_to_s3(destination.targetname, scan_result)
