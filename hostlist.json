@@ -1,0 +1,15 @@
+{
+    "sites": {
+      "Bug Bounty Sites": {
+        "myhost": [
+          "www.mozilla.org"
+        ]
+      },
+      "Uncategorized": {
+        "Uncategorized": [
+          "infosec.mozilla.org"
+        ]
+      }
+    }
+}
+  
