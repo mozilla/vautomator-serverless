@@ -22,6 +22,11 @@ provider:
             - S3BucketResults
             - Arn
           - "/*"
+   - Effect: "Allow"
+     Action:
+      - "sqs:SendMessage"
+     Resource:
+      Fn::GetAtt: [ SQSQueue, Arn ]
   environment:
     HTTPOBS_URL: 'https://observatory.mozilla.org'
 
@@ -68,6 +73,17 @@ functions:
       - s3:
         bucket: ${self:custom.cfg.s3BucketName}
         event: s3:ObjectCreated:*
+  ObservatoryScanQueue:
+    handler: handler.runObsScanFromQ
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [ SQSQueue, Arn ]
+  ingest:
+    handler: handler.putInQueue
+    environment:
+      SQS_URL:
+        Ref: SQSQueue
 
 plugins:
   - serverless-python-requirements
@@ -79,11 +95,15 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.cfg.s3BucketName}
-
+    SQSQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.cfg.vautomatorQ}
 
 custom:
   cfg:
     s3BucketName: "vautomator-results"
+    vautomatorQ: "vautomator-SQS"
   pythonRequirements:
     dockerizePip: non-linux
 

@@ -14,3 +14,4 @@ def send_to_s3(hostname, scan_json):
                       Key=key, ACL='public-read')
     url = "https://s3.amazonaws.com/{}/{}".format(bucket, key)
     logging.info("Uploaded result file to URL: {}".format(url))
+
