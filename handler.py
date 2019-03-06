@@ -35,11 +35,18 @@ def runObsScan(event, context):
 
 def runObsScanFromQ(event, context):
 
-    logger.info(event)
+    # logger.info(event)
+    # This is how we process the hostname
+    
+    for record, keys in event.items():
+        for item in keys:
+            if "body" in item:
+                print(item['body'])
     return ''
 
 
 def putInQueue(event, context):
+    # We need to figure out a way to put stuff in the queue regularly
     url = 'https://raw.githubusercontent.com/mozilla/vautomator-serverless/scheduled-scans/hostlist.json'
     randomizer = Randomizer(url)
     destination = Target(randomizer.next())
