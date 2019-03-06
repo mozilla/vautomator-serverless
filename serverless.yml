@@ -29,6 +29,8 @@ provider:
       Fn::GetAtt: [ SQSQueue, Arn ]
   environment:
     HTTPOBS_URL: 'https://observatory.mozilla.org'
+    SQS_URL:
+        Ref: SQSQueue
 
 # you can overwrite defaults here
 #  stage: dev
@@ -51,13 +53,15 @@ provider:
 #            - "/*"
 
 # you can add packaging information here
-#package:
+package:
 #  include:
 #    - include-me.py
 #    - include-me-dir/**
-#  exclude:
-#    - exclude-me.py
-#    - exclude-me-dir/**
+  exclude:
+   - .venv/**
+   - .git/**
+   - __pycache__/**
+   - node_modules/**
 
 functions:
   cronPortScan:
@@ -73,6 +77,13 @@ functions:
       - s3:
         bucket: ${self:custom.cfg.s3BucketName}
         event: s3:ObjectCreated:*
+  onDemandObservatoryScan:
+    handler: handler.runObsScanOnDemand
+    events:
+      - http:
+          path: ondemand
+          method: PUT
+          cors: true
   ObservatoryScanQueue:
     handler: handler.runObsScanFromQ
     events:
@@ -81,9 +92,6 @@ functions:
             Fn::GetAtt: [ SQSQueue, Arn ]
   ingest:
     handler: handler.putInQueue
-    environment:
-      SQS_URL:
-        Ref: SQSQueue
 
 plugins:
   - serverless-python-requirements
@@ -141,14 +149,3 @@ custom:
 #    environment:
 #      variable2: value2
 
-# you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
