@@ -1,5 +1,5 @@
 
-service: vautomator-serverless # NOTE: update this with your service name
+service: vautomator-serverless
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -23,7 +23,7 @@ provider:
             - Arn
           - "/*"
   environment:
-    HTTPOBS_URL: 'https://observatory.mozilla.org'
+    HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
 
 # you can overwrite defaults here
 #  stage: dev

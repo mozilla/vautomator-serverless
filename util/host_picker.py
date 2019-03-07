@@ -1,5 +1,4 @@
 import random
-import requests
 
 # This assumes the format found in
 # https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json
@@ -31,14 +30,8 @@ import requests
 class Randomizer(object):
     """Return a random hostname from sites.json."""
 
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, url_list=[]):
+        self.url_list = url_list
 
     def next(self):
-        r = requests.get(self.url).json()
-        full_list_of_sites = []
-        for category in r['sites']:
-            for site in r['sites'][category]:
-                for hostname in r['sites'][category][site]:
-                    full_list_of_sites.append(hostname)
-        return random.choice(full_list_of_sites)
+        return random.choice(self.url_list)
