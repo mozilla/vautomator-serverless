@@ -18,19 +18,26 @@ provider:
      Resource: 
       Fn::Join:
         - ""
-        - Fn::GetAtt:
+        - - Fn::GetAtt:
             - S3BucketResults
             - Arn
-            - "/*"
+          - "/*"
    - Effect: "Allow"
      Action:
       - "sqs:SendMessage"
      Resource:
       Fn::GetAtt: [ SQSQueue, Arn ]
+   - Effect: Allow
+     Action:
+      - "sqs:SendMessage"
+     Resource:
+      - "Fn::GetAtt":
+        - ReceiverDeadLetterQueue
+        - Arn
   environment:
     HTTPOBS_URL: 'https://observatory.mozilla.org'
     SQS_URL:
-        Ref: SQSQueue
+      Ref: SQSQueue
 
 # you can overwrite defaults here
 #  stage: dev
@@ -53,11 +60,11 @@ provider:
 #            - "/*"
 
 # you can add packaging information here
-package:
+#package:
 #  include:
 #    - include-me.py
 #    - include-me-dir/**
-  exclude:
+exclude:
    - .venv/**
    - .git/**
    - __pycache__/**
@@ -69,6 +76,13 @@ functions:
     events:
       # Invoke Lambda function every 15 mins
       - schedule: rate(15 minutes)
+  onDemandObservatoryScan:
+    handler: handler.runObsScanOnDemand
+    events:
+      - http:
+          path: ondemand
+          method: PUT
+          cors: true
   cronObservatoryScan:
     handler: handler.runObsScan
     events:
@@ -77,19 +91,13 @@ functions:
       - s3:
         bucket: ${self:custom.cfg.s3BucketName}
         event: s3:ObjectCreated:*
-  onDemandObservatoryScan:
-    handler: handler.runObsScanOnDemand
-    events:
-      - http:
-          path: ondemand
-          method: PUT
-          cors: true
   ObservatoryScanQueue:
     handler: handler.runObsScanFromQ
     events:
       - sqs:
           arn:
             Fn::GetAtt: [ SQSQueue, Arn ]
+          batchSize: 1
   ingest:
     handler: handler.putInQueue
 
@@ -103,10 +111,24 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.cfg.s3BucketName}
+    ReceiverDeadLetterQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${self:custom.cfg.vautomatorDLQ}
+        MessageRetentionPeriod: 120
     SQSQueue:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.cfg.vautomatorQ}
+        VisibilityTimeout: 120
+        MessageRetentionPeriod: 60
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt":
+              - ReceiverDeadLetterQueue
+              - Arn
+          maxReceiveCount: 1
+
 custom:
   cfg:
     s3BucketName: "vautomator-results"
@@ -149,3 +171,14 @@ custom:
 #    environment:
 #      variable2: value2
 
+# you can add CloudFormation resource templates here
+#resources:
+#  Resources:
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
