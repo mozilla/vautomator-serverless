@@ -1,5 +1,5 @@
 
-service: vautomator-serverless # NOTE: update this with your service name
+service: vautomator-serverless
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -21,21 +21,12 @@ provider:
         - Fn::GetAtt:
             - S3BucketResults
             - Arn
-          - "/*"
+            - "/*"
    - Effect: "Allow"
      Action:
       - "sqs:SendMessage"
      Resource:
       Fn::GetAtt: [ SQSQueue, Arn ]
-   # allow sending to dead-letter queue
-   - Sid: LambdaDLQPermissions
-     Effect: Allow
-     Action:
-      - "sqs:SendMessage"
-     Resource:
-      - Fn::GetAtt:
-        - ReceiverDeadLetterQueue
-        - Arn
   environment:
     HTTPOBS_URL: 'https://observatory.mozilla.org'
     SQS_URL:
@@ -116,21 +107,6 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.cfg.vautomatorQ}
-        VisibilityTimeout: 120
-        MessageRetentionPeriod: 60
-        batchSize: 1
-        RedrivePolicy:
-          deadLetterTargetArn:
-            "Fn::GetAtt":
-              - ReceiverDeadLetterQueue
-              - Arn
-          maxReceiveCount: 1
-    ReceiverDeadLetterQueue:
-      Type: "AWS::SQS::Queue"
-      Properties:
-        QueueName: ${self:custom.cfg.vautomatorDLQ}
-        MessageRetentionPeriod: 120 
-
 custom:
   cfg:
     s3BucketName: "vautomator-results"
