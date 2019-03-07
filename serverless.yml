@@ -39,26 +39,6 @@ provider:
     SQS_URL:
       Ref: SQSQueue
 
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
-
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
-
 # you can add packaging information here
 #package:
 #  include:
@@ -77,14 +57,14 @@ functions:
       # Invoke Lambda function every 15 mins
       - schedule: rate(15 minutes)
   onDemandObservatoryScan:
-    handler: handler.runObsScanOnDemand
+    handler: handler.putInQueueFromAPIGateway
     events:
       - http:
           path: ondemand
           method: PUT
           cors: true
   cronObservatoryScan:
-    handler: handler.runObsScan
+    handler: handler.runRegularObsScan
     events:
       # Invoke Lambda function every 5 mins
       - schedule: rate(5 minutes)
@@ -98,8 +78,9 @@ functions:
           arn:
             Fn::GetAtt: [ SQSQueue, Arn ]
           batchSize: 1
-  ingest:
-    handler: handler.putInQueue
+  # Only for manual invocation, not used currently
+  # ingest:
+  #  handler: handler.putInQueue
 
 plugins:
   - serverless-python-requirements

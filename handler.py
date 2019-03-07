@@ -14,13 +14,13 @@ logger.setLevel(logging.INFO)
 SQS_CLIENT = boto3.client('sqs')
 
 
-def runObsScanOnDemand(event, context):
+def putInQueueFromAPIGateway(event, context):
     data = json.loads(event['body'])
-    destination = Target(data.get('target'))
+    target = Target(data.get('target'))
 
-    if not destination.isValid():
+    if not target.isValid():
         logger.error("Target Validation Failed of: " +
-                     json.dumps(destination.targetname))
+                     json.dumps(target.targetname))
         return Response({
              "statusCode": 400,
              "body": json.dumps({'error': 'target was not valid or missing'})
@@ -28,7 +28,7 @@ def runObsScanOnDemand(event, context):
 
     print(SQS_CLIENT.send_message(
         QueueUrl=os.getenv('SQS_URL'),
-        MessageBody=destination.targetname
+        MessageBody=target.targetname
     ))
 
     return Response({
@@ -37,41 +37,38 @@ def runObsScanOnDemand(event, context):
     }).with_security_headers()
 
 
-def runObsScan(event, context):
+def runRegularObsScan(event, context):
 
     # Test out S3 upload capability
     url = 'https://raw.githubusercontent.com/mozilla/vautomator-serverless/scheduled-scans/hostlist.json'
     randomizer = Randomizer(url)
     scanner = HTTPObservatoryScanner()
-    destination = Target(randomizer.next())
+    target = Target(randomizer.next())
     # Need to perform target validation here
 
-    if not destination.isValid():
+    if not target.isValid():
         logger.error("Target Validation Failed of: " +
-                     json.dumps(destination.targetname))
+                     json.dumps(target.targetname))
     else:
-        scan_result = scanner.scan(destination.targetname)
+        scan_result = scanner.scan(target.targetname)
         logger.info(scan_result)
-        send_to_s3(destination.targetname, scan_result)
+        send_to_s3(target.targetname, scan_result)
 
 
 def runObsScanFromQ(event, context):
-
-    # logger.info(event)
-    # This is how we process the hostname
     
     for record, keys in event.items():
         for item in keys:
             if "body" in item:
                 # print(item['body'])
-                destination = item['body']
+                target = item['body']
             else:
                 logger.error("Target Validation Failed of: " +
-                             json.dumps(destination))
+                             json.dumps(target))
                 return False
 
     scanner = HTTPObservatoryScanner()
-    scan_result = scanner.scan(destination)
+    scan_result = scanner.scan(target)
     logger.info(scan_result)
-    send_to_s3(destination, scan_result)
+    send_to_s3(target, scan_result)
     return ''
