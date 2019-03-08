@@ -40,22 +40,41 @@ provider:
       Ref: SQSQueue
 
 # you can add packaging information here
-#package:
-#  include:
-#    - include-me.py
-#    - include-me-dir/**
-exclude:
-   - .venv/**
-   - .git/**
-   - __pycache__/**
-   - node_modules/**
+package:
+  include:
+    - bin/*
+  exclude:
+    - .venv/**
+    - .git/**
+    - __pycache__/**
+    - node_modules/**
 
 functions:
-  cronPortScan:
-    handler: handler.runPortScan
+  onDemandUDPScan:
+    handler: handler.runUDP
+    timeout: 180
     events:
-      # Invoke Lambda function every 15 mins
-      - schedule: rate(15 minutes)
+      - http:
+          path: ondemand/udp
+          method: POST
+          cors: true
+  onDemandTCPScan:
+    handler: handler.runTCP
+    timeout: 180
+    events:
+      - http:
+          path: ondemand/tcp
+          method: POST
+          cors: true
+  cronPortScan:
+    handler: handler.runRegularPortScan
+    events:
+      # Invoke Lambda function once a day
+      # We can fine grain it with cron() later
+      - schedule: 
+          rate: rate(1 day)
+          # Not enabling this by default
+          enabled: false
   onDemandObservatoryScan:
     handler: handler.putInQueueFromAPIGateway
     events:
@@ -84,8 +103,6 @@ functions:
 
 plugins:
   - serverless-python-requirements
-
-# We will need a bucket to store the results of a scheduled scan
 resources:
   Resources:
     S3BucketResults:
@@ -116,7 +133,9 @@ custom:
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
   pythonRequirements:
-    dockerizePip: non-linux
+    dockerFile: Dockerfile
+    dockerizePip: true
+    # vendor: ./vendored
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
