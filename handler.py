@@ -4,7 +4,7 @@ import logging
 
 from util.s3_helper import send_to_s3
 from lib.target import Target
-from scanners.httpobs_scanner import HTTPObservatoryScanner
+from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from util.host_picker import Randomizer
 
 logger = logging.getLogger(__name__)
