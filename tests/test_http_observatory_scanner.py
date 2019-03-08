@@ -41,6 +41,7 @@ class TestHTTPObservatoryScanner():
         # are in the scan result to ensure it's working
         assert 'host' in scan_result
         assert 'scan' in scan_result
+        assert 'grade' in scan_result['scan']
 
         # Unstub env var for testing
         os.environ["HTTPOBS_API_URL"] = ""
