@@ -11,6 +11,8 @@ class PortScanner():
 
     def scanUDP(self, host):
         # TODO: There is an async scan option in python-nmap, use that instead
+        # Lambda does not run in the context of root & there is no sudo
+        # So we won't be able to run UDP scans
         nm = nmap.PortScanner()
         isSudo = True
         udp_ports = (
