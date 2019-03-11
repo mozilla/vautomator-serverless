@@ -1,8 +1,5 @@
 
 service: vautomator-serverless
-
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
 frameworkVersion: ">=1.2.0 <2.0.0"
 
 provider:
@@ -104,6 +101,9 @@ functions:
           cors: true
   cronObservatoryScan:
     handler: handler.runRegularObsScan
+functions:
+  cronObservatoryScan:
+    handler: handler.runScheduledObservatoryScan
     events:
       # Invoke Lambda function every 5 mins
       - schedule: rate(5 minutes)
@@ -111,7 +111,7 @@ functions:
         bucket: ${self:custom.cfg.s3BucketName}
         event: s3:ObjectCreated:*
   ObservatoryScanQueue:
-    handler: handler.runObsScanFromQ
+    handler: handler.runObservatoryScanFromQ
     events:
       - sqs:
           arn:
