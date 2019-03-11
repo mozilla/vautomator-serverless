@@ -35,9 +35,29 @@ provider:
         - ReceiverDeadLetterQueue
         - Arn
   environment:
-    HTTPOBS_URL: 'https://observatory.mozilla.org'
+    HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
     SQS_URL:
       Ref: SQSQueue
+
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+#            - "/*"
 
 # you can add packaging information here
 package:
@@ -135,7 +155,6 @@ custom:
   pythonRequirements:
     dockerFile: Dockerfile
     dockerizePip: true
-    # vendor: ./vendored
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events

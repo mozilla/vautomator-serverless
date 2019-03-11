@@ -9,6 +9,9 @@ from scanners.httpobs_scanner import HTTPObservatoryScanner
 from scanners.port_scanner import PortScanner
 from util.host_picker import Randomizer
 from util.response import Response
+from scanners.http_observatory_scanner import HTTPObservatoryScanner
+from util.randomizer import Randomizer
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -138,3 +141,9 @@ def runObsScanFromQ(event, context):
     logger.info(scan_result)
     send_to_s3(target, scan_result)
     return ''
+        logger.info("Tasking Observatory Scan of: " +
+                    json.dumps(target.targetname))
+        scan_result = scanner.scan(target)
+        logger.info("Completed Observatory Scan of " +
+                    json.dumps(target.targetname))
+        send_to_s3(target.targetname, scan_result)

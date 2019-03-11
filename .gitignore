@@ -18,6 +18,8 @@ var/
 # Serverless directories
 .serverless
 
+# Ignore caches
+.pytest_cache/
 
 *.pyc
 *.pyo

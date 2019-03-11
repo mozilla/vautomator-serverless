@@ -22,7 +22,16 @@ class Target:
         if not isinstance(self.targetname, str):
             return False
 
-        starts_with_anti_patterns = ["127.0.0", "10.", "172.", "192.168", "169.254.169.254"]
+        starts_with_anti_patterns = [
+            "127.0.0", 
+            "10.", 
+            "172.",
+            "192.168",
+            "169.254.169.254",
+            "http://",
+            "ftp://",
+            "ssh://"
+            ]
 
         for pattern in starts_with_anti_patterns:
             if self.targetname.startswith(pattern):

@@ -1,13 +1,14 @@
 import requests
 import time
+import os
 
 
 class HTTPObservatoryScanner():
-    ## TODO: Re-write this with the httpobs python module
-    def __init__(self, sleep_interval=1):
+
+    def __init__(self, poll_interval=1):
         self.session = requests.Session()
-        self.sleep_interval = sleep_interval
-        self.api_url = 'https://http-observatory.security.mozilla.org/api/v1'
+        self.poll_interval = poll_interval
+        self.api_url = os.getenv('HTTPOBS_API_URL')
 
     def scan(self, host):
         # Initiate the scan
@@ -29,6 +30,6 @@ class HTTPObservatoryScanner():
             if 'content-security-policy' in resp:
                 return resp
 
-            time.sleep(self.sleep_interval)
+            time.sleep(self.poll_interval)
             count += 1
         raise Exception("Unable to get results within 60 seconds")
