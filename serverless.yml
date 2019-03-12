@@ -59,7 +59,7 @@ functions:
       - schedule:
           rate: rate(5 minutes)
           # Not enabling just yet
-          enabled: true
+          enabled: false
   onDemandPortScan:
     handler: handler.addPortScanToQueue
     events:

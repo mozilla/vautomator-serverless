@@ -12,14 +12,14 @@ class CTLogScanner():
     def __init__(self, poll_interval=1):
         self.ws_url = os.getenv('CERTSTREAM_WS_URL')
 
-    def on_open(instance):
+    def on_open(self, instance):
         logger.info("Connection to CT logs established.")
 
-    def on_error(instance, exception):
+    def on_error(self, instance, exception):
         logger.error("Exception in CertStreamClient: " +
                      json.dumps(exception))
 
-    def print_callback(message, context):
+    def print_callback(self, message, context):
 
         if message['message_type'] == "certificate_update":
             all_domains = message['data']['leaf_cert']['all_domains']
