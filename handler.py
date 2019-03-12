@@ -9,11 +9,17 @@ from scanners.port_scanner import PortScanner
 from util.response import Response
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from util.randomizer import Randomizer
+from scanners.ctlog_scanner import CTLogScanner
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 SQS_CLIENT = boto3.client('sqs')
+
+
+def monitorCTLog(event, context):
+    scanner = CTLogScanner()
+    scanner.watchCTLogs()
 
 
 def addPortScanToQueue(event, context):

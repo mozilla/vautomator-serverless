@@ -33,6 +33,7 @@ provider:
         - Arn
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
+    CERTSTREAM_WS_URL: 'wss://certstream.calidog.io/'
     SQS_URL:
       Ref: SQSQueue
 
@@ -48,6 +49,17 @@ package:
     - node_modules/**
 
 functions:
+  cronCTlogScan:
+    handler: handler.monitorCTLog
+    # Monitor for 10 seconds
+    timeout: 10
+    events:
+      # Invoke Lambda function every 5 mins, for testing purposes only
+      # TODO: Fine tune this later with cron()
+      - schedule:
+          rate: rate(5 minutes)
+          # Not enabling just yet
+          enabled: true
   onDemandPortScan:
     handler: handler.addPortScanToQueue
     events:

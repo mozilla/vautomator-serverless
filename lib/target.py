@@ -1,6 +1,4 @@
 import socket
-import logging
-import datetime
 from netaddr import valid_ipv4
 from urllib.parse import urlparse
 
