@@ -1,5 +1,6 @@
 netaddr==0.7.19
 requests>=2.20.0
 python_nmap==0.6.1
-boto3==1.9.109
+boto3>=1.9.109
 pytest>=4.1.1
+certstream>=1.10
