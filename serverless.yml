@@ -49,15 +49,16 @@ package:
 
 functions:
   onDemandPortScan:
-    handler: handler.runTCP
-    timeout: 180
+    handler: handler.addPortScanToQueue
     events:
       - http:
           path: ondemand/portscan
-          method: POST
+          method: PUT
           cors: true
   cronPortScan:
     handler: handler.runScheduledPortScan
+    # Giving 5 minutes to run the TCP scan before it times outs
+    timeout: 300
     events:
       # Invoke Lambda function once a day
       # We can fine grain it with cron() later
@@ -66,7 +67,7 @@ functions:
           # Not enabling this by default
           enabled: false
   onDemandObservatoryScan:
-    handler: handler.putInQueueFromAPIGateway
+    handler: handler.addObservatoryScanToQueue
     events:
       - http:
           path: ondemand
@@ -80,8 +81,10 @@ functions:
       - s3:
         bucket: ${self:custom.cfg.s3BucketName}
         event: s3:ObjectCreated:*
-  ObservatoryScanQueue:
-    handler: handler.runObservatoryScanFromQ
+  RunScanQueue:
+    handler: handler.runScanFromQ
+    # Giving this function a large timeout as well
+    timeout: 300
     events:
       - sqs:
           arn:
@@ -105,7 +108,7 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.cfg.vautomatorQ}
-        VisibilityTimeout: 120
+        VisibilityTimeout: 300
         MessageRetentionPeriod: 60
         RedrivePolicy:
           deadLetterTargetArn:
@@ -119,5 +122,5 @@ custom:
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
   pythonRequirements:
-    dockerFile: Dockerfile
+    # dockerFile: Dockerfile
     dockerizePip: true

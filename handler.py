@@ -5,9 +5,7 @@ import os
 
 from util.s3_helper import send_to_s3
 from lib.target import Target
-from scanners.httpobs_scanner import HTTPObservatoryScanner
 from scanners.port_scanner import PortScanner
-from util.host_picker import Randomizer
 from util.response import Response
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from util.randomizer import Randomizer
@@ -18,50 +16,20 @@ logger.setLevel(logging.INFO)
 SQS_CLIENT = boto3.client('sqs')
 
 
-def runUDP(event, context):
+def addPortScanToQueue(event, context):
     data = json.loads(event['body'])
     target = Target(data.get('target'))
 
-    if not target.isValid():
-        logger.error("Target Validation Failed of: " +
-                     json.dumps(target.targetname))
-        return Response({
-             "statusCode": 400,
-             "body": json.dumps({'error': 'target was not valid or missing'})
-         }).with_security_headers()
-    
-    port_scanner = PortScanner()
-    udp_results = port_scanner.scanUDP(target.targetname)
-    logger.info(udp_results)
-    if udp_results:
-        return Response({
-            "statusCode": 200,
-            "body": json.dumps({'OK': 'target added to the queue'})
-        }).with_security_headers()
-    else:
-        return Response({
-            "statusCode": 500,
-            "body": json.dumps({'error': 'MEH'})
-        }).with_security_headers()
-
-
-def runTCP(event, context):
-    data = json.loads(event['body'])
-    target = validateTarget(data.get('target'))
-
-    if target:
+    if target.isValid():
         print(SQS_CLIENT.send_message(
               QueueUrl=os.getenv('SQS_URL'),
-              MessageBody=target.targetname
-        ))
+              MessageBody="portscan|" + target.targetname
+              ))
 
         return Response({
             "statusCode": 200,
             "body": json.dumps({'OK': 'target added to the queue'})
         }).with_security_headers()
-        port_scanner = PortScanner()
-        tcp_results = port_scanner.scanTCP(target.targetname)
-        logger.info(tcp_results)
 
     else:
         logger.error("Target Validation Failed of: " +
@@ -70,38 +38,45 @@ def runTCP(event, context):
              "statusCode": 400,
              "body": json.dumps({'error': 'target was not valid or missing'})
          }).with_security_headers()
-    
-    port_scanner = PortScanner()
-    tcp_results = port_scanner.scanTCP(target.targetname)
-    logger.info(tcp_results)
-
-    if tcp_results:
-        return Response({
-            "statusCode": 200,
-            "body": json.dumps({'OK': 'target added to the queue'})
-        }).with_security_headers()
 
 
-def runRegularPortScan(event, context):
-    url = 'https://raw.githubusercontent.com/mozilla/vautomator-serverless/scheduled-scans/hostlist.json'
-    randomizer = Randomizer(url)
+def runScheduledPortScan(event, context):
+    # For demo purposes, we will use a static list here
+    target_list = [
+        "www.mozilla.org",
+        "infosec.mozilla.org",
+    ]
+    randomizer = Randomizer(target_list)
     target = Target(randomizer.next())
 
-    if not target.isValid():
+    if target.isValid():
+        logger.info("Tasking Port Scan of: " +
+                    json.dumps(target.targetname))
+        scanner = PortScanner()
+        results = scanner.scanTCP(target.targetname)
+        logger.info("Completed Port Scan of " +
+                    json.dumps(target.targetname))
+        send_to_s3(target.targetname + "_tcpscan", results)
+    else:
         logger.error("Target Validation Failed of: " +
                      json.dumps(target.targetname))
 
-    scanner = PortScanner()
-    results = scanner.scanAll(target.targetname)
-    logger.info(results)
-    send_to_s3(target.targetname + "-portscan", results)
 
-
-def putInQueueFromAPIGateway(event, context):
+def addObservatoryScanToQueue(event, context):
     data = json.loads(event['body'])
     target = Target(data.get('target'))
 
-    if not target.isValid():
+    if target.isValid():
+        print(SQS_CLIENT.send_message(
+              QueueUrl=os.getenv('SQS_URL'),
+              MessageBody="observatory|" + target.targetname
+              ))
+        return Response({
+            "statusCode": 200,
+            "body": json.dumps({'OK': 'target added to the queue'})
+        }).with_security_headers()
+    
+    else:
         logger.error("Target Validation Failed of: " +
                      json.dumps(target.targetname))
         return Response({
@@ -109,52 +84,30 @@ def putInQueueFromAPIGateway(event, context):
              "body": json.dumps({'error': 'target was not valid or missing'})
          }).with_security_headers()
 
-    print(SQS_CLIENT.send_message(
-        QueueUrl=os.getenv('SQS_URL'),
-        MessageBody=target.targetname
-    ))
 
-    return Response({
-        "statusCode": 200,
-        "body": json.dumps({'OK': 'target added to the queue'})
-    }).with_security_headers()
-
-
-def runRegularObsScan(event, context):
-
-    # Test out S3 upload capability
-    url = 'https://raw.githubusercontent.com/mozilla/vautomator-serverless/scheduled-scans/hostlist.json'
-    randomizer = Randomizer(url)
-    scanner = HTTPObservatoryScanner()
-    target = Target(randomizer.next())
-    # Need to perform target validation here
-
-    if not target.isValid():
-        logger.error("Target Validation Failed of: " +
-                     json.dumps(target.targetname))
-    else:
-        scan_result = scanner.scan(target.targetname)
-        logger.info(scan_result)
-        send_to_s3(target.targetname, scan_result)
-
-
-def runObsScanFromQ(event, context):
+def runScanFromQ(event, context):
     
+    # Read the queue
     for record, keys in event.items():
         for item in keys:
             if "body" in item:
-                # print(item['body'])
-                target = item['body']
+                message = item['body']
+                scan_type, target = message.split('|')
+                if scan_type == "observatory":
+                    scanner = HTTPObservatoryScanner()
+                    scan_result = scanner.scan(target)
+                    send_to_s3(target + "_observatory", scan_result)
+                elif scan_type == "portscan":
+                    scanner = PortScanner()
+                    scan_result = scanner.scanTCP(target)
+                    send_to_s3(target + "_tcpscan", scan_result)
+                else:
+                    # Manually invoked, just log the message
+                    logger.info("Message in queue: " +
+                                json.dumps(message))
             else:
-                logger.error("Target Validation Failed of: " +
-                             json.dumps(target))
-                return False
-
-    scanner = HTTPObservatoryScanner()
-    scan_result = scanner.scan(target)
-    logger.info(scan_result)
-    send_to_s3(target, scan_result)
-    return ''
+                logger.error("Unrecognized message in queue: " +
+                             json.dumps(message))
 
 
 def runScheduledObservatoryScan(event, context):
@@ -170,25 +123,13 @@ def runScheduledObservatoryScan(event, context):
         logger.info("Tasking Observatory Scan of: " +
                     json.dumps(target.targetname))
         scanner = HTTPObservatoryScanner()
-        scan_result = scanner.scan(target)
+        scan_result = scanner.scan(target.targetname)
         logger.info("Completed Observatory Scan of " +
                     json.dumps(target.targetname))
-        send_to_s3(target.targetname, scan_result)
+        send_to_s3(target.targetname + "_observatory", scan_result)
     else:
         logger.error("Target Validation Failed of: " +
                      json.dumps(target.targetname))
-
-
-def runObservatoryScanFromQ(event, context):
-
-    # This is how we process the hostname
-    # Demonstration purposes, in the final example 
-    # we should extract the hostname and perform a scan
-
-    for record, keys in event.items():
-        for item in keys:
-            if "body" in item:
-                logger.info(item['body'])
 
 
 def putInQueue(event, context):
@@ -204,5 +145,5 @@ def putInQueue(event, context):
     if target.isValid():
         print(SQS_CLIENT.send_message(
               QueueUrl=os.getenv('SQS_URL'),
-              MessageBody=target.targetname
+              MessageBody="manual|" + target.targetname
               ))
