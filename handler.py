@@ -4,7 +4,6 @@ import boto3
 import os
 
 from util.s3_helper import send_to_s3
-from util.validator import validateTarget
 from lib.target import Target
 from scanners.httpobs_scanner import HTTPObservatoryScanner
 from scanners.port_scanner import PortScanner
@@ -166,8 +165,8 @@ def runScheduledObservatoryScan(event, context):
         "infosec.mozilla.org",
     ]
     randomizer = Randomizer(target_list)
-    target = validateTarget(randomizer.next())
-    if target:
+    target = Target(randomizer.next())
+    if target.isValid():
         logger.info("Tasking Observatory Scan of: " +
                     json.dumps(target.targetname))
         scanner = HTTPObservatoryScanner()
@@ -190,7 +189,6 @@ def runObservatoryScanFromQ(event, context):
         for item in keys:
             if "body" in item:
                 logger.info(item['body'])
-    return ''
 
 
 def putInQueue(event, context):
@@ -203,9 +201,8 @@ def putInQueue(event, context):
     ]
     randomizer = Randomizer(target_list)
     target = Target(randomizer.next())
-
-    print(SQS_CLIENT.send_message(
-        QueueUrl=os.getenv('SQS_URL'),
-        MessageBody=target.targetname
-    ))
-    return ''
+    if target.isValid():
+        print(SQS_CLIENT.send_message(
+              QueueUrl=os.getenv('SQS_URL'),
+              MessageBody=target.targetname
+              ))
