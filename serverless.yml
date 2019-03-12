@@ -36,27 +36,8 @@ provider:
     SQS_URL:
       Ref: SQSQueue
 
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
-
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
-
-# you can add packaging information here
+# Adding some packaging information here to clean up
+# and to include the nmap static library
 package:
   include:
     - bin/*
@@ -67,24 +48,16 @@ package:
     - node_modules/**
 
 functions:
-  onDemandUDPScan:
-    handler: handler.runUDP
-    timeout: 180
-    events:
-      - http:
-          path: ondemand/udp
-          method: POST
-          cors: true
-  onDemandTCPScan:
+  onDemandPortScan:
     handler: handler.runTCP
     timeout: 180
     events:
       - http:
-          path: ondemand/tcp
+          path: ondemand/portscan
           method: POST
           cors: true
   cronPortScan:
-    handler: handler.runRegularPortScan
+    handler: handler.runScheduledPortScan
     events:
       # Invoke Lambda function once a day
       # We can fine grain it with cron() later
@@ -100,9 +73,6 @@ functions:
           method: PUT
           cors: true
   cronObservatoryScan:
-    handler: handler.runRegularObsScan
-functions:
-  cronObservatoryScan:
     handler: handler.runScheduledObservatoryScan
     events:
       # Invoke Lambda function every 5 mins
@@ -117,9 +87,6 @@ functions:
           arn:
             Fn::GetAtt: [ SQSQueue, Arn ]
           batchSize: 1
-  # Only for manual invocation, not used currently
-  # ingest:
-  #  handler: handler.putInQueue
 
 plugins:
   - serverless-python-requirements
@@ -146,7 +113,6 @@ resources:
               - ReceiverDeadLetterQueue
               - Arn
           maxReceiveCount: 1
-
 custom:
   cfg:
     s3BucketName: "vautomator-results"
@@ -155,49 +121,3 @@ custom:
   pythonRequirements:
     dockerFile: Dockerfile
     dockerizePip: true
-
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - websocket: $connect
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
-#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
-
-# you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"

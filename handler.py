@@ -48,9 +48,23 @@ def runUDP(event, context):
 
 def runTCP(event, context):
     data = json.loads(event['body'])
-    target = Target(data.get('target'))
+    target = validateTarget(data.get('target'))
 
-    if not target.isValid():
+    if target:
+        print(SQS_CLIENT.send_message(
+              QueueUrl=os.getenv('SQS_URL'),
+              MessageBody=target.targetname
+        ))
+
+        return Response({
+            "statusCode": 200,
+            "body": json.dumps({'OK': 'target added to the queue'})
+        }).with_security_headers()
+        port_scanner = PortScanner()
+        tcp_results = port_scanner.scanTCP(target.targetname)
+        logger.info(tcp_results)
+
+    else:
         logger.error("Target Validation Failed of: " +
                      json.dumps(target.targetname))
         return Response({
@@ -142,6 +156,8 @@ def runObsScanFromQ(event, context):
     logger.info(scan_result)
     send_to_s3(target, scan_result)
     return ''
+
+
 def runScheduledObservatoryScan(event, context):
 
     # For demo purposes, we will use a static list here
