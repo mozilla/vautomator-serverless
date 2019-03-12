@@ -6,10 +6,10 @@
   "directories": {
     "lib": "lib"
   },
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "serverless-python-requirements": "^4.3.0"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
