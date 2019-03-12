@@ -90,6 +90,9 @@ functions:
           arn:
             Fn::GetAtt: [ SQSQueue, Arn ]
           batchSize: 1
+  ingest:
+    # Demo function, not called on an event, but manually
+    handler: handler.putInQueue
 
 plugins:
   - serverless-python-requirements
@@ -99,6 +102,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.cfg.s3BucketName}
+    # Define a dead letter queue here
     ReceiverDeadLetterQueue:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -110,6 +114,7 @@ resources:
         QueueName: ${self:custom.cfg.vautomatorQ}
         VisibilityTimeout: 300
         MessageRetentionPeriod: 60
+        # Use the dead letter queue
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
@@ -122,5 +127,4 @@ custom:
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
   pythonRequirements:
-    # dockerFile: Dockerfile
     dockerizePip: true
