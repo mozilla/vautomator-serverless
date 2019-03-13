@@ -35,6 +35,8 @@ provider:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
     SQS_URL:
       Ref: SQSQueue
+  apiKeys:
+    - ${self:service}-api-key
 
 # Adding some packaging information here to clean up
 # and to include the nmap static library
@@ -55,6 +57,7 @@ functions:
           path: ondemand/portscan
           method: PUT
           cors: true
+          private: ${self:custom.private}
   cronPortScan:
     handler: handler.runScheduledPortScan
     # Giving 5 minutes to run the TCP scan before it times outs
@@ -66,6 +69,8 @@ functions:
           rate: rate(1 day)
           # Not enabling this by default
           enabled: false
+    environment:
+      PATH: ${env:PATH}:${env:LAMBDA_TASK_ROOT}/bin/nmap-standalone/
   onDemandObservatoryScan:
     handler: handler.addObservatoryScanToQueue
     events:
@@ -90,6 +95,8 @@ functions:
           arn:
             Fn::GetAtt: [ SQSQueue, Arn ]
           batchSize: 1
+    environment:
+      PATH: ${env:PATH}:${env:LAMBDA_TASK_ROOT}/bin/nmap-standalone/
   ingest:
     # Demo function, not called on an event, but manually
     handler: handler.putInQueue
@@ -126,5 +133,6 @@ custom:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
+    private: true # Change to 'false' to disable api-key authorization,
   pythonRequirements:
     dockerizePip: true

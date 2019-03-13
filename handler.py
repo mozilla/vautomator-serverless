@@ -2,6 +2,7 @@ import json
 import logging
 import boto3
 import os
+import uuid
 
 from util.s3_helper import send_to_s3
 from lib.target import Target
@@ -21,22 +22,25 @@ def addPortScanToQueue(event, context):
     target = Target(data.get('target'))
 
     if target.isValid():
+        scan_uuid = str(uuid.uuid4())
         print(SQS_CLIENT.send_message(
               QueueUrl=os.getenv('SQS_URL'),
               MessageBody="portscan|" + target.targetname
+              + "|" + scan_uuid
               ))
 
+        # Use a UUID for the scan type and return it 
         return Response({
             "statusCode": 200,
-            "body": json.dumps({'OK': 'target added to the queue'})
+            "body": json.dumps({'uuid': scan_uuid})
         }).with_security_headers()
 
     else:
-        logger.error("Target Validation Failed of: " +
+        logger.error("Target validation failed of: " +
                      json.dumps(target.targetname))
         return Response({
              "statusCode": 400,
-             "body": json.dumps({'error': 'target was not valid or missing'})
+             "body": json.dumps({'error': 'Target was not valid or missing'})
          }).with_security_headers()
 
 
@@ -50,15 +54,15 @@ def runScheduledPortScan(event, context):
     target = Target(randomizer.next())
 
     if target.isValid():
-        logger.info("Tasking Port Scan of: " +
+        logger.info("Tasking port scan of: " +
                     json.dumps(target.targetname))
         scanner = PortScanner()
         results = scanner.scanTCP(target.targetname)
-        logger.info("Completed Port Scan of " +
+        logger.info("Completed port scan of " +
                     json.dumps(target.targetname))
         send_to_s3(target.targetname + "_tcpscan", results)
     else:
-        logger.error("Target Validation Failed of: " +
+        logger.error("Target validation failed of: " +
                      json.dumps(target.targetname))
 
 
@@ -67,21 +71,23 @@ def addObservatoryScanToQueue(event, context):
     target = Target(data.get('target'))
 
     if target.isValid():
+        scan_uuid = str(uuid.uuid4())
         print(SQS_CLIENT.send_message(
               QueueUrl=os.getenv('SQS_URL'),
               MessageBody="observatory|" + target.targetname
+              + "|" + scan_uuid
               ))
         return Response({
             "statusCode": 200,
-            "body": json.dumps({'OK': 'target added to the queue'})
+            "body": json.dumps({'uuid': scan_uuid})
         }).with_security_headers()
     
     else:
-        logger.error("Target Validation Failed of: " +
+        logger.error("Target validation failed of: " +
                      json.dumps(target.targetname))
         return Response({
              "statusCode": 400,
-             "body": json.dumps({'error': 'target was not valid or missing'})
+             "body": json.dumps({'error': 'Target was not valid or missing'})
          }).with_security_headers()
 
 
@@ -120,15 +126,15 @@ def runScheduledObservatoryScan(event, context):
     randomizer = Randomizer(target_list)
     target = Target(randomizer.next())
     if target.isValid():
-        logger.info("Tasking Observatory Scan of: " +
+        logger.info("Tasking observatory scan of: " +
                     json.dumps(target.targetname))
         scanner = HTTPObservatoryScanner()
         scan_result = scanner.scan(target.targetname)
-        logger.info("Completed Observatory Scan of " +
+        logger.info("Completed observatory scan of " +
                     json.dumps(target.targetname))
         send_to_s3(target.targetname + "_observatory", scan_result)
     else:
-        logger.error("Target Validation Failed of: " +
+        logger.error("Target validation failed of: " +
                      json.dumps(target.targetname))
 
 
