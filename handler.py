@@ -19,8 +19,14 @@ SQS_CLIENT = boto3.client('sqs')
 
 def addPortScanToQueue(event, context):
     data = json.loads(event['body'])
+    if "target" not in data:
+        logger.error("Unrecognized payload")
+        return Response({
+             "statusCode": 500,
+             "body": json.dumps({'error': 'Unrecognized payload'})
+         }).with_security_headers()
+    
     target = Target(data.get('target'))
-
     if target.isValid():
         scan_uuid = str(uuid.uuid4())
         print(SQS_CLIENT.send_message(
@@ -37,7 +43,7 @@ def addPortScanToQueue(event, context):
 
     else:
         logger.error("Target validation failed of: " +
-                     json.dumps(target.targetname))
+                     target.targetname)
         return Response({
              "statusCode": 400,
              "body": json.dumps({'error': 'Target was not valid or missing'})
@@ -45,6 +51,12 @@ def addPortScanToQueue(event, context):
 
 
 def runScheduledPortScan(event, context):
+    # This is needed for nmap static library to be added to the path
+    original_pathvar = os.environ['PATH']
+    os.environ['PATH'] = original_pathvar \
+        + ':' + os.environ['LAMBDA_TASK_ROOT'] \
+        + '/bin/nmap-standalone/'
+
     # For demo purposes, we will use a static list here
     target_list = [
         "www.mozilla.org",
@@ -55,21 +67,29 @@ def runScheduledPortScan(event, context):
 
     if target.isValid():
         logger.info("Tasking port scan of: " +
-                    json.dumps(target.targetname))
+                    target.targetname)
         scanner = PortScanner()
         results = scanner.scanTCP(target.targetname)
         logger.info("Completed port scan of " +
-                    json.dumps(target.targetname))
+                    target.targetname)
         send_to_s3(target.targetname + "_tcpscan", results)
     else:
         logger.error("Target validation failed of: " +
-                     json.dumps(target.targetname))
+                     target.targetname)
+    
+    os.environ['PATH'] = original_pathvar
 
 
 def addObservatoryScanToQueue(event, context):
     data = json.loads(event['body'])
-    target = Target(data.get('target'))
+    if "target" not in data:
+        logger.error("Unrecognized payload")
+        return Response({
+             "statusCode": 500,
+             "body": json.dumps({'error': 'Unrecognized payload'})
+         }).with_security_headers()
 
+    target = Target(data.get('target'))
     if target.isValid():
         scan_uuid = str(uuid.uuid4())
         print(SQS_CLIENT.send_message(
@@ -84,7 +104,7 @@ def addObservatoryScanToQueue(event, context):
     
     else:
         logger.error("Target validation failed of: " +
-                     json.dumps(target.targetname))
+                     target.targetname)
         return Response({
              "statusCode": 400,
              "body": json.dumps({'error': 'Target was not valid or missing'})
@@ -93,12 +113,18 @@ def addObservatoryScanToQueue(event, context):
 
 def runScanFromQ(event, context):
     
+    # This is needed for nmap static library to be added to the path
+    original_pathvar = os.environ['PATH']
+    os.environ['PATH'] = original_pathvar \
+        + ':' + os.environ['LAMBDA_TASK_ROOT'] \
+        + '/bin/nmap-standalone/'
+    
     # Read the queue
     for record, keys in event.items():
         for item in keys:
             if "body" in item:
                 message = item['body']
-                scan_type, target = message.split('|')
+                scan_type, target, uuid = message.split('|')
                 if scan_type == "observatory":
                     scanner = HTTPObservatoryScanner()
                     scan_result = scanner.scan(target)
@@ -110,10 +136,12 @@ def runScanFromQ(event, context):
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: " +
-                                json.dumps(message))
+                                message)
             else:
                 logger.error("Unrecognized message in queue: " +
-                             json.dumps(message))
+                             message)
+    
+    os.environ['PATH'] = original_pathvar
 
 
 def runScheduledObservatoryScan(event, context):
@@ -127,15 +155,15 @@ def runScheduledObservatoryScan(event, context):
     target = Target(randomizer.next())
     if target.isValid():
         logger.info("Tasking observatory scan of: " +
-                    json.dumps(target.targetname))
+                    target.targetname)
         scanner = HTTPObservatoryScanner()
         scan_result = scanner.scan(target.targetname)
         logger.info("Completed observatory scan of " +
-                    json.dumps(target.targetname))
+                    target.targetname)
         send_to_s3(target.targetname + "_observatory", scan_result)
     else:
         logger.error("Target validation failed of: " +
-                     json.dumps(target.targetname))
+                     target.targetname)
 
 
 def putInQueue(event, context):

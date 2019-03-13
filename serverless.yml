@@ -57,20 +57,18 @@ functions:
           path: ondemand/portscan
           method: PUT
           cors: true
-          private: ${self:custom.private}
+          private: ${self:custom.cfg.private}
   cronPortScan:
     handler: handler.runScheduledPortScan
     # Giving 5 minutes to run the TCP scan before it times outs
     timeout: 300
     events:
       # Invoke Lambda function once a day
-      # We can fine grain it with cron() later
+      # Run at 4 PM UTC every day
       - schedule: 
-          rate: rate(1 day)
+          rate: cron(0 16 * * ? *)
           # Not enabling this by default
           enabled: false
-    environment:
-      PATH: ${env:PATH}:${env:LAMBDA_TASK_ROOT}/bin/nmap-standalone/
   onDemandObservatoryScan:
     handler: handler.addObservatoryScanToQueue
     events:
@@ -95,8 +93,6 @@ functions:
           arn:
             Fn::GetAtt: [ SQSQueue, Arn ]
           batchSize: 1
-    environment:
-      PATH: ${env:PATH}:${env:LAMBDA_TASK_ROOT}/bin/nmap-standalone/
   ingest:
     # Demo function, not called on an event, but manually
     handler: handler.putInQueue

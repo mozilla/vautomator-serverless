@@ -7,12 +7,9 @@ from urllib.parse import urlparse
 
 class Target:
 
-    # Here, tasklist is a list of Task objects
-    def __init__(self, target, results_dict={}):
+    def __init__(self, target):
         self.targetname = target
         self.type = ""
-        self.tasklist = []
-        self.resultsdict = results_dict
 
     def isValid(self):
         # A target can be 2 things:
