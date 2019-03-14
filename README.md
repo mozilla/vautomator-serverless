@@ -17,7 +17,6 @@ Port scans are performed using a [statically compiled `nmap` binary](https://git
 
 _**Note:** UDP port scans are not supported as Lamdba functions can not be as root/privileged users._
 
-
 ## Get ready to deploy
 
 1. Install serverless framework: `npm install -g serverless`
@@ -37,7 +36,6 @@ START RequestId: 6a3bc71b-e369-498c-849c-f522e79ce734 Version: $LATEST
 2019-03-11 17:16:59.974 (+11:00)	6a3bc71b-e369-498c-849c-f522e79ce734	[INFO]	Tasking Observatory Scan of: "infosec.mozilla.org"
 2019-03-11 17:17:00.439 (+11:00)	6a3bc71b-e369-498c-849c-f522e79ce734	[INFO]	Completed Observatory Scan of "infosec.mozilla.org"
 ```
-
 - To kick off a port scan on a target on demand, do:
 ```
 $ curl -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan`
@@ -68,4 +66,5 @@ $ aws s3 ls s3://<your-bucket-name>
 2019-03-12 22:27:00       9209 www.mozilla.org_observatory.json
 2019-03-07 16:41:27       5630 www.smh.com.au_tcpscan.json
 2019-03-12 22:49:33       5697 www.smh.com.au_observatory.json
+
 ```
