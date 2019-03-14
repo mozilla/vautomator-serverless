@@ -9,7 +9,7 @@ from lib.target import Target
 from scanners.port_scanner import PortScanner
 from util.response import Response
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
-from util.randomizer import Randomizer
+from util.hosts import Hosts
 
 
 logger = logging.getLogger(__name__)
@@ -42,44 +42,27 @@ def addPortScanToQueue(event, context):
             + "|" + scan_uuid
             ))
 
-    # Use a UUID for the scan type and return it 
+    # Use a UUID for the scan type and return it
     return Response({
         "statusCode": 200,
         "body": json.dumps({'uuid': scan_uuid})
     }).with_security_headers()
 
 
-def runScheduledPortScan(event, context):
-    # This is needed for nmap static library to be added to the path
-    original_pathvar = os.environ['PATH']
-    os.environ['PATH'] = original_pathvar \
-        + ':' + os.environ['LAMBDA_TASK_ROOT'] \
-        + '/bin/nmap-standalone/'
+def addScheduledPortScansToQueue(event, context):
 
-    # For demo purposes, we will use a static list here
-    target_list = [
-        "www.mozilla.org",
-        "infosec.mozilla.org",
-    ]
-    randomizer = Randomizer(target_list)
-    target = Target(name=randomizer.next())
+    hosts = Hosts()
+    target_list = hosts.getList()
+    for hostname in target_list:
+        SQS_CLIENT.send_message(
+            QueueUrl=os.getenv('SQS_URL'),
+            DelaySeconds=2,
+            MessageBody="portscan|" + hostname
+            + "|"
+        )
+        logger.info("Tasking port scan of: " + hostname)
 
-    if not target:
-        logger.error("Target validation failed of: " +
-                     target.targetname)
-
-    logger.info("Tasking port scan of: " +
-                target.targetname)
-    scanner = PortScanner(target.targetname)
-    nmap_scanner = scanner.scanTCP()
-    while nmap_scanner.still_scanning():
-        nmap_scanner.wait(2)
-
-    logger.info("Completed port scan of " +
-                target.targetname)
-    send_to_s3(target.targetname + "_tcpscan", results)
-         
-    os.environ['PATH'] = original_pathvar
+    logger.info("Host list has been added to the queue for port scan.")
 
 
 def addObservatoryScanToQueue(event, context):
@@ -135,7 +118,8 @@ def runScanFromQ(event, context):
                     scanner = PortScanner(target)
                     nmap_scanner = scanner.scanTCP()
                     while nmap_scanner.still_scanning():
-                        nmap_scanner.wait(2)
+                        # Wait for 1 second after the end of the scan
+                        nmap_scanner.wait(1)
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: " +
@@ -147,26 +131,20 @@ def runScanFromQ(event, context):
     os.environ['PATH'] = original_pathvar
 
 
-def runScheduledObservatoryScan(event, context):
+def addScheduledObservatoryScansToQueue(event, context):
 
-    # For demo purposes, we will use a static list here
-    target_list = [
-        "www.mozilla.org",
-        "infosec.mozilla.org",
-    ]
-    randomizer = Randomizer(target_list)
-    target = Target(name=randomizer.next())
-    if not target:
-        logger.error("Target validation failed of: " +
-                     target.targetname)
+    hosts = Hosts()
+    target_list = hosts.getList()
+    for hostname in target_list:
+        SQS_CLIENT.send_message(
+            QueueUrl=os.getenv('SQS_URL'),
+            DelaySeconds=2,
+            MessageBody="observatory|" + hostname
+            + "|"
+        )
+        logger.info("Tasking observatory scan of: " + hostname)
 
-    logger.info("Tasking observatory scan of: " +
-                target.targetname)
-    scanner = HTTPObservatoryScanner()
-    scan_result = scanner.scan(target.targetname)
-    logger.info("Completed observatory scan of " +
-                target.targetname)
-    send_to_s3(target.targetname + "_observatory", scan_result)
+    logger.info("Host list has been added to the queue for observatory scan.")
 
 
 def putInQueue(event, context):
@@ -177,8 +155,8 @@ def putInQueue(event, context):
         "www.mozilla.org",
         "infosec.mozilla.org",
     ]
-    randomizer = Randomizer(target_list)
-    target = Target(name=randomizer.next())
+    hostlist = Hosts(target_list)
+    target = Target(name=hostlist.next())
     print(SQS_CLIENT.send_message(
               QueueUrl=os.getenv('SQS_URL'),
               MessageBody="manual|" + target.targetname
