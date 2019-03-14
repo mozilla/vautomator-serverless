@@ -1,5 +1,4 @@
 
-
 class Response:
     SECURITY_HEADERS = {
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS, HEAD",

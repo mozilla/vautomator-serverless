@@ -24,10 +24,58 @@ provider:
       - "sqs:SendMessage"
      Resource:
       Fn::GetAtt: [ SQSQueue, Arn ]
+   - Effect: Allow
+     Action:
+      - "sqs:SendMessage"
+     Resource:
+      - "Fn::GetAtt":
+        - ReceiverDeadLetterQueue
+        - Arn
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
+    SQS_URL:
+      Ref: SQSQueue
+  apiKeys:
+    - ${self:service}-api-key
+
+# Adding some packaging information here to clean up
+# and to include the nmap static library
+package:
+  include:
+    - bin/*
+  exclude:
+    - .venv/**
+    - .git/**
+    - __pycache__/**
+    - node_modules/**
 
 functions:
+  onDemandPortScan:
+    handler: handler.addPortScanToQueue
+    events:
+      - http:
+          path: ondemand/portscan
+          method: PUT
+          cors: true
+          private: ${self:custom.cfg.private}
+  cronPortScan:
+    handler: handler.runScheduledPortScan
+    # Giving 5 minutes to run the TCP scan before it times outs
+    timeout: 300
+    events:
+      # Invoke Lambda function once a day
+      # Run at 4 PM UTC every day
+      - schedule: 
+          rate: cron(0 16 * * ? *)
+          # Not enabling this by default
+          enabled: false
+  onDemandObservatoryScan:
+    handler: handler.addObservatoryScanToQueue
+    events:
+      - http:
+          path: ondemand
+          method: PUT
+          cors: true
   cronObservatoryScan:
     handler: handler.runScheduledObservatoryScan
     events:
@@ -36,36 +84,51 @@ functions:
       - s3:
         bucket: ${self:custom.cfg.s3BucketName}
         event: s3:ObjectCreated:*
-  ObservatoryScanQueue:
-    handler: handler.runObservatoryScanFromQ
+  RunScanQueue:
+    handler: handler.runScanFromQ
+    # Giving this function a large timeout as well
+    timeout: 300
     events:
       - sqs:
           arn:
             Fn::GetAtt: [ SQSQueue, Arn ]
+          batchSize: 1
   ingest:
+    # Demo function, not called on an event, but manually
     handler: handler.putInQueue
-    environment:
-      SQS_URL:
-        Ref: SQSQueue
 
 plugins:
   - serverless-python-requirements
-
-# We will need a bucket to store the results of a scheduled scan
 resources:
   Resources:
     S3BucketResults:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.cfg.s3BucketName}
+    # Define a dead letter queue here
+    ReceiverDeadLetterQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${self:custom.cfg.vautomatorDLQ}
+        MessageRetentionPeriod: 120
     SQSQueue:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.cfg.vautomatorQ}
-
+        VisibilityTimeout: 300
+        MessageRetentionPeriod: 60
+        # Use the dead letter queue
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt":
+              - ReceiverDeadLetterQueue
+              - Arn
+          maxReceiveCount: 1
 custom:
   cfg:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
+    vautomatorDLQ: "vautomator-DLQ"
+    private: true # Change to 'false' to disable api-key authorization,
   pythonRequirements:
-    dockerizePip: non-linux
+    dockerizePip: true

@@ -10,15 +10,18 @@ class HTTPObservatoryScanner():
         self.poll_interval = poll_interval
         self.api_url = os.getenv('HTTPOBS_API_URL')
 
-    def scan(self, host):
+    def scan(self, hostname):
         # Initiate the scan
+        if self.api_url[-1] != "/":
+            analyze_url = self.api_url + '/analyze?host=' + hostname
+        else:
+            raise Exception("Invalid API URL specified for Observatory.")
         results = {}
-        analyze_url = self.api_url + '/analyze?host=' + host.targetname
         results['scan'] = self.session.post(analyze_url, data=None).json()
 
         # Wait for the scan to complete, polling every second
         results['tests'] = self.__poll(results['scan']['scan_id'])
-        results['host'] = host.targetname
+        results['host'] = hostname
         return results
 
     def __poll(self, scan_id):
