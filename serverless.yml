@@ -33,7 +33,7 @@ provider:
         - Arn
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
-    CERTSTREAM_WS_URL: 'wss://certstream.calidog.io/'
+    CERTSTREAM_URL: 'https://certstream.calidog.io'
     # Using Observatory list as source list for scheduled scans as it is comprehensive enough
     # This could be updated later, perhaps to another source, such as pentest-master list?
     HOST_LIST: 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
@@ -54,17 +54,13 @@ package:
     - node_modules/**
 
 functions:
-  cronCTlogScan:
-    handler: handler.monitorCTLog
-    # Monitor for 10 seconds
-    timeout: 10
+  cronMonitorCTLogs:
+    handler: handler.getLatestCTStream
+    timeout: 60
     events:
-      # Invoke Lambda function every 5 mins, for testing purposes only
-      # TODO: Fine tune this later with cron()
+      # Invoke Lambda function every 1 minute, this is a firehose
       - schedule:
-          rate: rate(5 minutes)
-          # Not enabling just yet
-          enabled: false
+          rate: rate(1 minute)
   onDemandPortScan:
     handler: handler.addPortScanToQueue
     events:

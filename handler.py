@@ -10,6 +10,7 @@ from scanners.port_scanner import PortScanner
 from util.response import Response
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from util.hosts import Hosts
+from util.ctlogs_helper import CTLogs
 
 
 logger = logging.getLogger(__name__)
@@ -17,9 +18,27 @@ logger.setLevel(logging.INFO)
 SQS_CLIENT = boto3.client('sqs')
 
 
-def monitorCTLog(event, context):
-    scanner = CTLogScanner()
-    scanner.watchCTLogs()
+def getLatestCTStream(event, context):
+    monitor = CTLogs()
+    mod_domains = monitor.latest25()
+
+    if len(mod_domains):
+        for fqdn in mod_domains:
+            SQS_CLIENT.send_message(
+                QueueUrl=os.getenv('SQS_URL'),
+                DelaySeconds=2,
+                MessageBody="observatory|" + fqdn
+                + "|"
+            )
+            SQS_CLIENT.send_message(
+                QueueUrl=os.getenv('SQS_URL'),
+                DelaySeconds=2,
+                MessageBody="portscan|" + fqdn
+                + "|"
+            )
+            logger.info("Tasking scans of new/changed domain: " + fqdn)
+    else:
+        logger.info("No new/changed domains identified.")
 
 
 def addPortScanToQueue(event, context):
