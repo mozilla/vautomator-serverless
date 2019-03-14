@@ -5,20 +5,19 @@ from urllib.parse import urlparse
 
 class Target:
 
-    # Here, tasklist is a list of Task objects
-    def __init__(self, target, results_dict={}):
-        self.targetname = target
-        self.type = ""
-        self.tasklist = []
-        self.resultsdict = results_dict
+    def __new__(cls, *args, **kwargs):
+        if cls._isValid(*args, **kwargs):
+            instance = super(Target, cls).__new__(cls)
+            return instance
+    
+    def __init__(self, name):
+        self.targetname = name
 
-    def isValid(self):
+    @classmethod
+    def _isValid(cls, *args, **kwargs):
         # A target can be 2 things:
         # 1. FQDN
         # 2. IPv4 address
-
-        if not isinstance(self.targetname, str):
-            return False
 
         starts_with_anti_patterns = [
             "127.0.0", 
@@ -28,34 +27,31 @@ class Target:
             "169.254.169.254",
             "http://",
             "ftp://",
-            "ssh://"
+            "ssh://",
             ]
-
-        for pattern in starts_with_anti_patterns:
-            if self.targetname.startswith(pattern):
-                return False
-
-        if self.valid_ip():
-            self.type = "IPv4"
-            self.targetdomain = self.targetname
-            return True
-        elif self.valid_fqdn():
-            self.type = "FQDN"
-            self.targetdomain = self.targetname
-            return True
-        else:
+        try:
+            # target name must not be empty
+            assert kwargs['name']
+            # target name must be a string
+            assert isinstance(kwargs['name'], str)
+            # target name must not start with anti-patterns
+            for pattern in starts_with_anti_patterns:
+                assert not kwargs['name'].startswith(pattern)
+            # target name must be an FQDN or an IPv4 address
+            assert cls._valid_fqdn(kwargs['name']) or \
+                cls._valid_ip(kwargs['name'])
+        except AssertionError:
             return False
+        return True
 
-    def valid_ip(self):
-        if valid_ipv4(self.targetname):
-            self.type = "IPv4"
+    def _valid_ip(ip):
+        if valid_ipv4(ip):
             return True
         return False
 
-    def valid_fqdn(self):
+    def _valid_fqdn(hostname):
         try:
-            socket.gethostbyname(self.targetname)
-            self.type = "FQDN"
+            socket.gethostbyname(hostname)
             return True
         except Exception:
             return False

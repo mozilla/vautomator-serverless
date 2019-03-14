@@ -34,8 +34,13 @@ provider:
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
     CERTSTREAM_WS_URL: 'wss://certstream.calidog.io/'
+    # Using Observatory list as source list for scheduled scans as it is comprehensive enough
+    # This could be updated later, perhaps to another source, such as pentest-master list?
+    HOST_LIST: 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
     SQS_URL:
       Ref: SQSQueue
+  apiKeys:
+    - ${self:service}-api-key
 
 # Adding some packaging information here to clean up
 # and to include the nmap static library
@@ -67,17 +72,7 @@ functions:
           path: ondemand/portscan
           method: PUT
           cors: true
-  cronPortScan:
-    handler: handler.runScheduledPortScan
-    # Giving 5 minutes to run the TCP scan before it times outs
-    timeout: 300
-    events:
-      # Invoke Lambda function once a day
-      # We can fine grain it with cron() later
-      - schedule: 
-          rate: rate(1 day)
-          # Not enabling this by default
-          enabled: false
+          private: ${self:custom.cfg.private}
   onDemandObservatoryScan:
     handler: handler.addObservatoryScanToQueue
     events:
@@ -85,17 +80,28 @@ functions:
           path: ondemand
           method: PUT
           cors: true
-  cronObservatoryScan:
-    handler: handler.runScheduledObservatoryScan
+  cronPortScan:
+    handler: handler.addScheduledPortScansToQueue
+    timeout: 60
     events:
-      # Invoke Lambda function every 5 mins
-      - schedule: rate(5 minutes)
-      - s3:
-        bucket: ${self:custom.cfg.s3BucketName}
-        event: s3:ObjectCreated:*
+      # Invoke Lambda function once a week
+      # Run at 6 PM UTC every Wednesday once
+      - schedule: 
+          rate: cron(0 18 ? * WED *)
+          # Not enabling this by default as it is intrusive in nature
+          enabled: false
+  cronObservatoryScan:
+    handler: handler.addScheduledObservatoryScansToQueue
+    timeout: 60
+    events:
+      # Invoke Lambda function once a day
+      # Run at 4 PM UTC every day
+      - schedule: 
+          rate: cron(0 16 * * ? *)
+          enabled: true
   RunScanQueue:
     handler: handler.runScanFromQ
-    # Giving this function a large timeout as well
+    # Giving this function a large timeout so port scans could run
     timeout: 300
     events:
       - sqs:
@@ -125,18 +131,19 @@ resources:
       Properties:
         QueueName: ${self:custom.cfg.vautomatorQ}
         VisibilityTimeout: 300
-        MessageRetentionPeriod: 60
+        MessageRetentionPeriod: 300
         # Use the dead letter queue
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
               - ReceiverDeadLetterQueue
               - Arn
-          maxReceiveCount: 1
+          maxReceiveCount: 2
 custom:
   cfg:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
+    private: true # Change to 'false' to disable api-key authorization
   pythonRequirements:
     dockerizePip: true
