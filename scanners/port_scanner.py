@@ -1,22 +1,22 @@
 import nmap
-import os
-import time
+from util.s3_helper import send_to_s3
 
 
 class PortScanner():
 
-    def __init__(self):
-        return None
+    def __init__(self, hostname):
+        self._host = hostname
     
-    def scanTCP(self, host):
+    def scanTCP(self):
         # TODO: There is an async scan option in python-nmap, use that instead
-        nm = nmap.PortScanner()
+        nma = nmap.PortScannerAsync()
         isSudo = False
         nmap_arguments = ("-v -Pn -sT -sV --script=banner " +
                           "--top-ports 1000 --open -T4 --system-dns"
                           )
-        results = nm.scan(host, arguments=nmap_arguments, sudo=isSudo)
-        time.sleep(120)
+        nma.scan(self._host, arguments=nmap_arguments, sudo=isSudo, callback=self.callback_results)
+        return nma
 
-        return results
+    def callback_results(self, hostname, scan_result):
+        send_to_s3(self._host + "_tcpscan", scan_result)
 
