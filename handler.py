@@ -2,6 +2,7 @@ import json
 import logging
 import boto3
 import os
+import uuid
 
 from util.s3_helper import send_to_s3
 from lib.target import Target
@@ -18,96 +19,132 @@ SQS_CLIENT = boto3.client('sqs')
 
 def addPortScanToQueue(event, context):
     data = json.loads(event['body'])
-    target = Target(data.get('target'))
-
-    if target.isValid():
-        print(SQS_CLIENT.send_message(
-              QueueUrl=os.getenv('SQS_URL'),
-              MessageBody="portscan|" + target.targetname
-              ))
-
+    if "target" not in data:
+        logger.error("Unrecognized payload")
         return Response({
-            "statusCode": 200,
-            "body": json.dumps({'OK': 'target added to the queue'})
-        }).with_security_headers()
-
-    else:
-        logger.error("Target Validation Failed of: " +
-                     json.dumps(target.targetname))
+             "statusCode": 500,
+             "body": json.dumps({'error': 'Unrecognized payload'})
+         }).with_security_headers()
+    
+    target = Target(name=data.get('target'))
+    if not target:
+        logger.error("Target validation failed of: " +
+                     target.targetname)
         return Response({
              "statusCode": 400,
-             "body": json.dumps({'error': 'target was not valid or missing'})
+             "body": json.dumps({'error': 'Target was not valid or missing'})
          }).with_security_headers()
+
+    scan_uuid = str(uuid.uuid4())
+    print(SQS_CLIENT.send_message(
+            QueueUrl=os.getenv('SQS_URL'),
+            MessageBody="portscan|" + target.targetname
+            + "|" + scan_uuid
+            ))
+
+    # Use a UUID for the scan type and return it 
+    return Response({
+        "statusCode": 200,
+        "body": json.dumps({'uuid': scan_uuid})
+    }).with_security_headers()
 
 
 def runScheduledPortScan(event, context):
+    # This is needed for nmap static library to be added to the path
+    original_pathvar = os.environ['PATH']
+    os.environ['PATH'] = original_pathvar \
+        + ':' + os.environ['LAMBDA_TASK_ROOT'] \
+        + '/bin/nmap-standalone/'
+
     # For demo purposes, we will use a static list here
     target_list = [
         "www.mozilla.org",
         "infosec.mozilla.org",
     ]
     randomizer = Randomizer(target_list)
-    target = Target(randomizer.next())
+    target = Target(name=randomizer.next())
 
-    if target.isValid():
-        logger.info("Tasking Port Scan of: " +
-                    json.dumps(target.targetname))
-        scanner = PortScanner()
-        results = scanner.scanTCP(target.targetname)
-        logger.info("Completed Port Scan of " +
-                    json.dumps(target.targetname))
-        send_to_s3(target.targetname + "_tcpscan", results)
-    else:
-        logger.error("Target Validation Failed of: " +
-                     json.dumps(target.targetname))
+    if not target:
+        logger.error("Target validation failed of: " +
+                     target.targetname)
+
+    logger.info("Tasking port scan of: " +
+                target.targetname)
+    scanner = PortScanner(target.targetname)
+    nmap_scanner = scanner.scanTCP()
+    while nmap_scanner.still_scanning():
+        nmap_scanner.wait(2)
+
+    logger.info("Completed port scan of " +
+                target.targetname)
+    send_to_s3(target.targetname + "_tcpscan", results)
+         
+    os.environ['PATH'] = original_pathvar
 
 
 def addObservatoryScanToQueue(event, context):
     data = json.loads(event['body'])
-    target = Target(data.get('target'))
-
-    if target.isValid():
-        print(SQS_CLIENT.send_message(
-              QueueUrl=os.getenv('SQS_URL'),
-              MessageBody="observatory|" + target.targetname
-              ))
+    if "target" not in data:
+        logger.error("Unrecognized payload")
         return Response({
-            "statusCode": 200,
-            "body": json.dumps({'OK': 'target added to the queue'})
-        }).with_security_headers()
-    
-    else:
-        logger.error("Target Validation Failed of: " +
-                     json.dumps(target.targetname))
+             "statusCode": 500,
+             "body": json.dumps({'error': 'Unrecognized payload'})
+         }).with_security_headers()
+
+    target = Target(name=data.get('target'))
+    if not target:
+        logger.error("Target validation failed of: " +
+                     target.targetname)
         return Response({
              "statusCode": 400,
-             "body": json.dumps({'error': 'target was not valid or missing'})
+             "body": json.dumps({'error': 'Target was not valid or missing'})
          }).with_security_headers()
+
+    scan_uuid = str(uuid.uuid4())
+    print(SQS_CLIENT.send_message(
+            QueueUrl=os.getenv('SQS_URL'),
+            MessageBody="observatory|" + target.targetname
+            + "|" + scan_uuid
+            ))
+
+    return Response({
+            "statusCode": 200,
+            "body": json.dumps({'uuid': scan_uuid})
+        }).with_security_headers()
 
 
 def runScanFromQ(event, context):
+    
+    # This is needed for nmap static library to be added to the path
+    original_pathvar = os.environ['PATH']
+    os.environ['PATH'] = original_pathvar \
+        + ':' + os.environ['LAMBDA_TASK_ROOT'] \
+        + '/bin/nmap-standalone/'
     
     # Read the queue
     for record, keys in event.items():
         for item in keys:
             if "body" in item:
                 message = item['body']
-                scan_type, target = message.split('|')
+                scan_type, target, uuid = message.split('|')
                 if scan_type == "observatory":
                     scanner = HTTPObservatoryScanner()
                     scan_result = scanner.scan(target)
                     send_to_s3(target + "_observatory", scan_result)
                 elif scan_type == "portscan":
-                    scanner = PortScanner()
-                    scan_result = scanner.scanTCP(target)
-                    send_to_s3(target + "_tcpscan", scan_result)
+                    scanner = PortScanner(target)
+                    nmap_scanner = scanner.scanTCP()
+                    while nmap_scanner.still_scanning():
+                        nmap_scanner.wait(2)
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: " +
-                                json.dumps(message))
+                                message)
             else:
                 logger.error("Unrecognized message in queue: " +
-                             json.dumps(message))
+                             message)
+    
+    os.environ['PATH'] = original_pathvar
 
 
 def runScheduledObservatoryScan(event, context):
@@ -118,18 +155,18 @@ def runScheduledObservatoryScan(event, context):
         "infosec.mozilla.org",
     ]
     randomizer = Randomizer(target_list)
-    target = Target(randomizer.next())
-    if target.isValid():
-        logger.info("Tasking Observatory Scan of: " +
-                    json.dumps(target.targetname))
-        scanner = HTTPObservatoryScanner()
-        scan_result = scanner.scan(target.targetname)
-        logger.info("Completed Observatory Scan of " +
-                    json.dumps(target.targetname))
-        send_to_s3(target.targetname + "_observatory", scan_result)
-    else:
-        logger.error("Target Validation Failed of: " +
-                     json.dumps(target.targetname))
+    target = Target(name=randomizer.next())
+    if not target:
+        logger.error("Target validation failed of: " +
+                     target.targetname)
+
+    logger.info("Tasking observatory scan of: " +
+                target.targetname)
+    scanner = HTTPObservatoryScanner()
+    scan_result = scanner.scan(target.targetname)
+    logger.info("Completed observatory scan of " +
+                target.targetname)
+    send_to_s3(target.targetname + "_observatory", scan_result)
 
 
 def putInQueue(event, context):
@@ -141,9 +178,8 @@ def putInQueue(event, context):
         "infosec.mozilla.org",
     ]
     randomizer = Randomizer(target_list)
-    target = Target(randomizer.next())
-    if target.isValid():
-        print(SQS_CLIENT.send_message(
+    target = Target(name=randomizer.next())
+    print(SQS_CLIENT.send_message(
               QueueUrl=os.getenv('SQS_URL'),
               MessageBody="manual|" + target.targetname
-              ))
+            ))
