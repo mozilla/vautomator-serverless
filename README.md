@@ -38,14 +38,14 @@ START RequestId: 6a3bc71b-e369-498c-849c-f522e79ce734 Version: $LATEST
 ```
 - To kick off a port scan on a target on demand, do:
 ```
-$ curl --header "x-api-key: <API-KEY> -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan`
+$ curl --header "x-api-key: <API-KEY> -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan`
 {"uuid": "3c74a069-4aac-4b3a-9f0e-29af42874b1b"}
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandPortScan`
 
 - To kick off an Observatory scan on a target on demand:
 ```
-curl -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/observatory
+curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/observatory
 {"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandObservatoryScan`
