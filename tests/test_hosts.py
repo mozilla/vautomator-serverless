@@ -2,7 +2,7 @@ import sys
 import pytest
 import os
 import json
-from util.hosts import Hosts
+from lib.hosts import Hosts
 
 
 class TestHosts():
