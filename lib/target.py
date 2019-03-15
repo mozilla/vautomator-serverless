@@ -8,7 +8,7 @@ class Target:
         assert self._valid_class(target_string) == True
         assert self._valid_pattern(target_string) == True
         assert (self._valid_ip(target_string) == True or self._valid_fqdn(target_string) == True)
-        self.target_string = target_string
+        self.name = target_string
 
     @classmethod
     def _valid_class(self, unknown_object):
