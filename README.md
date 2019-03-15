@@ -1,7 +1,7 @@
 # vautomator-serverless
 Repository to experiment with serverless framework and automation.
 
-This project uses serverless framework and attempts to create a serverless environment that could be used to automate vulnerability assessment tasks with multiple ingestion points, such as on-demand submission of a host via a REST API, regular scanning of a list of hosts and proactive scanning of hosts appearing in Certificate Transparency logs.
+This project uses serverless framework and attempts to create a serverless environment that could be used to automate vulnerability assessment tasks from multiple ingestion points, such as on-demand submission of a host via a REST API, regular scanning of a known list of hosts, and opportunistically scanning of hosts appearing in Certificate Transparency logs.
 
 This is under development with more features being added as different branches. The current branch supports:
 - Addition of a target to the scan queue for port scan by an API endpoint (`/ondemand/portscan`). Due to the intrusive nature of this endpoint, it is protected by an API key.
