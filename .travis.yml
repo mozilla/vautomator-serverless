@@ -6,4 +6,4 @@ install:
   - pip install -r requirements.txt
 # command to run tests
 script:
-- PYTHONPATH=. pytest tests/test_response.py
+- PYTHONPATH=. pytest tests/
