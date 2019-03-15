@@ -32,10 +32,9 @@ class TestHTTPObservatoryScanner():
     def test_scan(self):
         # Stub env var for testing
         os.environ["HTTPOBS_API_URL"] = "https://http-observatory.security.mozilla.org/api/v1"
-
-        target = Target("www.mozilla.org")
+        host_name = "www.mozilla.org"
         scanner = HTTPObservatoryScanner()
-        scan_result = scanner.scan(target)
+        scan_result = scanner.scan(host_name)
 
         # Check to see is some of the expected JSON elements
         # are in the scan result to ensure it's working
