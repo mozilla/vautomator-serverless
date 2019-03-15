@@ -73,7 +73,7 @@ functions:
     handler: handler.addObservatoryScanToQueue
     events:
       - http:
-          path: ondemand
+          path: ondemand/observatory
           method: PUT
           cors: true
   cronObservatoryScan:

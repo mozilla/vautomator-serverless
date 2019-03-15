@@ -4,8 +4,8 @@ Repository to experiment with serverless framework and automation.
 This project uses serverless framework and attempts to create a serverless environment that could be used to automate vulnerability assessment tasks with multiple ingestion points, such as on-demand submission of a host via a REST API, regular scanning of a list of hosts and proactive scanning of hosts appearing in Certificate Transparency logs.
 
 This is under development with more features being added as different branches. The current branch supports:
-- Addition of a target to the scan queue for port scan by an API endpoint (`/ondemand/portscan`)
-- Addition of a target to the scan queue for Observatory scan by an API endpoint (`/ondemand`)
+- Addition of a target to the scan queue for port scan by an API endpoint (`/ondemand/portscan`). Due to the intrusive nature of this endpoint, it is protected by an API key.
+- Addition of a target to the scan queue for Observatory scan by an API endpoint (`/ondemand/observatory`)
 - Performing requested scan type (port or Observatory) on hosts in the queue
 - Daily scheduled port scans from a hard-coded list of hosts (for PoC purposes, currently disabled)
 - Scheduled HTTP Observatory scans from a hard-coded list of hosts (for PoC purposes, runs every 5 minutes)
@@ -21,8 +21,8 @@ _**Note:** UDP port scans are not supported as Lamdba functions can not be as ro
 
 1. Install serverless framework: `npm install -g serverless`
 2. Install `serverless-python-requirements` plugin for serverless: `npm install --save serverless-python-requirements`
-3. Download the repo: `git clone -b ondemand-port-scan https://github.com/mozilla/vautomator-serverless.git && cd vautomator-serverless`
-4. Setup your AWS environment/profile. An account or role with at least the permissions listed in [serverless.yml](https://github.com/mozilla/vautomator-serverless/blob/ondemand-port-scan/serverless.yml#L10-L33) is required in order to deploy and run this.
+3. Download the repo: `git clone https://github.com/mozilla/vautomator-serverless.git && cd vautomator-serverless`
+4. Setup your AWS environment/profile. An account or role with at least the permissions listed in [serverless.yml](https://github.com/mozilla/vautomator-serverless/blob/master/serverless.yml#L10-L33) is required in order to deploy and run this.
 5. Customise your `serverless.yml` file, in particular the `custom` section where you can specify your own S3 bucket name/SQS name etc.
 6. Once your AWS profile is set up, run: `serverless deploy -v`
 7. If you have no CloudFormation errors and if you see `Service Information` listing your lambda functions/endpoints, you are good to go.
@@ -38,15 +38,15 @@ START RequestId: 6a3bc71b-e369-498c-849c-f522e79ce734 Version: $LATEST
 ```
 - To kick off a port scan on a target on demand, do:
 ```
-$ curl -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan`
-{"OK": "target added to the queue"}
+$ curl --header "x-api-key: <API-KEY> -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan`
+{"uuid": "3c74a069-4aac-4b3a-9f0e-29af42874b1b"}
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandPortScan`
 
 - To kick off an Observatory scan on a target on demand:
 ```
-curl -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand
-{"OK": "target added to the queue"}
+curl -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/observatory
+{"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandObservatoryScan`
 
