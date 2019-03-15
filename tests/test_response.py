@@ -2,7 +2,7 @@ import sys
 import pytest
 import os
 import json
-from util.response import Response
+from lib.response import Response
 
 
 class TestResponse():

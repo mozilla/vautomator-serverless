@@ -45,7 +45,7 @@ provider:
 # and to include the nmap static library
 package:
   include:
-    - bin/*
+    - vendor/*
   exclude:
     - .venv/**
     - .git/**
