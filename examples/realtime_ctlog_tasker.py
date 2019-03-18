@@ -24,7 +24,6 @@ def print_callback(message, context):
             ".mozilla.com",
             ".mozilla.org",
             ".firefox.com",
-            ".com",  # for testing purposes only, remove before setting live
         ]
 
         for fqdn in all_domains:
