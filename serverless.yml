@@ -58,7 +58,7 @@ functions:
     events:
       - http:
           path: ondemand/portscan
-          method: PUT
+          method: POST
           cors: true
           private: ${self:custom.cfg.private}
   onDemandObservatoryScan:
@@ -66,7 +66,7 @@ functions:
     events:
       - http:
           path: ondemand/observatory
-          method: PUT
+          method: POST
           cors: true
   cronPortScan:
     handler: handler.addScheduledPortScansToQueue

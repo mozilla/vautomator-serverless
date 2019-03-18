@@ -1,7 +1,7 @@
 # vautomator-serverless
 Repository to experiment with serverless framework and automation.
 
-This project uses serverless framework and attempts to create a serverless environment that could be used to automate vulnerability assessment tasks with multiple ingestion points, such as on-demand submission of a host via a REST API, regular scanning of a list of hosts and proactive scanning of hosts appearing in Certificate Transparency logs.
+This project uses serverless framework and attempts to create a serverless environment that could be used to automate vulnerability assessment tasks from multiple ingestion points, such as on-demand submission of a host via a REST API, regular scanning of a known list of hosts, and opportunistically scanning of hosts appearing in Certificate Transparency logs.
 
 This is under development with more features being added as different branches. The current branch supports:
 - Addition of a target to the scan queue for port scan by an API endpoint (`/ondemand/portscan`). Due to the intrusive nature of this endpoint, it is protected by an API key.
@@ -38,14 +38,14 @@ START RequestId: 6a3bc71b-e369-498c-849c-f522e79ce734 Version: $LATEST
 ```
 - To kick off a port scan on a target on demand, do:
 ```
-$ curl --header "x-api-key: <API-KEY> -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan`
+$ curl --header "x-api-key: <API-KEY> -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan`
 {"uuid": "3c74a069-4aac-4b3a-9f0e-29af42874b1b"}
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandPortScan`
 
 - To kick off an Observatory scan on a target on demand:
 ```
-curl -X PUT -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/observatory
+curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/observatory
 {"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandObservatoryScan`
