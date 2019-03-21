@@ -166,19 +166,34 @@ def runScanFromQ(event, context):
     os.environ['PATH'] = original_pathvar
 
 
-def addScheduledObservatoryScansToQueue(event, context):
+def addScheduledHttpObservatoryScansToQueue(event, context):
     hosts = Hosts()
     hostname_list = hosts.getList()
     for hostname in hostname_list:
         SQS_CLIENT.send_message(
             QueueUrl=os.getenv('SQS_URL'),
             DelaySeconds=2,
-            MessageBody="observatory|" + hostname
+            MessageBody="httpobservatory|" + hostname
             + "|"
         )
-        logger.info("Tasking observatory scan of: " + hostname)
+        logger.info("Tasking http observatory scan of: " + hostname)
 
-    logger.info("Host list has been added to the queue for observatory scan.")
+    logger.info("Host list has been added to the queue for http observatory scan.")
+
+
+def addScheduledSshObservatoryScansToQueue(event, context):
+    hosts = Hosts()
+    hostname_list = hosts.getList()
+    for hostname in hostname_list:
+        SQS_CLIENT.send_message(
+            QueueUrl=os.getenv('SQS_URL'),
+            DelaySeconds=2,
+            MessageBody="sshobservatory|" + hostname
+            + "|"
+        )
+        logger.info("Tasking ssh observatory scan of: " + hostname)
+
+    logger.info("Host list has been added to the queue for ssh observatory scan.")
 
 
 def putInQueue(event, context):
