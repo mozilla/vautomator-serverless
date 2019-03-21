@@ -43,12 +43,19 @@ $ curl --header "x-api-key: <API-KEY> -X POST -d '{"target": "www.smh.com.au"}' 
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandPortScan`
 
-- To kick off an Observatory scan on a target on demand:
+- To kick off an HTTP Observatory scan on a target on demand:
 ```
-curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/observatory
+curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/httpobservatory
 {"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
 ```
-  - Observe the target added to the scan queue with: `sls logs -f onDemandObservatoryScan`
+  - Observe the target added to the scan queue with: `sls logs -f onDemandHttpObservatoryScan`
+
+- To kick off an SSH Observatory scan on a target on demand:
+```
+curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/sshobservatory
+{"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
+```
+  - Observe the target added to the scan queue with: `sls logs -f onDemandSshObservatoryScan`
 
 - Verify the queued scans actually run: `sls logs -f RunScanQueue`
 ```
@@ -60,11 +67,13 @@ REPORT RequestId: 2298e8f2-17ac-5e78-8608-bdf388a42dba	Duration: 590.75 ms	Bille
 To confirm all scans were performed and results were stored in S3:
 ```
 $ aws s3 ls s3://<your-bucket-name>
-2019-03-12 15:32:00       6906 infosec.mozilla.org.json
-2019-03-12 22:52:00       6906 infosec.mozilla.org_observatory.json
-2019-03-12 15:42:00       9209 www.mozilla.org.json
-2019-03-12 22:27:00       9209 www.mozilla.org_observatory.json
+2019-03-12 15:32:00       6906 infosec.mozilla.org_tcpscan.json
+2019-03-12 22:52:00       6906 infosec.mozilla.org_httpobservatory.json
+2019-03-12 22:52:00       6906 infosec.mozilla.org_sshobservatory.json
+2019-03-12 15:42:00       9209 www.mozilla.org_tcpscan.json
+2019-03-12 22:27:00       9209 www.mozilla.org_httpobservatory.json
+2019-03-12 22:27:00       9209 www.mozilla.org_sshobservatory.json
 2019-03-07 16:41:27       5630 www.smh.com.au_tcpscan.json
-2019-03-12 22:49:33       5697 www.smh.com.au_observatory.json
-
+2019-03-12 22:49:33       5697 www.smh.com.au_org_httpobservatory.json
+2019-03-12 22:49:33       5697 www.smh.com.au_org_sshobservatory.json
 ```
