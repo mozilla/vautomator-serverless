@@ -61,10 +61,12 @@ To confirm all scans were performed and results were stored in S3:
 ```
 $ aws s3 ls s3://<your-bucket-name>
 2019-03-12 15:32:00       6906 infosec.mozilla.org.json
-2019-03-12 22:52:00       6906 infosec.mozilla.org_observatory.json
+2019-03-12 22:52:00       6906 infosec.mozilla.org_httpobservatory.json
+2019-03-12 22:52:00       6906 infosec.mozilla.org_sshobservatory.json
 2019-03-12 15:42:00       9209 www.mozilla.org.json
-2019-03-12 22:27:00       9209 www.mozilla.org_observatory.json
+2019-03-12 22:27:00       9209 www.mozilla.org_httpobservatory.json
+2019-03-12 22:27:00       9209 www.mozilla.org_sshobservatory.json
 2019-03-07 16:41:27       5630 www.smh.com.au_tcpscan.json
-2019-03-12 22:49:33       5697 www.smh.com.au_observatory.json
-
+2019-03-12 22:49:33       5697 www.smh.com.au_org_httpobservatory.json
+2019-03-12 22:49:33       5697 www.smh.com.au_org_sshobservatory.json
 ```
