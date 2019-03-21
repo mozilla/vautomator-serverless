@@ -43,12 +43,19 @@ $ curl --header "x-api-key: <API-KEY> -X POST -d '{"target": "www.smh.com.au"}' 
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandPortScan`
 
-- To kick off an Observatory scan on a target on demand:
+- To kick off an HTTP Observatory scan on a target on demand:
 ```
-curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/observatory
+curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/httpobservatory
 {"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
 ```
-  - Observe the target added to the scan queue with: `sls logs -f onDemandObservatoryScan`
+  - Observe the target added to the scan queue with: `sls logs -f onDemandHttpObservatoryScan`
+
+- To kick off an SSH Observatory scan on a target on demand:
+```
+curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/sshobservatory
+{"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
+```
+  - Observe the target added to the scan queue with: `sls logs -f onDemandSshObservatoryScan`
 
 - Verify the queued scans actually run: `sls logs -f RunScanQueue`
 ```
