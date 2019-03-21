@@ -65,7 +65,7 @@ def addScheduledPortScansToQueue(event, context):
     logger.info("Host list has been added to the queue for port scan.")
 
 
-def addObservatoryScanToQueue(event, context):
+def addHttpObservatoryScanToQueue(event, context):
     data = json.loads(event['body'])
     if "target" not in data:
         logger.error("Unrecognized payload")
@@ -86,7 +86,38 @@ def addObservatoryScanToQueue(event, context):
     scan_uuid = str(uuid.uuid4())
     print(SQS_CLIENT.send_message(
         QueueUrl=os.getenv('SQS_URL'),
-        MessageBody="observatory|" + target.name
+        MessageBody="httpobservatory|" + target.name
+        + "|" + scan_uuid
+    ))
+
+    return Response({
+        "statusCode": 200,
+        "body": json.dumps({'uuid': scan_uuid})
+    }).with_security_headers()
+
+
+def addSshObservatoryScanToQueue(event, context):
+    data = json.loads(event['body'])
+    if "target" not in data:
+        logger.error("Unrecognized payload")
+        return Response({
+            "statusCode": 500,
+            "body": json.dumps({'error': 'Unrecognized payload'})
+        }).with_security_headers()
+
+    target = Target(data.get('target'))
+    if not target:
+        logger.error("Target validation failed of: " +
+                     target.name)
+        return Response({
+            "statusCode": 400,
+            "body": json.dumps({'error': 'Target was not valid or missing'})
+        }).with_security_headers()
+
+    scan_uuid = str(uuid.uuid4())
+    print(SQS_CLIENT.send_message(
+        QueueUrl=os.getenv('SQS_URL'),
+        MessageBody="sshobservatory|" + target.name
         + "|" + scan_uuid
     ))
 
@@ -110,10 +141,14 @@ def runScanFromQ(event, context):
             if "body" in item:
                 message = item['body']
                 scan_type, target, uuid = message.split('|')
-                if scan_type == "observatory":
+                if scan_type == "httpobservatory":
                     scanner = HTTPObservatoryScanner()
                     scan_result = scanner.scan(target)
-                    send_to_s3(target + "_observatory", scan_result)
+                    send_to_s3(target + "_httpobservatory", scan_result)
+                elif scan_type == "sshobservatory":
+                    scanner = SSHObservatoryScanner()
+                    scan_result = scanner.scan(target)
+                    send_to_s3(target + "_sshobservatory", scan_result)
                 elif scan_type == "portscan":
                     scanner = PortScanner(target)
                     nmap_scanner = scanner.scanTCP()

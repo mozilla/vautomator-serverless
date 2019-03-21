@@ -61,11 +61,18 @@ functions:
           method: POST
           cors: true
           private: ${self:custom.cfg.private}
-  onDemandObservatoryScan:
-    handler: handler.addObservatoryScanToQueue
+  onDemandHttpObservatoryScan:
+    handler: handler.addHttpObservatoryScanToQueue
     events:
       - http:
-          path: ondemand/observatory
+          path: ondemand/httpobservatory
+          method: POST
+          cors: true
+  onDemandSshObservatoryScan:
+    handler: handler.addSshObservatoryScanToQueue
+    events:
+      - http:
+          path: ondemand/sshobservatory
           method: POST
           cors: true
   cronPortScan:
