@@ -85,8 +85,17 @@ functions:
           rate: cron(0 18 ? * WED *)
           # Not enabling this by default as it is intrusive in nature
           enabled: false
-  cronObservatoryScan:
-    handler: handler.addScheduledObservatoryScansToQueue
+  cronHttpObservatoryScan:
+    handler: handler.addScheduledHttpObservatoryScansToQueue
+    timeout: 60
+    events:
+      # Invoke Lambda function once a day
+      # Run at 4 PM UTC every day
+      - schedule: 
+          rate: cron(0 16 * * ? *)
+          enabled: true
+  cronSshObservatoryScan:
+    handler: handler.addScheduledSshObservatoryScansToQueue
     timeout: 60
     events:
       # Invoke Lambda function once a day
