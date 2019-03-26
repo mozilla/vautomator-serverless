@@ -13,26 +13,27 @@ class TLSObservatoryScanner():
     def scan(self, hostname):
         # Initiate the scan
         if self.api_url[-1] != "/":
-            analyze_url = self.api_url + '/analyze?host=' + hostname
+            scan_url = self.api_url + '/scan?target=' + hostname
         else:
-            raise Exception("Invalid API URL specified for Observatory.")
+            raise Exception("Invalid API URL specified for TLS Observatory.")
         results = {}
-        results['scan'] = self.session.post(analyze_url, data=None).json()
+        scan_id = self.session.post(scan_url, data=None).json()['scan_id']
 
-        # Wait for the scan to complete, polling every second
-        results['tests'] = self.__poll(results['scan']['scan_id'])
+        # Wait for the scan to complete, 
+        # polling until completion percentage is 100
+        results['scan'] = self.__poll(scan_id)
         results['host'] = hostname
         return results
 
     def __poll(self, scan_id):
-        url = self.api_url + '/getScanResults?scan=' + str(scan_id)
-        count = 0
-        while count < 60:
+        url = self.api_url + '/results?id=' + str(scan_id)
+        completion_percentage = 0
+        while completion_percentage != 100:
             resp = self.session.get(url).json()
             # This means we got our results back, so return them!
-            if 'content-security-policy' in resp:
+            if resp.status_code == 200 and resp['completion_perc'] == 100:
                 return resp
 
             time.sleep(self.poll_interval)
-            count += 1
-        raise Exception("Unable to get results within 60 seconds")
+            completion_percentage = resp['completion_perc']
+        raise Exception("Unable to get results from TLS observatory API.")

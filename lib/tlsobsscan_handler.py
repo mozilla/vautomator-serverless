@@ -3,15 +3,15 @@ import logging
 import boto3
 import json
 import os
-
 from lib.target import Target
 from lib.response import Response
 from lib.hosts import Hosts
 
 
 class TLSObsScanHandler(object):
-    def __init__(self, sqs_client=boto3.client('sqs', region_name='us-west-2'), logger=logging.getLogger(__name__), region='us-west-2'):
+    def __init__(self, sqs_client=boto3.client('sqs', region_name='us-west-2'), queueURL=os.getenv('SQS_URL'), logger=logging.getLogger(__name__), region='us-west-2'):
         self.sqs_client = sqs_client
+        self.queueURL = queueURL
         self.logger = logger
         self.region = region
 
@@ -35,7 +35,7 @@ class TLSObsScanHandler(object):
 
         scan_uuid = str(uuid.uuid4())
         self.sqs_client.send_message(
-            QueueUrl=os.getenv('SQS_URL'),
+            QueueUrl=self.queueURL,
             MessageBody="tlsobservatory|" + target.name
             + "|" + scan_uuid
         )
@@ -51,7 +51,7 @@ class TLSObsScanHandler(object):
         hostname_list = hosts.getList()
         for hostname in hostname_list:
             self.sqs_client.send_message(
-                QueueUrl=os.getenv('SQS_URL'),
+                QueueUrl=self.queueURL,
                 DelaySeconds=2,
                 MessageBody="tlsobservatory|" + hostname
                 + "|"
