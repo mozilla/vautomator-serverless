@@ -33,6 +33,7 @@ provider:
         - Arn
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
+    TLSOBS_API_URL: 'https://tls-observatory.services.mozilla.com/api/v1'
     # Using Observatory list as source list for scheduled scans as it is comprehensive enough
     # This could be updated later, perhaps to another source, such as pentest-master list?
     HOST_LIST: 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
