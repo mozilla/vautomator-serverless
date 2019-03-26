@@ -46,9 +46,10 @@ class TLSObsScanHandler(object):
             "body": json.dumps({'uuid': scan_uuid})
         }).with_security_headers()
 
-    def queue_scheduled(self, event, context):
-        hosts = Hosts()
-        hostname_list = hosts.getList()
+    def queue_scheduled(self, event, context, hostname_list=[]):
+        if len(hostname_list) == 0:
+            hosts = Hosts()
+            hostname_list = hosts.getList()
         for hostname in hostname_list:
             self.sqs_client.send_message(
                 QueueUrl=self.queueURL,

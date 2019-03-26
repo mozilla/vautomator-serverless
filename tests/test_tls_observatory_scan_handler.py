@@ -1,7 +1,9 @@
 
 import pytest
 import boto3
+import time
 from lib.tlsobsscan_handler import TLSObsScanHandler
+from lib.hosts import Hosts
 from moto import mock_sqs
 from uuid import UUID
 
@@ -39,4 +41,28 @@ class TestTLSObsScanHandler():
         assert scan_type == "tlsobservatory"
         assert target == "ssh.mozilla.com"
         assert UUID(uuid, version=4)
+
+    def test_queue_scheduled(self, sqs):
+        client, queue_url = sqs
+        test_hostlist = [
+            "ssh.mozilla.com",
+            "infosec.mozilla.org",
+            "mozilla.org"
+        ]
+        index = 0
+        test_event = None
+        test_context = None
+        tlsobs_scan_handler = TLSObsScanHandler(client, queue_url)
+        tlsobs_scan_handler.queue_scheduled(test_event, test_context, test_hostlist)
+        
+        # Need to sleep here for at least 6 seconds as queue messages 
+        # have 2 seconds delay until become available
+        time.sleep(7)
+        response = client.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=3)
+        for msg in response['Messages']:
+            scan_type, target, placeholder = msg['Body'].split('|')
+            assert scan_type == "tlsobservatory"
+            assert target == test_hostlist[index]
+            assert placeholder == ""
+            index += 1
 
