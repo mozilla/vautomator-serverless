@@ -5,11 +5,15 @@ This project uses serverless framework and attempts to create a serverless envir
 
 This is under development with more features being added as different branches. The current branch supports:
 - Addition of a target to the scan queue for port scan by an API endpoint (`/ondemand/portscan`). Due to the intrusive nature of this endpoint, it is protected by an API key.
-- Addition of a target to the scan queue for Observatory scan by an API endpoint (`/ondemand/observatory`)
-- Performing requested scan type (port or Observatory) on hosts in the queue
-- Daily scheduled port scans from a hard-coded list of hosts (for PoC purposes, currently disabled)
-- Scheduled HTTP Observatory scans from a hard-coded list of hosts (for PoC purposes, runs every 5 minutes)
-- Manually add a host to the queue (for PoC purposes).
+- Addition of a target to the scan queue for HTTP Observatory scan by an API endpoint (`/ondemand/httpobservatory`)
+- Addition of a target to the scan queue for TLS Observatory scan by an API endpoint (`/ondemand/tlsobservatory`)
+- Addition of a target to the scan queue for SSH Observatory scan by an API endpoint (`/ondemand/sshobservatory`)
+- Performing requested scan type (port, HTTP Observatory,  TLS Observatory or SSH Observatory) on hosts in the queue
+- Scheduled port scans from a hard-coded list of hosts (for PoC purposes, currently disabled)
+- Scheduled HTTP Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
+- Scheduled TLS Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
+- Scheduled SSH Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
+- Manually add a host to the scan queue (for PoC purposes).
 
 Results from all scans are placed in an S3 bucket specified in `serverless.yml`.
 
@@ -29,7 +33,7 @@ _**Note:** UDP port scans are not supported as Lamdba functions can not be as ro
 
 ## Running
 
-- Scheduled Observatory scans will run every 5 mins: `serverless logs -f cronObservatoryScan`
+- Scheduled Observatory scans will run once a day: `serverless logs -f cronHttpObservatoryScan`
 
 ```
 START RequestId: 6a3bc71b-e369-498c-849c-f522e79ce734 Version: $LATEST
@@ -52,10 +56,17 @@ curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/o
 
 - To kick off an SSH Observatory scan on a target on demand:
 ```
-curl -X POST -d '{"target": "www.smh.com.au"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/sshobservatory
+curl -X POST -d '{"target": "www.mozilla.org"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/sshobservatory
 {"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
 ```
   - Observe the target added to the scan queue with: `sls logs -f onDemandSshObservatoryScan`
+
+- To kick off a TLS Observatory scan on a target on demand:
+```
+curl -X POST -d '{"target": "www.mozilla.org"}' https://<YOUR-API-ENDPOINT>/dev/ondemand/tlsobservatory
+{"uuid": "a542444e-8df3-47b5-a2b8-3e1b0f3c6668"}
+```
+  - Observe the target added to the scan queue with: `sls logs -f onDemandTlsObservatoryScan`
 
 - Verify the queued scans actually run: `sls logs -f RunScanQueue`
 ```
@@ -74,6 +85,7 @@ $ aws s3 ls s3://<your-bucket-name>
 2019-03-12 22:27:00       9209 www.mozilla.org_httpobservatory.json
 2019-03-12 22:27:00       9209 www.mozilla.org_sshobservatory.json
 2019-03-07 16:41:27       5630 www.smh.com.au_tcpscan.json
-2019-03-12 22:49:33       5697 www.smh.com.au_org_httpobservatory.json
-2019-03-12 22:49:33       5697 www.smh.com.au_org_sshobservatory.json
+2019-03-12 22:49:33       5697 www.smh.com.au_httpobservatory.json
+2019-03-12 22:49:33       5697 www.smh.com.au_sshobservatory.json
+2019-03-17 20:42:54       5697 www.mozilla.org_tlsobservatory.json
 ```
