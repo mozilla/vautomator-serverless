@@ -29,10 +29,10 @@ class TLSObservatoryScanner():
         url = self.api_url + '/results?id=' + str(scan_id)
         completion_percentage = 0
         while completion_percentage != 100:
-            resp = self.session.get(url).json()
+            resp = self.session.get(url)
             # This means we got our results back, so return them!
-            if resp.status_code == 200 and resp['completion_perc'] == 100:
-                return resp
+            if resp.status_code == 200 and resp.json()['completion_perc'] == 100:
+                return resp.json()
 
             time.sleep(self.poll_interval)
             completion_percentage = resp['completion_perc']
