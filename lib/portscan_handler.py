@@ -10,9 +10,10 @@ from lib.hosts import Hosts
 
 
 class PortScanHandler(object):
-    def __init__(self, sqs_client=boto3.client('sqs', region_name='us-west-2'), logger=logging.getLogger(__name__), region='us-west-2'):
+    def __init__(self, sqs_client=boto3.client('sqs', region_name='us-west-2'), queueURL=os.getenv('SQS_URL'), logger=logging.getLogger(__name__), region='us-west-2'):
         self.sqs_client = sqs_client
         self.logger = logger
+        self.queueURL = queueURL
         self.region = region
 
     def queue(self, event, context):
@@ -34,11 +35,12 @@ class PortScanHandler(object):
             }).with_security_headers()
 
         scan_uuid = str(uuid.uuid4())
-        print(self.sqs_client.send_message(
-            QueueUrl=os.getenv('SQS_URL'),
+
+        self.sqs_client.send_message(
+            QueueUrl=self.queueURL,
             MessageBody="portscan|" + target.name
             + "|" + scan_uuid
-        ))
+        )
 
         # Use a UUID for the scan type and return it
         return Response({
@@ -46,12 +48,15 @@ class PortScanHandler(object):
             "body": json.dumps({'uuid': scan_uuid})
         }).with_security_headers()
 
-    def queue_scheduled(self, event, context):
-        hosts = Hosts()
-        hostname_list = hosts.getList()
+    def queue_scheduled(self, event, context, hostname_list=[]):
+        if len(hostname_list) == 0:
+            hosts = Hosts()
+            hostname_list = hosts.getList()
+
         for hostname in hostname_list:
+
             self.sqs_client.send_message(
-                QueueUrl=os.getenv('SQS_URL'),
+                QueueUrl=self.queueURL,
                 DelaySeconds=2,
                 MessageBody="portscan|" + hostname
                 + "|"
