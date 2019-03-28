@@ -11,58 +11,9 @@ from lib.response import Response
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from lib.hosts import Hosts
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 SQS_CLIENT = boto3.client('sqs')
-
-
-def addPortScanToQueue(event, context):
-    data = json.loads(event['body'])
-    if "target" not in data:
-        logger.error("Unrecognized payload")
-        return Response({
-            "statusCode": 500,
-            "body": json.dumps({'error': 'Unrecognized payload'})
-        }).with_security_headers()
-
-    target = Target(data.get('target'))
-    if not target:
-        logger.error("Target validation failed of: " +
-                     target.name)
-        return Response({
-            "statusCode": 400,
-            "body": json.dumps({'error': 'Target was not valid or missing'})
-        }).with_security_headers()
-
-    scan_uuid = str(uuid.uuid4())
-    print(SQS_CLIENT.send_message(
-        QueueUrl=os.getenv('SQS_URL'),
-        MessageBody="portscan|" + target.name
-        + "|" + scan_uuid
-    ))
-
-    # Use a UUID for the scan type and return it
-    return Response({
-        "statusCode": 200,
-        "body": json.dumps({'uuid': scan_uuid})
-    }).with_security_headers()
-
-
-def addScheduledPortScansToQueue(event, context):
-
-    hosts = Hosts()
-    hostname_list = hosts.getList()
-    for hostname in hostname_list:
-        SQS_CLIENT.send_message(
-            QueueUrl=os.getenv('SQS_URL'),
-            DelaySeconds=2,
-            MessageBody="portscan|" + hostname
-            + "|"
-        )
-        logger.info("Tasking port scan of: " + hostname)
-
-    logger.info("Host list has been added to the queue for port scan.")
 
 
 def addHttpObservatoryScanToQueue(event, context):

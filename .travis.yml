@@ -1,9 +1,12 @@
 language: python
 python:
   - "3.6"
-# command to install dependencies
+before_install:
+  - export BOTO_CONFIG=/dev/null
 install:
   - pip install -r requirements.txt
+  # This is a workaround for issue: https://github.com/spulec/moto/issues/1941
+  - pip install -e git+https://github.com/spulec/moto@master#egg=moto
 # command to run tests
 script:
-- PYTHONPATH=. pytest tests/
+- PYTHONPATH=. python3 -m pytest tests/
