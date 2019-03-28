@@ -35,9 +35,13 @@ def print_callback(message, context):
                     logger.info("Sends POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan")
                     logger.info("Triggered a Port Scan of: {}".format(fqdn))
 
-                    # TODO: add relevant tasking call here to /ondemand/observatoryscan
-                    logger.info("Sends POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/observatory")
+                    # TODO: add relevant tasking call here to /ondemand/httpobservatory
+                    logger.info("Sends POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/httpobservatory")
                     logger.info("Triggered an Observatory Scan of: {}".format(fqdn))
+
+                    # TODO: add relevant tasking call here to /ondemand/tlsobservatoryscan
+                    logger.info("Sends POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/tlsobservatory")
+                    logger.info("Triggered an SSH Observatory Scan of: {}".format(fqdn))
 
 
 logging.basicConfig(format='[%(levelname)s:%(name)s] %(asctime)s - %(message)s', level=logging.INFO)
