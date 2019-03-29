@@ -56,6 +56,7 @@ package:
 functions:
   onDemandPortScan:
     handler: handler.addPortScanToQueue
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for port scan.
     events:
       - http:
           path: ondemand/portscan
@@ -64,6 +65,7 @@ functions:
           private: ${self:custom.cfg.private}
   onDemandHttpObservatoryScan:
     handler: handler.addHttpObservatoryScanToQueue
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for HTTP Observatory scan.
     events:
       - http:
           path: ondemand/httpobservatory
@@ -71,6 +73,7 @@ functions:
           cors: true
   onDemandSshObservatoryScan:
     handler: handler.addSshObservatoryScanToQueue
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for SSH Observatory scan.
     events:
       - http:
           path: ondemand/sshobservatory
@@ -78,6 +81,7 @@ functions:
           cors: true
   onDemandTlsObservatoryScan:
     handler: lib/tlsobsscan_handler.queue
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for TLS Observatory scan.
     events:
       - http:
           path: ondemand/tlsobservatory
@@ -85,6 +89,7 @@ functions:
           cors: true 
   cronPortScan:
     handler: handler.addScheduledPortScansToQueue
+    description: Cron job which adds a list of hosts to the scan queue for port scan.
     timeout: 60
     events:
       # Invoke Lambda function once a week
@@ -95,6 +100,7 @@ functions:
           enabled: false
   cronHttpObservatoryScan:
     handler: handler.addScheduledHttpObservatoryScansToQueue
+    description: Cron job which adds a list of hosts to the scan queue for HTTP Observartory scan.
     timeout: 60
     events:
       # Invoke Lambda function once a day
@@ -104,6 +110,7 @@ functions:
           enabled: true
   cronTlsObservatoryScan:
     handler: lib/tlsobsscan_handler.queue_scheduled
+    description: Cron job which adds a list of hosts to the scan queue for TLS Observatory scan.
     timeout: 60
     events:
       # Invoke Lambda function once a day
@@ -113,6 +120,7 @@ functions:
           enabled: true
   cronSshObservatoryScan:
     handler: handler.addScheduledSshObservatoryScansToQueue
+    description: Cron job which adds a list of hosts to the scan queue for SSH Observatory scan.
     timeout: 60
     events:
       # Invoke Lambda function once a day
@@ -122,6 +130,7 @@ functions:
           enabled: true
   RunScanQueue:
     handler: handler.runScanFromQ
+    description: Function that is triggered to run scans when new messages are in the queue.
     # Giving this function a large timeout so port scans could run
     timeout: 300
     events:
@@ -130,8 +139,8 @@ functions:
             Fn::GetAtt: [ SQSQueue, Arn ]
           batchSize: 1
   ingest:
-    # Demo function, not called on an event, but manually
     handler: handler.putInQueue
+    description: This is a demo function that can be called manually, not called on an event.
 
 plugins:
   - serverless-python-requirements
