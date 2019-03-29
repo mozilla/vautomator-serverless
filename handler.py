@@ -37,11 +37,11 @@ def addSshObservatoryScanToQueue(event, context):
         }).with_security_headers()
 
     scan_uuid = str(uuid.uuid4())
-    print(SQS_CLIENT.send_message(
+    SQS_CLIENT.send_message(
         QueueUrl=os.getenv('SQS_URL'),
         MessageBody="sshobservatory|" + target.name
         + "|" + scan_uuid
-    ))
+    )
 
     return Response({
         "statusCode": 200,
@@ -117,7 +117,7 @@ def putInQueue(event, context):
     ]
     hosts = Hosts(target_list)
     target = Target(hosts.next())
-    print(SQS_CLIENT.send_message(
+    SQS_CLIENT.send_message(
         QueueUrl=os.getenv('SQS_URL'),
         MessageBody="manual|" + target.name
-    ))
+    )
