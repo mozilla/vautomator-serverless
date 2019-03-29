@@ -79,6 +79,7 @@ functions:
           path: ondemand/sshobservatory
           method: POST
           cors: true
+          private: ${self:custom.cfg.private}
   onDemandTlsObservatoryScan:
     handler: lib/tlsobsscan_handler.queue
     description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for TLS Observatory scan.
