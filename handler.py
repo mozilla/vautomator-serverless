@@ -6,9 +6,11 @@ import uuid
 
 from lib.s3_helper import send_to_s3
 from lib.target import Target
-from scanners.port_scanner import PortScanner
 from lib.response import Response
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
+from scanners.ssh_observatory_scanner import SSHObservatoryScanner
+from scanners.tls_observatory_scanner import TLSObservatoryScanner
+from scanners.port_scanner import PortScanner
 from lib.hosts import Hosts
 
 logger = logging.getLogger(__name__)
@@ -100,6 +102,10 @@ def runScanFromQ(event, context):
                     scanner = SSHObservatoryScanner()
                     scan_result = scanner.scan(target)
                     send_to_s3(target + "_sshobservatory", scan_result)
+                elif scan_type == "tlsobservatory":
+                    scanner = TLSObservatoryScanner()
+                    scan_result = scanner.scan(target)
+                    send_to_s3(target + "_tlsobservatory", scan_result)
                 elif scan_type == "portscan":
                     scanner = PortScanner(target)
                     nmap_scanner = scanner.scanTCP()
