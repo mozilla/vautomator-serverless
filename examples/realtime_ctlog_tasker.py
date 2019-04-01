@@ -1,9 +1,5 @@
 import logging
-import sys
-import datetime
 import certstream
-import json
-import requests
 
 # This is an example of a long-running service/process which will monitor for
 # CT Logs in real-time and as soon as a certificat_update action is triggered

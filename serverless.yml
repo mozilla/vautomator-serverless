@@ -63,7 +63,7 @@ functions:
           cors: true
           private: ${self:custom.cfg.private}
   onDemandHttpObservatoryScan:
-    handler: handler.addHttpObservatoryScanToQueue
+    handler: lib/httpobsscan_handler.queue
     events:
       - http:
           path: ondemand/httpobservatory
@@ -94,7 +94,7 @@ functions:
           # Not enabling this by default as it is intrusive in nature
           enabled: false
   cronHttpObservatoryScan:
-    handler: handler.addScheduledHttpObservatoryScansToQueue
+    handler: lib/httpobsscan_handler.queue_scheduled
     timeout: 60
     events:
       # Invoke Lambda function once a day
