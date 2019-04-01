@@ -25,9 +25,9 @@ class TestPortScanner():
         # This is needed for nmap static library to be added to the path
         global result
         original_pathvar = os.environ['PATH']
-        os.environ['PATH'] = original_pathvar \
-            + ':' + os.path.dirname(os.path.realpath(__file__))  \
-            + '/vendor/nmap-standalone/'
+        os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__))  \
+            + '/vendor/nmap-standalone/' + ':' \
+            + original_pathvar
         host_name = "ssh.mozilla.com"
         scanner = PortScanner(host_name)
         nmap_scanner = scanner.scanTCP(self.callback_results)
