@@ -33,6 +33,7 @@ provider:
         - Arn
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
+    TLSOBS_API_URL: 'https://tls-observatory.services.mozilla.com/api/v1'
     # Using Observatory list as source list for scheduled scans as it is comprehensive enough
     # This could be updated later, perhaps to another source, such as pentest-master list?
     HOST_LIST: 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
@@ -62,7 +63,7 @@ functions:
           cors: true
           private: ${self:custom.cfg.private}
   onDemandHttpObservatoryScan:
-    handler: handler.addHttpObservatoryScanToQueue
+    handler: lib/httpobsscan_handler.queue
     events:
       - http:
           path: ondemand/httpobservatory
@@ -75,6 +76,13 @@ functions:
           path: ondemand/sshobservatory
           method: POST
           cors: true
+  onDemandTlsObservatoryScan:
+    handler: lib/tlsobsscan_handler.queue
+    events:
+      - http:
+          path: ondemand/tlsobservatory
+          method: POST
+          cors: true 
   cronPortScan:
     handler: handler.addScheduledPortScansToQueue
     timeout: 60
@@ -86,12 +94,21 @@ functions:
           # Not enabling this by default as it is intrusive in nature
           enabled: false
   cronHttpObservatoryScan:
-    handler: handler.addScheduledHttpObservatoryScansToQueue
+    handler: lib/httpobsscan_handler.queue_scheduled
     timeout: 60
     events:
       # Invoke Lambda function once a day
       # Run at 4 PM UTC every day
       - schedule: 
+          rate: cron(0 16 * * ? *)
+          enabled: true
+  cronTlsObservatoryScan:
+    handler: lib/tlsobsscan_handler.queue_scheduled
+    timeout: 60
+    events:
+      # Invoke Lambda function once a day
+      # Run at 4 PM UTC every day
+      - schedule:
           rate: cron(0 16 * * ? *)
           enabled: true
   cronSshObservatoryScan:

@@ -1,9 +1,5 @@
 import logging
-import sys
-import datetime
 import certstream
-import json
-import requests
 
 # This is an example of a long-running service/process which will monitor for
 # CT Logs in real-time and as soon as a certificat_update action is triggered
@@ -35,12 +31,16 @@ def print_callback(message, context):
                     logger.info("Sends POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan")
                     logger.info("Triggered a Port Scan of: {}".format(fqdn))
 
-                    # TODO: add relevant tasking call here to /ondemand/httpobservatoryscan
+                    # TODO: add relevant tasking call here to /ondemand/httpobservatory
                     logger.info("Sends POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/httpobservatory")
                     logger.info("Triggered an HTTP Observatory Scan of: {}".format(fqdn))
 
-                    # TODO: add relevant tasking call here to /ondemand/sshobservatoryscan
+                    # TODO: add relevant tasking call here to /ondemand/sshobservatory
                     logger.info("Sends POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/sshobservatory")
+                    logger.info("Triggered an SSH Observatory Scan of: {}".format(fqdn))
+
+                    # TODO: add relevant tasking call here to /ondemand/tlsobservatory
+                    logger.info("Sends POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/tlsobservatory")
                     logger.info("Triggered an SSH Observatory Scan of: {}".format(fqdn))
 
 
