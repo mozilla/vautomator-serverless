@@ -70,7 +70,7 @@ functions:
           method: POST
           cors: true
   onDemandSshObservatoryScan:
-    handler: handler.addSshObservatoryScanToQueue
+    handler: lib/sshscan_handler.queue
     events:
       - http:
           path: ondemand/sshobservatory
@@ -112,7 +112,7 @@ functions:
           rate: cron(0 16 * * ? *)
           enabled: true
   cronSshObservatoryScan:
-    handler: handler.addScheduledSshObservatoryScansToQueue
+    handler: lib/sshscan_handler.queue_scheduled
     timeout: 60
     events:
       # Invoke Lambda function once a day
