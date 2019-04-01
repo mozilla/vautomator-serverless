@@ -55,7 +55,7 @@ package:
 
 functions:
   onDemandPortScan:
-    handler: handler.addPortScanToQueue
+    handler: lib/portscan_handler.queue
     events:
       - http:
           path: ondemand/portscan
@@ -84,7 +84,7 @@ functions:
           method: POST
           cors: true 
   cronPortScan:
-    handler: handler.addScheduledPortScansToQueue
+    handler: lib/portscan_handler.queue_scheduled
     timeout: 60
     events:
       # Invoke Lambda function once a week
