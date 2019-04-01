@@ -81,7 +81,6 @@ def runScanFromQ(event, context):
                     while nmap_scanner.still_scanning():
                         # Wait for 1 second after the end of the scan
                         nmap_scanner.wait(1)
-                    send_to_s3(target + "_tcpscan", scanner.results)
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: " +
