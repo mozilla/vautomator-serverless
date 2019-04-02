@@ -73,6 +73,9 @@ functions:
   onDemandHttpObservatoryScan:
     handler: handler.queue_httpboservatory
     description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for HTTP Observatory scan.
+    # Trying the HTTP 500 alarm here
+    alarms:
+      - Error500
     events:
       - http:
           path: ondemand/httpobservatory
@@ -177,6 +180,7 @@ functions:
 
 plugins:
   - serverless-python-requirements
+  - serverless-plugin-aws-alerts
 resources:
   Resources:
     S3BucketResults:
@@ -208,5 +212,23 @@ custom:
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
     private: true # Change to 'false' to disable api-key authorization
+  # Trying custom alerts here  
+  alerts:
+    definitions:
+      Error500:
+        description: 'Error500'
+        metric: Error500
+        threshold: 0
+        statistic: Average
+        period: 300
+        evaluationPeriods: 1
+        comparisonOperator: GreaterThanThreshold
+        pattern: 'METRIC Error500'
+    topics:
+      alarm:
+        topic: ${self:service}-${self:custom.stage}-alerts
+        notifications:
+          - protocol: email
+          - endpoint: culucenk@mozilla.com
   pythonRequirements:
     dockerizePip: true
