@@ -1,8 +1,5 @@
-import sys
 import pytest
-import os
 import boto3
-import json
 import time
 
 from lib.portscan_handler import PortScanHandler

@@ -55,7 +55,7 @@ def runScanFromQ(event, context):
     original_pathvar = os.environ['PATH']
     os.environ['PATH'] = original_pathvar \
         + ':' + os.environ['LAMBDA_TASK_ROOT'] \
-        + '/bin/nmap-standalone/'
+        + '/vendor/nmap-standalone/'
 
     # Read the queue
     for record, keys in event.items():
