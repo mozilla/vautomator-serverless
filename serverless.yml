@@ -1,4 +1,3 @@
-
 service: vautomator-serverless
 frameworkVersion: ">=1.2.0 <2.0.0"
 
@@ -214,6 +213,10 @@ custom:
     private: true # Change to 'false' to disable api-key authorization
   # Trying custom alerts here  
   alerts:
+    stages:
+      - production
+      - staging
+    dashboards: true
     definitions:
       Error500:
         description: 'Error500'
@@ -226,7 +229,7 @@ custom:
         pattern: 'METRIC Error500'
     topics:
       alarm:
-        topic: ${self:service}-${self:custom.stage}-alerts
+        topic: ${self:service}-http500-alerts
         notifications:
           - protocol: email
           - endpoint: culucenk@mozilla.com
