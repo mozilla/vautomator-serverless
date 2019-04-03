@@ -20,7 +20,7 @@ class TestSSHObservatoryScanner():
 
     def test_setting_api_url(self):
         # Stub env var for testing
-        os.environ["SSHOBS_API_URL"] = "https://sshscan.rubidus.com"
+        os.environ["SSHOBS_API_URL"] = "https://sshscan.rubidus.com/api/v1"
 
         scanner = SSHObservatoryScanner()
         assert scanner.poll_interval == 1
@@ -31,7 +31,7 @@ class TestSSHObservatoryScanner():
 
     def test_scan(self):
         # Stub env var for testing
-        os.environ["SSHOBS_API_URL"] = "https://sshscan.rubidus.com"
+        os.environ["SSHOBS_API_URL"] = "https://sshscan.rubidus.com/api/v1"
         host_name = "ssh.mozilla.com"
         scanner = SSHObservatoryScanner()
         scan_result = scanner.scan(host_name)
