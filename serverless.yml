@@ -76,6 +76,7 @@ functions:
           path: ondemand/sshobservatory
           method: POST
           cors: true
+          private: ${self:custom.cfg.private}
   onDemandTlsObservatoryScan:
     handler: handler.queue_tlsobservatory
     events:
