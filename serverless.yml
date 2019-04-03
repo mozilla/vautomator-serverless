@@ -34,6 +34,7 @@ provider:
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
     TLSOBS_API_URL: 'https://tls-observatory.services.mozilla.com/api/v1'
+    SSHOBS_API_URL: 'https://sshscan.rubidus.com/api/v1'
     # Using Observatory list as source list for scheduled scans as it is comprehensive enough
     # This could be updated later, perhaps to another source, such as pentest-master list?
     HOST_LIST: 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
@@ -55,7 +56,7 @@ package:
 
 functions:
   onDemandPortScan:
-    handler: lib/portscan_handler.queue
+    handler: handler.queue_portscan
     events:
       - http:
           path: ondemand/portscan
@@ -63,28 +64,29 @@ functions:
           cors: true
           private: ${self:custom.cfg.private}
   onDemandHttpObservatoryScan:
-    handler: lib/httpobsscan_handler.queue
+    handler: handler.queue_httpboservatory
     events:
       - http:
           path: ondemand/httpobservatory
           method: POST
           cors: true
   onDemandSshObservatoryScan:
-    handler: lib/sshscan_handler.queue
+    handler: handler.queue_sshobservatory
     events:
       - http:
           path: ondemand/sshobservatory
           method: POST
           cors: true
+          private: ${self:custom.cfg.private}
   onDemandTlsObservatoryScan:
-    handler: lib/tlsobsscan_handler.queue
+    handler: handler.queue_tlsobservatory
     events:
       - http:
           path: ondemand/tlsobservatory
           method: POST
           cors: true 
   cronPortScan:
-    handler: lib/portscan_handler.queue_scheduled
+    handler: handler.queue_scheduled_portscan
     timeout: 60
     events:
       # Invoke Lambda function once a week
@@ -94,7 +96,7 @@ functions:
           # Not enabling this by default as it is intrusive in nature
           enabled: false
   cronHttpObservatoryScan:
-    handler: lib/httpobsscan_handler.queue_scheduled
+    handler: handler.queue_scheduled_httpobservatory
     timeout: 60
     events:
       # Invoke Lambda function once a day
@@ -103,7 +105,7 @@ functions:
           rate: cron(0 16 * * ? *)
           enabled: true
   cronTlsObservatoryScan:
-    handler: lib/tlsobsscan_handler.queue_scheduled
+    handler: handler.queue_scheduled_tlsobservatory
     timeout: 60
     events:
       # Invoke Lambda function once a day
@@ -112,7 +114,7 @@ functions:
           rate: cron(0 16 * * ? *)
           enabled: true
   cronSshObservatoryScan:
-    handler: lib/sshscan_handler.queue_scheduled
+    handler: handler.queue_scheduled_sshobservatory
     timeout: 60
     events:
       # Invoke Lambda function once a day
