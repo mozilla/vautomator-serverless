@@ -29,7 +29,5 @@ flake8:
 
 .PHONY: clean
 clean:
-	rm -rf .eggs
-	rm -rf .pytest_cache
+	find . -name .pytest_cache -type d -exec rm -rf {}\;
 	find . -name __pycache__ -type d -exec rm -rf {}\;
-	rm -rf vautomator.egg-info
