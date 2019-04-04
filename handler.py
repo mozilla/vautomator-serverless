@@ -99,11 +99,9 @@ def runScanFromQ(event, context):
                         nmap_scanner.wait(1)
                 else:
                     # Manually invoked, just log the message
-                    logger.info("Message in queue: " +
-                                message)
+                    logger.info("Message in queue: {}".format(message))
             else:
-                logger.error("Unrecognized message in queue: " +
-                             message)
+                logger.error("Unrecognized message in queue: {}".format(message))
 
     os.environ['PATH'] = original_pathvar
 

@@ -26,8 +26,7 @@ class TLSObsScanHandler(object):
 
         target = Target(data.get('target'))
         if not target:
-            self.logger.error("Target validation failed of: " +
-                              target.name)
+            self.logger.error("Target validation failed of: {}".format(target.name))
             return Response({
                 "statusCode": 400,
                 "body": json.dumps({'error': 'Target was not valid or missing'})
@@ -57,7 +56,7 @@ class TLSObsScanHandler(object):
                 MessageBody="tlsobservatory|" + hostname
                 + "|"
             )
-            self.logger.info("Tasking TLS observatory scan of: " + hostname)
+            self.logger.info("Tasking TLS observatory scan of: {}".format(hostname))
 
         self.logger.info("Host list has been added to the queue "
                          "for TLS observatory scan.")
