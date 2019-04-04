@@ -21,6 +21,7 @@ test:
 
 .PHONY: flake8
 flake8:
+	flake8 ./*py
 	flake8 lib/*py
 	flake8 scanners/*py
 	flake8 examples/*py

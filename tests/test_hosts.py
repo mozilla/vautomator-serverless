@@ -8,7 +8,7 @@ from lib.hosts import Hosts
 class TestHosts():
     def test_with_no_hosts(self):
         hosts = Hosts()
-        assert hosts.next() == None
+        assert hosts.next() is None
 
     def test_with_hosts(self):
         hostname_array = [

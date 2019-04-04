@@ -19,7 +19,7 @@ class TLSObservatoryScanner():
         results = {}
         scan_id = self.session.post(scan_url, data=None).json()['scan_id']
 
-        # Wait for the scan to complete, 
+        # Wait for the scan to complete,
         # polling until completion percentage is 100
         results['scan'] = self.__poll(scan_id)
         results['host'] = hostname

@@ -64,4 +64,3 @@ class SSHScanHandler(object):
             self.logger.info("Tasking SSH observatory scan of: " + hostname)
 
         self.logger.info("Host list has been added to the queue for SSH observatory scan.")
-        

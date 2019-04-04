@@ -5,9 +5,9 @@ from urllib.parse import urlparse
 
 class Target:
     def __init__(self, target_string):
-        assert self._valid_class(target_string) == True
-        assert self._valid_pattern(target_string) == True
-        assert (self._valid_ip(target_string) == True or self._valid_fqdn(target_string) == True)
+        assert self._valid_class(target_string)
+        assert self._valid_pattern(target_string)
+        assert (self._valid_ip(target_string) or self._valid_fqdn(target_string))
         self.name = target_string
 
     @classmethod

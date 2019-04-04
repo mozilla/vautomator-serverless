@@ -55,15 +55,15 @@ class TestHTTPObsScanHandler():
         httpobs_scan_handler = HTTPObsScanHandler(client, queue_url)
         httpobs_scan_handler.queue_scheduled(
             test_event, test_context, test_hostlist
-            )
-        
-        # Need to sleep here for at least 6 seconds as queue messages 
+        )
+
+        # Need to sleep here for at least 6 seconds as queue messages
         # have 2 seconds delay until become available
         time.sleep(7)
         response = client.receive_message(
-            QueueUrl=queue_url, 
+            QueueUrl=queue_url,
             MaxNumberOfMessages=3
-            )
+        )
         for msg in response['Messages']:
             scan_type, target, placeholder = msg['Body'].split('|')
             assert scan_type == "httpobservatory"
