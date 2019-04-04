@@ -9,22 +9,20 @@ class PortScanner():
         self.host = hostname
         self.arguments = "".join(sanitise_shell_cmd(arguments))
         self.privileged = False
-    
+
     def scanTCP(self, callback_function=None):
         nma = nmap.PortScannerAsync()
         if not callback_function:
-            nma.scan(self.host, arguments=self.arguments, 
-                     sudo=self.privileged, 
+            nma.scan(self.host, arguments=self.arguments,
+                     sudo=self.privileged,
                      callback=self.callback_results
                      )
         else:
-            nma.scan(self.host, arguments=self.arguments, 
-                     sudo=self.privileged, 
+            nma.scan(self.host, arguments=self.arguments,
+                     sudo=self.privileged,
                      callback=callback_function
                      )
         return nma
 
     def callback_results(self, hostname, scan_result):
         send_to_s3(self.host + "_tcpscan", scan_result)
-
-

@@ -13,14 +13,14 @@ class TestPortScanner():
         assert 'command_line' in scan_result['nmap']
         assert 'elapsed' in scan_result['nmap'] and \
             scan_result['nmap']['elapsed'] > 0.0
-        
+
     def test_defaults(self):
         host_name = "ssh.mozilla.com"
         scanner = PortScanner(host_name)
         assert not scanner.privileged
         assert scanner.arguments == ("-v -Pn -sT -sV --script=banner "
                                      "--top-ports 1000 --open -T4 --system-dns")
-    
+
     # This will never succeed in Travis, because
     # it relies on nmap being installed/available
     # locally, therefore adding a condition

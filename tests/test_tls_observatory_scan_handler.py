@@ -54,8 +54,8 @@ class TestTLSObsScanHandler():
         test_context = None
         tlsobs_scan_handler = TLSObsScanHandler(client, queue_url)
         tlsobs_scan_handler.queue_scheduled(test_event, test_context, test_hostlist)
-        
-        # Need to sleep here for at least 6 seconds as queue messages 
+
+        # Need to sleep here for at least 6 seconds as queue messages
         # have 2 seconds delay until become available
         time.sleep(7)
         response = client.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=3)
@@ -65,4 +65,3 @@ class TestTLSObsScanHandler():
             assert target == test_hostlist[index]
             assert placeholder == ""
             index += 1
-

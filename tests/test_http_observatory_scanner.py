@@ -11,12 +11,12 @@ class TestHTTPObservatoryScanner():
     def test_defaults(self):
         scanner = HTTPObservatoryScanner()
         assert scanner.poll_interval == 1
-        assert scanner.api_url == None
+        assert scanner.api_url is None
 
     def test_setting_poll_interval(self):
         scanner = HTTPObservatoryScanner(2)
         assert scanner.poll_interval == 2
-        assert scanner.api_url == None
+        assert scanner.api_url is None
 
     def test_setting_api_url(self):
         # Stub env var for testing
