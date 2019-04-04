@@ -2,22 +2,22 @@ ROOT_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 AWS_REGION	:= us-west-2
 
 all:
-    @echo 'Available make targets:'
-    @grep '^[^#[:space:]^\.PHONY.*].*:' Makefile
+	@echo 'Available make targets:'
+	@grep '^[^#[:space:]^\.PHONY.*].*:' Makefile
 
 .PHONY: validate
 validate:
-    npm install serverless-python-requirements --save-dev && \
-    sls deploy --noDeploy --region $(AWS_REGION)
+	npm install serverless-python-requirements --save-dev && \
+	sls deploy --noDeploy --region $(AWS_REGION)
 
 .PHONY: deploy
 deploy:
 	npm install serverless-python-requirements --save-dev && \
-    sls deploy --region $(AWS_REGION)
+	sls deploy --region $(AWS_REGION)
 
 .PHONY: test
 test:
-    python3 -m pytest tests/
+	python3 -m pytest tests/
 
 .PHONY: flake8
 flake8:
