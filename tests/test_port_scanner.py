@@ -24,8 +24,8 @@ class TestPortScanner():
     # This will never succeed in Travis, because
     # it relies on nmap being installed/available
     # locally, therefore adding a condition
-    @pytest.mark.skipif("TRAVIS" in os.environ and
-                        os.environ["TRAVIS"] == "true",
+    @pytest.mark.skipif("TRAVIS" in os.environ
+                        and os.environ["TRAVIS"] == "true",
                         reason="Skipping this test on Travis CI.")
     def test_scan(self):
         # This is needed for nmap static library to be added to the path
