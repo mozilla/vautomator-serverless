@@ -1,19 +1,22 @@
 ROOT_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 AWS_REGION	:= us-west-2
+AWS_PROFILE := 
 
 all:
 	@echo 'Available make targets:'
 	@grep '^[^#[:space:]^\.PHONY.*].*:' Makefile
 
 .PHONY: validate
+validate: export AWS_SDK_LOAD_CONFIG=true
 validate:
 	npm install serverless-python-requirements --save-dev && \
-	sls deploy --noDeploy --region $(AWS_REGION)
+	sls deploy --noDeploy --region $(AWS_REGION) --aws-profile $(AWS_PROFILE)
 
 .PHONY: deploy
+deploy: export AWS_SDK_LOAD_CONFIG=true
 deploy:
 	npm install serverless-python-requirements --save-dev && \
-	sls deploy --region $(AWS_REGION)
+	sls deploy --region $(AWS_REGION) --aws-profile $(AWS_PROFILE)
 
 .PHONY: test
 test:
