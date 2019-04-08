@@ -1,9 +1,9 @@
-
 service: vautomator-serverless
 frameworkVersion: ">=1.2.0 <2.0.0"
 
 provider:
   name: aws
+  stage: dev
   runtime: python3.6
   region: us-west-2
   stackTags:
@@ -41,6 +41,12 @@ provider:
     # Using Observatory list as source list for scheduled scans as it is comprehensive enough
     # This could be updated later, perhaps to another source, such as pentest-master list?
     HOST_LIST: 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
+    GATEWAT_URL:
+      Fn::Join:
+        - ""
+        - - "https://"
+          - Ref: "ApiGatewayRestApi"
+          - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}"
     SQS_URL:
       Ref: SQSQueue
   apiKeys:
@@ -73,6 +79,8 @@ functions:
   onDemandHttpObservatoryScan:
     handler: handler.queue_httpboservatory
     description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for HTTP Observatory scan.
+    alarms:
+      - UnrecognizedErrorAlarm
     events:
       - http:
           path: ondemand/httpobservatory
@@ -176,9 +184,20 @@ functions:
       TYPE: demo
 
 plugins:
+  - serverless-plugin-aws-alerts
   - serverless-python-requirements
 resources:
   Resources:
+    ServerlessCloudWatchCustomMetricFilter:
+      Type: "AWS::Logs::MetricFilter"
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-dev-onDemandHttpObservatoryScan
+        FilterPattern: "Unrecognized"
+        MetricTransformations:
+          - MetricValue: "0"
+            DefaultValue: "0"
+            MetricNamespace: ${self:service}-${self:provider.stage}
+            MetricName: unrecognized-error
     S3BucketResults:
       Type: AWS::S3::Bucket
       Properties:
@@ -208,5 +227,26 @@ custom:
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
     private: true # Change to 'false' to disable api-key authorization
+  alerts:
+    dashboards: true
+    topics: 
+      alarm:
+        topic: ${self:service}-${self:provider.stage}-UnrecognizedError-alarm
+        notifications:
+          - protocol: email
+            endpoint: culucenk@mozilla.com
+    definitions:
+      UnrecognizedErrorAlarm:
+        description: 'Fires when unrecognized error returned.'
+        namespace: 'AWS/Lambda'
+        metric: unrecognized-error
+        threshold: 1
+        statistic: Sum
+        period: 60
+        evaluationPeriods: 1
+        comparisonOperator: GreaterThanOrEqualToThreshold
+        treatMissingData: missing
+    alarms:
+      - UnrecognizedErrorAlarm
   pythonRequirements:
     dockerizePip: true

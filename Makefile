@@ -1,6 +1,6 @@
 ROOT_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 AWS_REGION	:= us-west-2
-AWS_PROFILE := 
+AWS_PROFILE := infosec-dev-admin
 
 all:
 	@echo 'Available make targets:'
@@ -10,12 +10,14 @@ all:
 validate: export AWS_SDK_LOAD_CONFIG=true
 validate:
 	npm install serverless-python-requirements --save-dev && \
+	npm install serverless-plugin-aws-alerts --save-dev && \
 	sls deploy --noDeploy --region $(AWS_REGION) --aws-profile $(AWS_PROFILE)
 
 .PHONY: deploy
 deploy: export AWS_SDK_LOAD_CONFIG=true
 deploy:
 	npm install serverless-python-requirements --save-dev && \
+	npm install serverless-plugin-aws-alerts --save-dev && \
 	sls deploy --region $(AWS_REGION) --aws-profile $(AWS_PROFILE)
 
 .PHONY: test

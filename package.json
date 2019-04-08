@@ -8,6 +8,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "serverless-plugin-aws-alerts": "^1.2.4",
     "serverless-python-requirements": "^4.3.0"
   },
   "scripts": {

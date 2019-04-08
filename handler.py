@@ -1,7 +1,6 @@
 import logging
 import boto3
 import os
-
 from lib.s3_helper import send_to_s3
 from lib.target import Target
 from lib.portscan_handler import PortScanHandler
@@ -13,6 +12,7 @@ from scanners.ssh_observatory_scanner import SSHObservatoryScanner
 from scanners.tls_observatory_scanner import TLSObservatoryScanner
 from scanners.port_scanner import PortScanner
 from lib.hosts import Hosts
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
