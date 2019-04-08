@@ -68,4 +68,3 @@ class TestSSHScanHandler():
             assert target == test_hostlist[index]
             assert placeholder == ""
             index += 1
-            

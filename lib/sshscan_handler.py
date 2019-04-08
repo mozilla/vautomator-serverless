@@ -27,8 +27,7 @@ class SSHScanHandler(object):
 
         target = Target(data.get('target'))
         if not target:
-            self.logger.error("Target validation failed of: " +
-                              target.name)
+            self.logger.error("Target validation failed of: {}".format(target.name))
             return Response({
                 "statusCode": 400,
                 "body": json.dumps({'error': 'Target was not valid or missing'})
@@ -61,7 +60,6 @@ class SSHScanHandler(object):
                 MessageBody="sshobservatory|" + hostname
                 + "|"
             )
-            self.logger.info("Tasking SSH observatory scan of: " + hostname)
+            self.logger.info("Tasking SSH observatory scan of: {}".format(hostname))
 
         self.logger.info("Host list has been added to the queue for SSH observatory scan.")
-        

@@ -6,6 +6,9 @@ provider:
   name: aws
   runtime: python3.6
   region: us-west-2
+  stackTags:
+    PRODUCT_NAME: "vautomator-serverless-app"
+    SERVICE_NAME: "vautomator"
   # To use the bucket specified, we will need permissions
   iamRoleStatements:
    - Effect: "Allow"
@@ -57,36 +60,53 @@ package:
 functions:
   onDemandPortScan:
     handler: handler.queue_portscan
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for port scan.
     events:
       - http:
           path: ondemand/portscan
           method: POST
           cors: true
           private: ${self:custom.cfg.private}
+    tags:
+      TYPE: ondemand
+      SCAN_TYPE: port
   onDemandHttpObservatoryScan:
     handler: handler.queue_httpboservatory
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for HTTP Observatory scan.
     events:
       - http:
           path: ondemand/httpobservatory
           method: POST
           cors: true
+    tags:
+      TYPE: ondemand
+      SCAN_TYPE: http-observatory
   onDemandSshObservatoryScan:
     handler: handler.queue_sshobservatory
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for SSH Observatory scan.
     events:
       - http:
           path: ondemand/sshobservatory
           method: POST
           cors: true
           private: ${self:custom.cfg.private}
+    tags:
+      TYPE: ondemand
+      SCAN_TYPE: ssh-observatory
   onDemandTlsObservatoryScan:
     handler: handler.queue_tlsobservatory
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for TLS Observatory scan.
     events:
       - http:
           path: ondemand/tlsobservatory
           method: POST
-          cors: true 
+          cors: true
+    tags:
+      TYPE: ondemand
+      SCAN_TYPE: tls-observatory
   cronPortScan:
     handler: handler.queue_scheduled_portscan
+    description: Cron job which adds a list of hosts to the scan queue for port scan.
     timeout: 60
     events:
       # Invoke Lambda function once a week
@@ -95,8 +115,12 @@ functions:
           rate: cron(0 18 ? * WED *)
           # Not enabling this by default as it is intrusive in nature
           enabled: false
+    tags:
+      TYPE: cron
+      SCAN_TYPE: port
   cronHttpObservatoryScan:
     handler: handler.queue_scheduled_httpobservatory
+    description: Cron job which adds a list of hosts to the scan queue for HTTP Observartory scan.
     timeout: 60
     events:
       # Invoke Lambda function once a day
@@ -104,8 +128,12 @@ functions:
       - schedule: 
           rate: cron(0 16 * * ? *)
           enabled: true
+    tags:
+      TYPE: cron
+      SCAN_TYPE: http-observatory
   cronTlsObservatoryScan:
     handler: handler.queue_scheduled_tlsobservatory
+    description: Cron job which adds a list of hosts to the scan queue for TLS Observatory scan.
     timeout: 60
     events:
       # Invoke Lambda function once a day
@@ -113,8 +141,12 @@ functions:
       - schedule:
           rate: cron(0 16 * * ? *)
           enabled: true
+    tags:
+      TYPE: cron
+      SCAN_TYPE: tls-observatory
   cronSshObservatoryScan:
     handler: handler.queue_scheduled_sshobservatory
+    description: Cron job which adds a list of hosts to the scan queue for SSH Observatory scan.
     timeout: 60
     events:
       # Invoke Lambda function once a day
@@ -122,8 +154,12 @@ functions:
       - schedule: 
           rate: cron(0 16 * * ? *)
           enabled: true
+    tags:
+      TYPE: cron
+      SCAN_TYPE: ssh-observatory
   RunScanQueue:
     handler: handler.runScanFromQ
+    description: Function that is triggered to run scans when new messages are in the queue.
     # Giving this function a large timeout so port scans could run
     timeout: 300
     events:
@@ -131,9 +167,13 @@ functions:
           arn:
             Fn::GetAtt: [ SQSQueue, Arn ]
           batchSize: 1
+    tags:
+      TYPE: async
   ingest:
-    # Demo function, not called on an event, but manually
     handler: handler.putInQueue
+    description: This is a demo function that can be called manually, not called on an event.
+    tags:
+      TYPE: demo
 
 plugins:
   - serverless-python-requirements
