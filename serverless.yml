@@ -75,7 +75,33 @@ functions:
     description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for HTTP Observatory scan.
     # Trying the HTTP 500 alarm here
     alarms:
-      - Error500
+      # Alert on any errors (very generic alert)
+      - functionErrors
+      # If you created a custom alert definition (on line 74), use it on a function here
+      # - customAlarm
+      # Below, we are creating a custom metric, and alerting on that
+      # This is possible due to the use of the plugin, however is not very configurable
+      # Need to make sure to select a descriptive name and a good description
+      # Here, basically we are alerting on the first instance of an unhandled exception
+      - name: Error500
+        description: 'Alert when HTTP 500 is returned'
+        namespace: 'AWS/Lambda'
+        metric: Error500   # define custom metrics here
+        threshold: 0
+        statistic: Average
+        period: 300
+        evaluationPeriods: 1
+        comparisonOperator: GreaterThanThreshold
+        treatMissingData: notBreaching
+        # Pattern specified here will scan the lambda function logs for this pattern
+        # If there is a match, it will raise this alarm
+        # Format here follows CloudWatch metric filter format
+        # See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html
+        # Below is an example pattern which would match on a log like:
+        # {"level": "ERROR", "message": "Some message"} 
+        # pattern: '{($.level = "ERROR") && ($.message = *)}'
+        # Let's set a simpler pattern so it would keep alerting on unhandled exceptions
+        pattern: 'METRIC Error500'
     events:
       - http:
           path: ondemand/httpobservatory
@@ -179,8 +205,8 @@ functions:
       TYPE: demo
 
 plugins:
-  - serverless-python-requirements
   - serverless-plugin-aws-alerts
+  - serverless-python-requirements
 resources:
   Resources:
     S3BucketResults:
@@ -211,28 +237,18 @@ custom:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
+    notifications:
+      - protocol: email
+      - endpoint: culucenk@mozilla.com      # Change this to your email address
     private: true # Change to 'false' to disable api-key authorization
   # Trying custom alerts here  
   alerts:
-    stages:
-      - production
-      - staging
     dashboards: true
-    definitions:
-      Error500:
-        description: 'Error500'
-        metric: Error500
-        threshold: 0
-        statistic: Average
-        period: 300
-        evaluationPeriods: 1
-        comparisonOperator: GreaterThanThreshold
-        pattern: 'METRIC Error500'
     topics:
       alarm:
-        topic: ${self:service}-http500-alerts
-        notifications:
-          - protocol: email
-          - endpoint: culucenk@mozilla.com
+        topic: ${self:service}-${self:provider.stage}-http500-alerts
+        notifications: ${self:custom.cfg.notifications}
+    function:
+      - functionErrors
   pythonRequirements:
     dockerizePip: true
