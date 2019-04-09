@@ -1,7 +1,6 @@
 import logging
 import sys
 import requests
-import os
 import json
 import time
 from lib.target import Target
@@ -12,6 +11,7 @@ from lib.target import Target
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+API_GW_URL = "https://y2ippncfd1.execute-api.us-west-2.amazonaws.com"
 
 fqdn = input("Provide the FQDN (Fully Qualified Domain Name) you want to scan: ")
 # TODO: add relevant tasking call here to /ondemand/portscan
@@ -20,10 +20,10 @@ if not target:
     logger.error("Target validation failed: target must be an FQDN or IPv4 only.")
     sys.exit(-1)
 
-portscan_url = os.environ() + "/dev/ondemand/portscan"
-httpobs_scan_url = os.environ() + "/dev/ondemand/httpobservatory"
-tlsobs_scan_url = os.environ() + "/dev/ondemand/tlsobservatory"
-sshobs_scan_url = os.environ() + "/dev/ondemand/sshobservatory"
+portscan_url = API_GW_URL + "/dev/ondemand/portscan"
+httpobs_scan_url = API_GW_URL + "/dev/ondemand/httpobservatory"
+tlsobs_scan_url = API_GW_URL + "/dev/ondemand/tlsobservatory"
+sshobs_scan_url = API_GW_URL + "/dev/ondemand/sshobservatory"
 
 session = requests.Session()
 logger.info("Sending POST to https://<YOUR-API-ENDPOINT>/dev/ondemand/portscan")
