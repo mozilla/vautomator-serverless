@@ -78,6 +78,7 @@ functions:
           path: ondemand/httpobservatory
           method: POST
           cors: true
+          private: ${self:custom.cfg.private}
     tags:
       TYPE: ondemand
       SCAN_TYPE: http-observatory
@@ -101,6 +102,7 @@ functions:
           path: ondemand/tlsobservatory
           method: POST
           cors: true
+          private: ${self:custom.cfg.private}
     tags:
       TYPE: ondemand
       SCAN_TYPE: tls-observatory
@@ -207,6 +209,6 @@ custom:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
-    private: true # Change to 'false' to disable api-key authorization
+    private: false # Change to 'false' to disable api-key authorization
   pythonRequirements:
     dockerizePip: true
