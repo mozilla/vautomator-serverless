@@ -18,7 +18,7 @@ class HTTPObsScanHandler(object):
     def queue(self, event, context):
         try:
             data = json.loads(event['body'])
-            if "target" not in data:
+            if "target" not in str(data):
                 self.logger.error("Unrecognized payload")
                 return Response({
                     "statusCode": 500,
