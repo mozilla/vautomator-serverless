@@ -209,6 +209,6 @@ custom:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
-    private: false # Change to 'false' to disable api-key authorization
+    private: true # Change to 'false' to disable api-key authorization
   pythonRequirements:
     dockerizePip: true
