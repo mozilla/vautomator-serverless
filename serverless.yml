@@ -78,6 +78,7 @@ functions:
           path: ondemand/httpobservatory
           method: POST
           cors: true
+          private: ${self:custom.cfg.private}
     tags:
       TYPE: ondemand
       SCAN_TYPE: http-observatory
@@ -101,6 +102,7 @@ functions:
           path: ondemand/tlsobservatory
           method: POST
           cors: true
+          private: ${self:custom.cfg.private}
     tags:
       TYPE: ondemand
       SCAN_TYPE: tls-observatory
