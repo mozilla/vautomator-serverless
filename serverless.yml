@@ -34,6 +34,11 @@ provider:
       - "Fn::GetAtt":
         - ReceiverDeadLetterQueue
         - Arn
+     # Required to use SSM for secrets
+   - Effect: "Allow"
+     Action: "ssm:GetParameters"
+     Resource: 
+
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
     TLSOBS_API_URL: 'https://tls-observatory.services.mozilla.com/api/v1'
@@ -106,6 +111,15 @@ functions:
     tags:
       TYPE: ondemand
       SCAN_TYPE: tls-observatory
+  onDemandTenableScan:
+    handler: handler.queue_tenableioscan
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for Tenable.io scan.
+    events:
+      - http:
+          path: ondemand/tenablescan
+          method: POST
+          cors: true
+          private: ${self:custom.cfg.private} # Never remove this as it's an intrusive end-point
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.
