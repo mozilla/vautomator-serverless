@@ -30,20 +30,20 @@ class TestTIOScanner():
 
         ssm_client = boto3.client('ssm', 'us-west-2')
         ssm_client.put_parameter(
-            Name='TENABLEIO_ACCESS_KEY',
-            Description='Bogus access key.',
-            Value='TEST',
-            Type='SecureString'
+            Name="TENABLEIO_ACCESS_KEY",
+            Description="Bogus access key.",
+            Value="TEST",
+            Type="SecureString"
         )
 
         ssm_client.put_parameter(
-            Name='TENABLEIO_SECRET_KEY',
-            Description='Bogus secret key.',
-            Value='TEST',
-            Type='SecureString'
+            Name="TENABLEIO_SECRET_KEY",
+            Description="Bogus secret key.",
+            Value="TEST",
+            Type="SecureString"
         )
 
-        yield (ssm_client)
+        yield ssm_client
         mock.stop()
 
     def test_defaults(self, ssm):

@@ -63,7 +63,7 @@ deploy:
 
 .PHONY: test
 test:
-	python3 -m pytest tests/
+	python -m pytest tests/
 
 .PHONY: flake8
 flake8:

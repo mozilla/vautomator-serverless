@@ -51,7 +51,7 @@ class TIOScanner():
 
     def __getAPIKey(self):
         response = self.ssm_client.get_parameter(Name="TENABLEIO_ACCESS_KEY", WithDecryption=True)
-        access_key = response['Parameter'][0]['Value']
+        access_key = response['Parameter']['Value']
         response = self.ssm_client.get_parameter(Name="TENABLEIO_ACCESS_KEY", WithDecryption=True)
-        secret_key = response['Parameter'][0]['Value']
+        secret_key = response['Parameter']['Value']
         return access_key, secret_key
