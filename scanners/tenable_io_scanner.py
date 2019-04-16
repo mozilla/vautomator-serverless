@@ -41,12 +41,12 @@ class TIOScanner():
             # Run a basic network scan on the target
             scan_name = "VA for " + hostname
             nscan = self.client.scan_helper.create(
-                name=scan_name, text_targets=hostname, template="basic"
+                name=scan_name, text_targets=hostname, template='basic'
             )
             return nscan
 
         except TenableIOApiException as TIOException:
-            self.logger.error("[-] Tenable.io scan failed: {}".format(TIOException))
+            self.logger.error("Tenable.io scan failed: {}".format(TIOException))
             return False
 
     def __getAPIKey(self):

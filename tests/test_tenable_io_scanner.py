@@ -97,8 +97,8 @@ class TestTIOScanner():
         # nscan is a ScanRef object.
         # Note that we are NOT launching the scan here, we do not
         # want an actual scan to be kicked off as a part of CI
-        nscan.delete(force_stop=True)
         # scan_details is a scan_detail object
         scan_detail = nscan.details()
         # ScanRef object ID should the ScanDetail object ID
         assert scan_detail.info.object_id == nscan.id
+        nscan.delete(force_stop=True)
