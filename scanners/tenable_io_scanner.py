@@ -23,7 +23,7 @@ class TIOScanner():
         self.tio_secret_key = secret_key
         self.report_format = report_format
         self.logger = logger
-    
+
     def scan(self, hostname):
         # If not passed at the time of object instantiation
         if not self.tio_access_key and not self.tio_secret_key:
@@ -43,7 +43,6 @@ class TIOScanner():
             nscan = self.client.scan_helper.create(
                 name=scan_name, text_targets=hostname, template="basic"
             )
-            nscan.launch(wait=False)
             return nscan
 
         except TenableIOApiException as TIOException:

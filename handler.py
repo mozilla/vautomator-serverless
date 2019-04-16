@@ -107,7 +107,8 @@ def runScanFromQ(event, context):
                         nmap_scanner.wait(1)
                 elif scan_type == "tenableio":
                     scanner = TIOScanner()
-                    scanner.scan(target)
+                    nessus_scanner = scanner.scan(target)
+                    nessus_scanner.launch(wait=False)
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: {}".format(message))

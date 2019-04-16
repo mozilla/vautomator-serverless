@@ -6,18 +6,17 @@ import requests
 import boto3
 from scanners.tenable_io_scanner import TIOScanner
 from lib.target import Target
+from moto import mock_ssm
 from tenable_io.client import TenableIOClient
 from tenable_io.exceptions import TenableIOApiException, TenableIOErrorCode
 from tenable_io.api.scans import ScanExportRequest
 from tenable_io.api.models import Scan
-from moto import mock_ssm
-from uuid import UUID
 
 
 class TestTIOScanner():
-    # Approach taken here is to create a dedicated Tenable.io 
-    # account just for test purposes, and use Travis CI's 
-    # "secure" method to store the credentials, use those 
+    # Approach taken here is to create a dedicated Tenable.io
+    # account just for test purposes, and use Travis CI's
+    # "secure" method to store the credentials, use those
     # credentials to test the "scan" method.
 
     # Mocking SSM here so we can tes the __getAPIKey() method
@@ -43,7 +42,7 @@ class TestTIOScanner():
             Value='TEST',
             Type='SecureString'
         )
-        
+
         yield (ssm_client)
         mock.stop()
 
@@ -93,3 +92,13 @@ class TestTIOScanner():
         host_name = "www.mozilla.org"
         scanner = TIOScanner(access_key=a_key, secret_key=s_key)
         nscan = scanner.scan(host_name)
+
+        # Ref: https://github.com/tenable/Tenable.io-SDK-for-Python/blob/master/tests/integration/helpers/test_scan.py
+        # nscan is a ScanRef object.
+        # Note that we are NOT launching the scan here, we do not
+        # want an actual scan to be kicked off as a part of CI
+        nscan.delete(force_stop=True)
+        # scan_details is a scan_detail object
+        scan_detail = nscan.details()
+        # ScanRef object ID should the ScanDetail object ID
+        assert scan_detail.info.object_id == nscan.id
