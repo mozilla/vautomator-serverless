@@ -34,9 +34,7 @@ ifdef DEFAULT_KMS
 	aws --profile $(AWS_PROFILE) ssm put-parameter --name "TENABLEIO_ACCESS_KEY" \
 	--value $(TENABLE_ACCESS_KEY) --type SecureString --overwrite && \
 	aws --profile $(AWS_PROFILE) ssm put-parameter --name "TENABLEIO_SECRET_KEY" \
-	--value $(TENABLE_SECRET_KEY) --type SecureString --overwrite && \
-	npm install serverless-python-requirements --save-dev && \
-	npm install serverless-pseudo-parameters --save-dev
+	--value $(TENABLE_SECRET_KEY) --type SecureString --overwrite
 else
   ifdef KMS_KEYID
     setup:
@@ -44,9 +42,7 @@ else
 	aws --profile $(AWS_PROFILE) ssm put-parameter --name "TENABLEIO_ACCESS_KEY" \
 	--value $(TENABLE_ACCESS_KEY) --type SecureString --key-id $(KMS_KEYID) --overwrite && \
 	aws --profile $(AWS_PROFILE) ssm put-parameter --name "TENABLEIO_SECRET_KEY" \
-	--value $(TENABLE_SECRET_KEY) --type SecureString --key-id $(KMS_KEYID) --overwrite && \
-	npm install serverless-python-requirements --save-dev && \
-	npm install serverless-pseudo-parameters --save-dev
+	--value $(TENABLE_SECRET_KEY) --type SecureString --key-id $(KMS_KEYID) --overwrite
   endif
 endif
 	
@@ -58,6 +54,8 @@ validate:
 .PHONY: deploy
 deploy: export AWS_SDK_LOAD_CONFIG=true
 deploy:
+	npm install serverless-python-requirements --save-dev && \
+	npm install serverless-pseudo-parameters --save-dev && \
 	sls deploy --region $(AWS_REGION) --aws-profile $(AWS_PROFILE)
 
 .PHONY: test

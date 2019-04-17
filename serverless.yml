@@ -66,11 +66,14 @@ package:
     - vendor/*
   exclude:
     - .venv/**
+    - .virtualenv/**
     - .git/**
     - __pycache__/**
     - node_modules/**
     - ./Makefile
     - ./kms_policy.json
+    - .vscode
+    - examples/**
     - tests/**
 
 functions:
