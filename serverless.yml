@@ -34,6 +34,19 @@ provider:
       - "Fn::GetAtt":
         - ReceiverDeadLetterQueue
         - Arn
+     # Required to use SSM for secrets
+   - Effect: "Allow"
+     Action:
+      - ssm:GetParameter
+      - ssm:GetParameters
+     Resource:
+      - "arn:#{AWS::Partition}:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:custom.cfg.ssmAKey}"
+      - "arn:#{AWS::Partition}:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:custom.cfg.ssmSKey}"
+   - Effect: "Allow"
+     Action:
+      - kms:Decrypt
+     Resource: "arn:aws:kms:#{AWS::Region}:#{AWS::AccountId}:key/${self:custom.cfg.ssmKms}"
+
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
     TLSOBS_API_URL: 'https://tls-observatory.services.mozilla.com/api/v1'
@@ -53,9 +66,15 @@ package:
     - vendor/*
   exclude:
     - .venv/**
+    - .virtualenv/**
     - .git/**
     - __pycache__/**
     - node_modules/**
+    - ./Makefile
+    - ./kms_policy.json
+    - .vscode
+    - examples/**
+    - tests/**
 
 functions:
   onDemandPortScan:
@@ -106,6 +125,18 @@ functions:
     tags:
       TYPE: ondemand
       SCAN_TYPE: tls-observatory
+  onDemandTenableScan:
+    handler: handler.queue_tenableioscan
+    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for Tenable.io scan.
+    events:
+      - http:
+          path: ondemand/tenablescan
+          method: POST
+          cors: true
+          private: ${self:custom.cfg.private} # Never remove this as it's an intrusive end-point
+    tags:
+      TYPE: ondemand
+      SCAN_TYPE: tenableio
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.
@@ -179,6 +210,7 @@ functions:
 
 plugins:
   - serverless-python-requirements
+  - serverless-pseudo-parameters
 resources:
   Resources:
     S3BucketResults:
@@ -209,6 +241,9 @@ custom:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
+    ssmKms: beaede06-f6f5-4183-90bf-64a13edcea15
+    ssmAKey: TENABLEIO_ACCESS_KEY
+    ssmSKey: TENABLEIO_SECRET_KEY
     private: true # Change to 'false' to disable api-key authorization
   pythonRequirements:
     dockerizePip: true

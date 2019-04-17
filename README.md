@@ -3,11 +3,12 @@ Repository to experiment with serverless framework and automation.
 
 This project uses serverless framework and attempts to create a serverless environment that could be used to automate vulnerability assessment tasks from multiple ingestion points, such as on-demand submission of a host via a REST API, regular scanning of a known list of hosts, and opportunistically scanning of hosts appearing in Certificate Transparency logs.
 
-This is under development with more features being added as different branches. The master branch supports:
-- Addition of a target to the scan queue for port scan by an API endpoint (`/ondemand/portscan`). Due to the intrusive nature of this endpoint, it is protected by an API key.
+This is under development with more features being added as different branches. The tool currently supports:
+- Addition of a target to the scan queue for port scan by an API endpoint (`/ondemand/portscan`).
 - Addition of a target to the scan queue for HTTP Observatory scan by an API endpoint (`/ondemand/httpobservatory`)
 - Addition of a target to the scan queue for TLS Observatory scan by an API endpoint (`/ondemand/tlsobservatory`)
-- Addition of a target to the scan queue for SSH Observatory scan by an API endpoint (`/ondemand/sshobservatory`). This endpoint is protected by an API key.
+- Addition of a target to the scan queue for SSH Observatory scan by an API endpoint (`/ondemand/sshobservatory`).
+- _[OPTIONAL]_ Addition of a target to the scan queue for a Tenable.io scan by an API endpoint (`/ondemand/tenablescan`).
 - Performing requested scan type (port, HTTP Observatory, TLS Observatory or SSH Observatory) on hosts in the queue
 - Scheduled port scans from a hard-coded list of hosts (disabled by default)
 - Scheduled HTTP Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
@@ -15,22 +16,48 @@ This is under development with more features being added as different branches. 
 - Scheduled SSH Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
 - Manually add a host to the scan queue (for PoC purposes).
 
+All API endpoints are currently protected by an API key. This will be replaced with SSO integration.
+
 Results from all scans are placed in an S3 bucket specified in `serverless.yml`.
 
-Port scans are performed using a [statically compiled `nmap` binary](https://github.com/ernw/static-toolbox/releases/download/1.0.2/nmap-7.70SVN-b5bd185-x86_64-portable.zip), [packaged within the serverless application](https://github.com/mozilla/vautomator-serverless/blob/master/serverless.yml#L51-L53).
+Port scans are performed using a [statically compiled `nmap` binary](https://github.com/ernw/static-toolbox/releases/download/1.0.2/nmap-7.70SVN-b5bd185-x86_64-portable.zip), [packaged within the serverless application](https://github.com/mozilla/vautomator-serverless/blob/master/serverless.yml#L64-L66).
 
 _**Note:** UDP port scans are not supported as Lamdba functions can not be as root/privileged users._
 
 ## Get ready to deploy
 
-1. Install serverless framework: `npm install -g serverless`
-2. Download the repo: `git clone https://github.com/mozilla/vautomator-serverless.git && cd vautomator-serverless`
-3. Customise your `serverless.yml` file, in particular the `custom` and `provider` sections where you can specify your own S3 bucket name/SQS name etc. or specify multiple environments, tag your resources etc.
-4. Setup your AWS profile and credentials. An account or role with at least the permissions listed in [serverless.yml](https://github.com/mozilla/vautomator-serverless/blob/master/serverless.yml#L12-L36) is required in order to deploy and run this. _Currently we are using a role in the Mozilla Infosec Dev AWS account using role assumption._
-5. Once your AWS profile is set up, modify the `Makefile` to specify your `AWS region` and `AWS profile`. Serverless framework supports role assumption, and so does the `Makefile`, as long as your AWS config and credentials files are setup as per [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
-6. [OPTIONAL] run: `make validate` to check if your `serverless.yml` is correctly formatted without deploying a stack.
-7. Run `make deploy` to deploy to AWS!
-7. If you have no CloudFormation errors and if you see `Service Information` listing your lambda functions/endpoints, you are good to go.
+1. Install Python3 and [aws-cli](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html).
+2. Install serverless framework: `npm install -g serverless`
+3. Download the repo: `git clone https://github.com/mozilla/vautomator-serverless.git && cd vautomator-serverless`
+4. Customise your `serverless.yml` file, in particular the `custom` and `provider` sections where you can specify your own S3 bucket name/SQS name/KMS key (if using Tenable.io integration, see step 6) etc. or specify multiple environments, tag your resources etc.
+5. Setup your AWS profile and credentials. An account or role with at least the permissions listed in [serverless.yml](https://github.com/mozilla/vautomator-serverless/blob/master/serverless.yml#L12-L36) is required in order to deploy and run this. _Currently we are using a role in the Mozilla Infosec Dev AWS account using role assumption._
+6. Once your AWS profile is set up, modify the `Makefile` to specify your `AWS region` and `AWS profile`. Serverless framework supports role assumption, and so does the `Makefile`, as long as your AWS config and credentials files are setup as per [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
+7. [OPTIONAL] If you want Tenable.io integration via the `/ondemand/tenablescan` endpoint (otherwise skip to step 8):
+    - Create a Tenable.io user account with _standard_ user permissions, and create an API key for this account.
+    - Modify the top of the `Makefile` as follows:
+        ```
+        AWS_PROFILE := <YOUR-AWS-PROFILE/ROLE>
+        # Y for Tenable.io support, N or blank if not
+        TENABLE_IO := Y / N 
+        
+        # If you would like to create a dedicated KMS for vautomator
+        # Blank if you would like to use default AWS SSM key for
+        # encrypted storage
+        KMS_POLICY_FILE := <YOUR-KMS-POLICY-JSON-FILE>
+        
+        # Blank if a policy file is specified, 
+        # or if you would like to use default AWS SSM key
+        KMS_KEYID := <YOUR-KMS-KEY-ID> 
+        ```
+
+    - Once this is done, run `make setup TIOA=<Tenable-Access-Key> TIOS=<Tenable-Secret-Key>`. `TIOA` and `TIOS` are API keys generated in the first point above. Based on the above values in Makefile, this will create a new or use the default AWS KMS key, and store the Tenable API keys in SSM in encrypted form using the KMS key.
+    _**NOTE**: The most straightforward option is to specify the AWS profile and `Y` for `TENABLE_IO`, and leave other variables blank._
+
+8. [OPTIONAL] run: `make validate` to check if your `serverless.yml` is correctly formatted without deploying a stack.
+
+9. Run `make deploy` to deploy to AWS!
+
+10. If you have no CloudFormation errors and if you see `Service Information` listing your lambda functions/endpoints, you are good to go.
 
 ## Examples
 
@@ -46,6 +73,8 @@ INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
 INFO:root:Triggered a TLS Observatory Scan of: infosec.mozilla.org
 INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
 INFO:root:Triggered an SSH Observatory Scan of: infosec.mozilla.org
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
+INFO:root:Triggered an Tenable Scan of: infosec.mozilla.org
 ```
 
 To confirm all scans were performed and results were stored in S3 bucket:

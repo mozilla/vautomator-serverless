@@ -8,6 +8,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "serverless-pseudo-parameters": "^2.4.0",
     "serverless-python-requirements": "^4.3.0"
   },
   "scripts": {

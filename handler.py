@@ -8,10 +8,12 @@ from lib.portscan_handler import PortScanHandler
 from lib.httpobsscan_handler import HTTPObsScanHandler
 from lib.tlsobsscan_handler import TLSObsScanHandler
 from lib.sshscan_handler import SSHScanHandler
+from lib.tenableio_scan_handler import TIOScanHandler
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from scanners.ssh_observatory_scanner import SSHObservatoryScanner
 from scanners.tls_observatory_scanner import TLSObservatoryScanner
 from scanners.port_scanner import PortScanner
+from scanners.tenable_io_scanner import TIOScanner
 from lib.hosts import Hosts
 
 logger = logging.getLogger(__name__)
@@ -63,6 +65,12 @@ def queue_scheduled_sshobservatory(event, context):
     scheduled_sshobservatory_handler.queue_scheduled(event, context)
 
 
+def queue_tenableioscan(event, context):
+    tenableio_scan_handler = TIOScanHandler(sqs_client=SQS_CLIENT, logger=logger)
+    response = tenableio_scan_handler.queue(event, context)
+    return response
+
+
 # To leave handler as lean as possible, we should
 # probably move this to another file/module also
 def runScanFromQ(event, context):
@@ -97,6 +105,10 @@ def runScanFromQ(event, context):
                     while nmap_scanner.still_scanning():
                         # Wait for 1 second after the end of the scan
                         nmap_scanner.wait(1)
+                elif scan_type == "tenableio":
+                    scanner = TIOScanner(logger=logger)
+                    nessus_scanner = scanner.scan(target)
+                    nessus_scanner.launch(wait=False)
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: {}".format(message))
