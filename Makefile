@@ -1,12 +1,12 @@
 ROOT_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 AWS_REGION	:= us-west-2
 AWS_PROFILE := 
-TENABLE_IO := Y
+TENABLE_IO := 
 KMS_POLICY_FILE := 
 KMS_KEYID := 
 
-$(info Checking if Tenable.io support is needed...)
 ifeq ($(TENABLE_IO), Y)
+  $(info Tenable.io support enabled, make sure you passed API keys as variables!)
   TENABLE_ACCESS_KEY = ${TIOA}
   TENABLE_SECRET_KEY = ${TIOS}
   ifeq ($(KMS_POLICY_FILE), )
@@ -18,13 +18,12 @@ ifeq ($(TENABLE_IO), Y)
     KMS_KEYID := $(shell aws --profile '$(AWS_PROFILE)' kms create-key --policy \
 	file://./'$(KMS_POLICY_FILE)' --description '$(KMS_DESCRIPTION)' --query 'KeyMetadata.KeyId')
   endif
+else
+  $(info Tenable.io support disabled.)
 endif
 
 all:
 	@echo 'Available make targets:'
-	# TODO: Debug, remove later
-	@echo $(TENABLE_ACCESS_KEY)
-	@echo $(TENABLE_SECRET_KEY)
 	@grep '^[^#[:space:]^\.PHONY.*].*:' Makefile
 
 .SILENT: setup
@@ -36,7 +35,8 @@ ifdef DEFAULT_KMS
 	--value $(TENABLE_ACCESS_KEY) --type SecureString --overwrite && \
 	aws --profile $(AWS_PROFILE) ssm put-parameter --name "TENABLEIO_SECRET_KEY" \
 	--value $(TENABLE_SECRET_KEY) --type SecureString --overwrite && \
-	npm install serverless-python-requirements --save-dev
+	npm install serverless-python-requirements --save-dev && \
+	npm install serverless-pseudo-parameters --save-dev
 else
   ifdef KMS_KEYID
     setup:
@@ -45,9 +45,8 @@ else
 	--value $(TENABLE_ACCESS_KEY) --type SecureString --key-id $(KMS_KEYID) --overwrite && \
 	aws --profile $(AWS_PROFILE) ssm put-parameter --name "TENABLEIO_SECRET_KEY" \
 	--value $(TENABLE_SECRET_KEY) --type SecureString --key-id $(KMS_KEYID) --overwrite && \
-	npm install serverless-python-requirements --save-dev
-  else
-    $(info Could not get KEYID!)
+	npm install serverless-python-requirements --save-dev && \
+	npm install serverless-pseudo-parameters --save-dev
   endif
 endif
 	

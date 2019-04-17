@@ -16,4 +16,4 @@ install:
 # command to run tests
 script:
   - make flake8
-  - PYTHONPATH=. python -m pytest tests/
+  - make test

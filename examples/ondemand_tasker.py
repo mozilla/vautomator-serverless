@@ -28,12 +28,14 @@ portscan_url = API_GW_URL + "/dev/ondemand/portscan"
 httpobs_scan_url = API_GW_URL + "/dev/ondemand/httpobservatory"
 tlsobs_scan_url = API_GW_URL + "/dev/ondemand/tlsobservatory"
 sshobs_scan_url = API_GW_URL + "/dev/ondemand/sshobservatory"
+tenableio_scan_url = API_GW_URL + "/dev/ondemand/tenablescan"
 
 scan_types = {
     "port": portscan_url,
     "httpobservatory": httpobs_scan_url,
     "tlsobservatory": tlsobs_scan_url,
-    "sshobservatory": sshobs_scan_url
+    "sshobservatory": sshobs_scan_url,
+    "tenable": tenableio_scan_url
 }
 
 session = requests.Session()

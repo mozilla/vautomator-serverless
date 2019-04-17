@@ -106,7 +106,7 @@ def runScanFromQ(event, context):
                         # Wait for 1 second after the end of the scan
                         nmap_scanner.wait(1)
                 elif scan_type == "tenableio":
-                    scanner = TIOScanner()
+                    scanner = TIOScanner(logger=logger)
                     nessus_scanner = scanner.scan(target)
                     nessus_scanner.launch(wait=False)
                 else:

@@ -26,7 +26,7 @@ class TIOScanner():
 
     def scan(self, hostname):
         # If not passed at the time of object instantiation
-        if not self.tio_access_key and not self.tio_secret_key:
+        if not self.tio_access_key or not self.tio_secret_key:
             try:
                 # See if we can load the API keys from SSM
                 self.tio_access_key, self.tio_secret_key = self.__getAPIKey()
@@ -45,13 +45,13 @@ class TIOScanner():
             )
             return nscan
 
-        except TenableIOApiException as TIOException:
+        except Exception as TIOException:
             self.logger.error("Tenable.io scan failed: {}".format(TIOException))
             return False
 
     def __getAPIKey(self):
         response = self.ssm_client.get_parameter(Name="TENABLEIO_ACCESS_KEY", WithDecryption=True)
         access_key = response['Parameter']['Value']
-        response = self.ssm_client.get_parameter(Name="TENABLEIO_ACCESS_KEY", WithDecryption=True)
+        response = self.ssm_client.get_parameter(Name="TENABLEIO_SECRET_KEY", WithDecryption=True)
         secret_key = response['Parameter']['Value']
         return access_key, secret_key
