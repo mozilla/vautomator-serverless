@@ -118,8 +118,8 @@ def runScanFromQ(event, context):
                     nessus_scanner = scanner.scan(target)
                     nessus_scanner.launch(wait=False)
                 elif scan_type == "websearch":
-                    scanner = WebSearcher(target, logger=logger)
-                    search_results = scanner.scan()
+                    searcher = WebSearcher(logger=logger)
+                    search_results = searcher.search(target)
                     send_to_s3(target + "_websearch", search_results)
                 else:
                     # Manually invoked, just log the message
