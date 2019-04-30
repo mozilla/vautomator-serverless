@@ -15,7 +15,7 @@ class WebSearcher(object):
         search_results = []
         results['search'] = search_results
         results['host'] = hostname
-        
+
         self.logger.info("[+] Running a web search on {}...".format(hostname))
         for m in googlesearch.search(
             query="{} security -site:{}".format(hostname, hostname), num=15
