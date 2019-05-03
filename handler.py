@@ -9,11 +9,13 @@ from lib.httpobsscan_handler import HTTPObsScanHandler
 from lib.tlsobsscan_handler import TLSObsScanHandler
 from lib.sshscan_handler import SSHScanHandler
 from lib.tenableio_scan_handler import TIOScanHandler
+from lib.websearch_handler import WebSearchHandler
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from scanners.ssh_observatory_scanner import SSHObservatoryScanner
 from scanners.tls_observatory_scanner import TLSObservatoryScanner
 from scanners.port_scanner import PortScanner
 from scanners.tenable_io_scanner import TIOScanner
+from scanners.websearcher import WebSearcher
 from lib.hosts import Hosts
 
 logger = logging.getLogger(__name__)
@@ -71,6 +73,12 @@ def queue_tenableioscan(event, context):
     return response
 
 
+def queue_websearch(event, context):
+    websearch_handler = WebSearchHandler(sqs_client=SQS_CLIENT, logger=logger)
+    response = websearch_handler.queue(event, context)
+    return response
+
+
 # To leave handler as lean as possible, we should
 # probably move this to another file/module also
 def runScanFromQ(event, context):
@@ -109,6 +117,10 @@ def runScanFromQ(event, context):
                     scanner = TIOScanner(logger=logger)
                     nessus_scanner = scanner.scan(target)
                     nessus_scanner.launch(wait=False)
+                elif scan_type == "websearch":
+                    searcher = WebSearcher(logger=logger)
+                    search_results = searcher.search(target)
+                    send_to_s3(target + "_websearch", search_results)
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: {}".format(message))

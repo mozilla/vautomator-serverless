@@ -79,7 +79,7 @@ package:
 functions:
   onDemandPortScan:
     handler: handler.queue_portscan
-    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for port scan.
+    description: API endpoint which consumes a host and adds it to the scan queue for port scan.
     events:
       - http:
           path: ondemand/portscan
@@ -91,7 +91,7 @@ functions:
       SCAN_TYPE: port
   onDemandHttpObservatoryScan:
     handler: handler.queue_httpboservatory
-    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for HTTP Observatory scan.
+    description: API endpoint which consumes a host and adds it to the scan queue for HTTP Observatory scan.
     events:
       - http:
           path: ondemand/httpobservatory
@@ -103,7 +103,7 @@ functions:
       SCAN_TYPE: http-observatory
   onDemandSshObservatoryScan:
     handler: handler.queue_sshobservatory
-    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for SSH Observatory scan.
+    description: API endpoint which consumes a host and adds it to the scan queue for SSH Observatory scan.
     events:
       - http:
           path: ondemand/sshobservatory
@@ -115,7 +115,7 @@ functions:
       SCAN_TYPE: ssh-observatory
   onDemandTlsObservatoryScan:
     handler: handler.queue_tlsobservatory
-    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for TLS Observatory scan.
+    description: API endpoint which consumes a host and adds it to the scan queue for TLS Observatory scan.
     events:
       - http:
           path: ondemand/tlsobservatory
@@ -127,7 +127,7 @@ functions:
       SCAN_TYPE: tls-observatory
   onDemandTenableScan:
     handler: handler.queue_tenableioscan
-    description: API endpoint which consumes a hostname/IP address and adds it to the scan queue for Tenable.io scan.
+    description: API endpoint which consumes a host and adds it to the scan queue for Tenable.io scan.
     events:
       - http:
           path: ondemand/tenablescan
@@ -137,6 +137,18 @@ functions:
     tags:
       TYPE: ondemand
       SCAN_TYPE: tenableio
+  onDemandWebSearch:
+    handler: handler.queue_websearch
+    description: API endpoint which consumes a host and adds it to the scan queue for a Google search of a host. 
+    events:
+      - http:
+          patch: ondemand/websearch
+          method: POST
+          cors: true
+          private: ${self:custom.cfg.private}
+    tags:
+      TYPE: ondemand
+      SCAN_TYPE: search
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.
