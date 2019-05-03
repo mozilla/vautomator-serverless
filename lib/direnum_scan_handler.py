@@ -8,7 +8,7 @@ from lib.response import Response
 from lib.hosts import Hosts
 
 
-class DinectoryEnumScanHandler(object):
+class DirectoryEnumScanHandler(object):
     def __init__(self,
                  sqs_client=boto3.client('sqs', region_name='us-west-2'),
                  queueURL=os.getenv('SQS_URL'),

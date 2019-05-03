@@ -10,12 +10,14 @@ from lib.tlsobsscan_handler import TLSObsScanHandler
 from lib.sshscan_handler import SSHScanHandler
 from lib.tenableio_scan_handler import TIOScanHandler
 from lib.websearch_handler import WebSearchHandler
+from lib.direnum_scan_handler import DirectoryEnumScanHandler
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from scanners.ssh_observatory_scanner import SSHObservatoryScanner
 from scanners.tls_observatory_scanner import TLSObservatoryScanner
 from scanners.port_scanner import PortScanner
 from scanners.tenable_io_scanner import TIOScanner
 from scanners.websearcher import WebSearcher
+from scanners.direnum_scanner import DirectoryEnumScanner
 from lib.hosts import Hosts
 
 logger = logging.getLogger(__name__)
@@ -79,11 +81,23 @@ def queue_websearch(event, context):
     return response
 
 
+def queue_direnumscan(event, context):
+    direnum_scan_handler = DirectoryEnumScanHandler(sqs_client=SQS_CLIENT, logger=logger)
+    response = direnum_scan_handler.queue(event, context)
+    return response
+
+
+def queue_scheduled_direnumscan(event, context):
+    scheduled_direnum_scan_handler = DirectoryEnumScanHandler(sqs_client=SQS_CLIENT, logger=logger)
+    scheduled_direnum_scan_handler.queue_scheduled(event, context)
+
+
 # To leave handler as lean as possible, we should
 # probably move this to another file/module also
 def runScanFromQ(event, context):
 
     # This is needed for nmap static library to be added to the path
+    # TODO: Update here to include the statically compiled dirb binary
     original_pathvar = os.environ['PATH']
     os.environ['PATH'] = original_pathvar \
         + ':' + os.environ['LAMBDA_TASK_ROOT'] \
@@ -121,6 +135,12 @@ def runScanFromQ(event, context):
                     searcher = WebSearcher(logger=logger)
                     search_results = searcher.search(target)
                     send_to_s3(target + "_websearch", search_results)
+                elif scan_type == "direnumscan":
+                    scanner = DirectoryEnumScanner(logger=logger)
+                    direnum_scanner = scanner.scan(target)
+                    # TODO: Probably need to check the return code here
+                    # since we are using subprocess to execute command
+                    send_to_s3(target + "_websearch", direnum_scanner)
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: {}".format(message))
