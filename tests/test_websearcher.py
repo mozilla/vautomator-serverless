@@ -23,3 +23,4 @@ class TestWebSearcher(object):
         assert 'host' in search_results
         assert 'search' in search_results
         assert len(search_results['search']) <= 15
+        assert len(search_results['search']) > 0
