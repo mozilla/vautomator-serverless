@@ -21,7 +21,7 @@ class TestDirectoryEnumScanner():
         # This is needed for nmap static library to be added to the path
         original_pathvar = os.environ['PATH']
         os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__))  \
-            + '/vendor/dirb2222/' + ':' \
+            + '/vendor/dirb/' + ':' \
             + original_pathvar
         host_name = "infosec.mozilla.org"
         # By default this will use the short wordlist
@@ -43,7 +43,7 @@ class TestDirectoryEnumScanner():
         # This is needed for nmap static library to be added to the path
         original_pathvar = os.environ['PATH']
         os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__))  \
-            + '/vendor/dirb2222/' + ':' \
+            + '/vendor/dirb/' + ':' \
             + original_pathvar
         host_name = "infosec.mozilla.org"
         # Give it a long wordlist to guarantee time out

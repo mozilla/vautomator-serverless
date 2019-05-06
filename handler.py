@@ -101,7 +101,8 @@ def runScanFromQ(event, context):
     original_pathvar = os.environ['PATH']
     os.environ['PATH'] = original_pathvar \
         + ':' + os.environ['LAMBDA_TASK_ROOT'] \
-        + '/vendor/nmap-standalone/'
+        + '/vendor/nmap-standalone/' \
+        + '/vendor/dirb/'
 
     # Read the queue
     for record, keys in event.items():
@@ -137,10 +138,11 @@ def runScanFromQ(event, context):
                     send_to_s3(target + "_websearch", search_results)
                 elif scan_type == "direnumscan":
                     scanner = DirectoryEnumScanner(logger=logger)
-                    direnum_scanner = scanner.scan(target)
-                    # TODO: Probably need to check the return code here
-                    # since we are using subprocess to execute command
-                    send_to_s3(target + "_websearch", direnum_scanner)
+                    return_code, direnum_scanner = scanner.scan(target)
+                    if not return_code:
+                        send_to_s3(target + "_direnum", direnum_scanner)
+                    else:
+                        logger.error("Directory enumeration could not be performed for: {}".format(target))
                 else:
                     # Manually invoked, just log the message
                     logger.info("Message in queue: {}".format(message))
