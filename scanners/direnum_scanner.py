@@ -37,7 +37,7 @@ class DirectoryEnumScanner():
             direnum_results = []
             results['routes'] = direnum_results
             results['host'] = hostname
-            
+
             p = run(
                 ["dirb", hostname, wordlist_options[self.wordlist], self.arguments],
                 check=True,

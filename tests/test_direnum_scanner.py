@@ -18,11 +18,13 @@ class TestDirectoryEnumScanner():
                         and os.environ["TRAVIS"] == "true",
                         reason="Skipping this test on Travis CI.")
     def test_scan_no_timeout(self):
-        # This is needed for nmap static library to be added to the path
+        # This is needed for dirb binary to be added to the path
         original_pathvar = os.environ['PATH']
+        print(original_pathvar)
         os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__))  \
             + '/vendor/dirb/' + ':' \
             + original_pathvar
+        print(os.environ['PATH'])
         host_name = "infosec.mozilla.org"
         # By default this will use the short wordlist
         scanner = DirectoryEnumScanner()
@@ -31,7 +33,7 @@ class TestDirectoryEnumScanner():
         assert 'host' in result
         assert 'routes' in result
         assert len(result['routes']) > 0
-        
+
         # Set PATH to original value
         os.environ['PATH'] = original_pathvar
 
@@ -40,7 +42,7 @@ class TestDirectoryEnumScanner():
                         and os.environ["TRAVIS"] == "true",
                         reason="Skipping this test on Travis CI.")
     def test_scan_timeout(self):
-        # This is needed for nmap static library to be added to the path
+        # This is needed for dirb binary to be added to the path
         original_pathvar = os.environ['PATH']
         os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__))  \
             + '/vendor/dirb/' + ':' \
