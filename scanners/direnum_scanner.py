@@ -1,4 +1,5 @@
 import logging
+import os
 from subprocess import run, PIPE
 from lib.s3_helper import send_to_s3
 from lib.utilities import sanitise_shell_cmd, wait_process_timeout
@@ -13,13 +14,20 @@ class DirectoryEnumScanner():
         self.wordlist = wordlist
 
     def scan(self, hostname):
-        # Decide on the wordlist first
-        # TODO: Fill these with actual wordlists
+        # Not very elegant, but for test purposes,
+        # we need to know if we are running in Lambda
+        if "LAMBDA_ENV" in os.environ and os.environ["LAMBDA_ENV"] == "true":
+            path_prefix = os.environ['LAMBDA_TASK_ROOT']
+        else:
+            path_prefix = os.path.dirname(os.path.realpath(__file__))
+        # Now decide on the wordlist
         wordlist_options = {
-            'short': "common.txt",
-            'medium': "common.txt",
-            'long': "common.txt"
+            'short': path_prefix + "/vendor/dirb/wordlists/custom/RobotsDisallowed-Top1000.txt",
+            'medium': path_prefix + "/vendor/dirb/wordlists/custom/quickhits.txt",
+            'long': path_prefix + "/vendor/dirb/wordlists/custom/common.txt"
         }
+        # Currently no other tools other than dirb is supported,
+        # but maybe we should explore gobuster here too
         if self.tool == "dirb":
             # Assume here that standalone dirb binary is in the PATH
             # This is done in the main handler file
@@ -43,6 +51,8 @@ class DirectoryEnumScanner():
             except RuntimeError:
                 p.kill()
                 self.logger.warning("[!] Directory enum timed out, process killed")
+                # TODO: Remove me later, for debug
+                print("Dir enum output when killed because of timeout:" + direnum_results)
                 return p.returncode, False
             else:
                 return p.returncode, results

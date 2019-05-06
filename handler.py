@@ -1,7 +1,6 @@
 import logging
 import boto3
 import os
-
 from lib.s3_helper import send_to_s3
 from lib.target import Target
 from lib.portscan_handler import PortScanHandler
@@ -139,6 +138,7 @@ def runScanFromQ(event, context):
                 elif scan_type == "direnumscan":
                     scanner = DirectoryEnumScanner(logger=logger)
                     return_code, direnum_scanner = scanner.scan(target)
+                    # TODO: Note this may not be handling timeout case (partial output)
                     if not return_code:
                         send_to_s3(target + "_direnum", direnum_scanner)
                     else:
