@@ -5,6 +5,7 @@ import sys
 from scanners.direnum_scanner import DirectoryEnumScanner
 from lib.utilities import uppath
 
+
 @pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 class TestDirectoryEnumScanner():
 
@@ -13,6 +14,10 @@ class TestDirectoryEnumScanner():
         assert scanner.tool == 'dirb'
         assert scanner.arguments == ['-f', '-w', '-S', '-r']
         assert scanner.wordlist == 'short'
+
+    @pytest.mark.xfail(raises=AssertionError)
+    def test_invalid_wordlist(self):
+        DirectoryEnumScanner(wordlist='invalid')
 
     # This will never succeed in Travis, because
     # it relies on dirb being installed/available
@@ -64,7 +69,6 @@ class TestDirectoryEnumScanner():
     @pytest.mark.skipif("TRAVIS" in os.environ
                         and os.environ["TRAVIS"] == "true",
                         reason="Skipping this test on Travis CI.")
-    # @pytest.mark.xfail(raises=subprocess.TimeoutExpired)
     def test_scan_timeout(self):
         # This is needed for dirb binary to be added to the path
         original_pathvar = os.environ['PATH']

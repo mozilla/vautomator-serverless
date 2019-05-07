@@ -12,7 +12,19 @@ class DirectoryEnumScanner():
         self.tool = tool
         self.logger = logger
         self.arguments = arguments_list
+        assert self._valid_wordlist(wordlist)
         self.wordlist = wordlist
+
+    @classmethod
+    def _valid_wordlist(self, wordlist_candidate):
+        # It must be a str
+        if isinstance(wordlist_candidate, str):
+            # It must not be empty
+            if wordlist_candidate:
+                valid_types = ['short', 'medium', 'long']
+                if wordlist_candidate in valid_types:
+                    return True
+        return False
 
     def scan(self, hostname):
         # Not very elegant, but for test purposes,
@@ -32,7 +44,7 @@ class DirectoryEnumScanner():
                 dirb = "dirb"
             else:
                 self.logger.error("[-] Unable to run dirb, unidentified or unsupported architecture.")
-        
+
         # Now decide on the wordlist
         wordlist_options = {
             'short': path_prefix + "/vendor/dirb/wordlists/custom/RobotsDisallowed-Top1000.txt",
