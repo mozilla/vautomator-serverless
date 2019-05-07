@@ -1,6 +1,8 @@
 import pytest
 import os
+import subprocess
 from scanners.direnum_scanner import DirectoryEnumScanner
+from lib.utilities import uppath
 
 
 class TestDirectoryEnumScanner():
@@ -8,8 +10,27 @@ class TestDirectoryEnumScanner():
     def test_defaults(self):
         scanner = DirectoryEnumScanner()
         assert scanner.tool == 'dirb'
-        assert scanner.arguments == '-f -w -S -r'
+        assert scanner.arguments == ['-f', '-w', '-S', '-r']
         assert scanner.wordlist == 'short'
+
+    @pytest.mark.skipif("TRAVIS" in os.environ
+                        and os.environ["TRAVIS"] == "true",
+                        reason="Skipping this test on Travis CI.")
+    @pytest.mark.xfail(raises=subprocess.CalledProcessError)
+    def test_scan_invalid(self):
+        # This is needed for dirb binary to be added to the path
+        original_pathvar = os.environ['PATH']
+        os.environ['PATH'] = uppath(os.path.realpath(__file__), 2)  \
+            + '/vendor/dirb/' + ':' \
+            + original_pathvar
+
+        host_name = "infosec.mozilla.org"
+        # Wordlist does not matter here, but we want to give it
+        # an invalid command line option (e.g '-b')
+        scanner = DirectoryEnumScanner(arguments_list=['-b'])
+        return_code, result = scanner.scan(host_name)
+        assert not return_code == 0
+        assert 'illegal' in result['routes']
 
     # This will never succeed in Travis, because
     # it relies on dirb being installed/available
@@ -17,14 +38,13 @@ class TestDirectoryEnumScanner():
     @pytest.mark.skipif("TRAVIS" in os.environ
                         and os.environ["TRAVIS"] == "true",
                         reason="Skipping this test on Travis CI.")
-    def test_scan_no_timeout(self):
+    def scan_no_timeout(self):
         # This is needed for dirb binary to be added to the path
         original_pathvar = os.environ['PATH']
-        print(original_pathvar)
-        os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__))  \
+        os.environ['PATH'] = uppath(os.path.realpath(__file__), 2)  \
             + '/vendor/dirb/' + ':' \
             + original_pathvar
-        print(os.environ['PATH'])
+
         host_name = "infosec.mozilla.org"
         # By default this will use the short wordlist
         scanner = DirectoryEnumScanner()
@@ -32,6 +52,7 @@ class TestDirectoryEnumScanner():
         assert return_code == 0
         assert 'host' in result
         assert 'routes' in result
+        print(result)
         assert len(result['routes']) > 0
 
         # Set PATH to original value
@@ -41,12 +62,14 @@ class TestDirectoryEnumScanner():
     @pytest.mark.skipif("TRAVIS" in os.environ
                         and os.environ["TRAVIS"] == "true",
                         reason="Skipping this test on Travis CI.")
+    @pytest.mark.xfail(raises=subprocess.TimeoutExpired)
     def test_scan_timeout(self):
         # This is needed for dirb binary to be added to the path
         original_pathvar = os.environ['PATH']
-        os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__))  \
+        os.environ['PATH'] = uppath(os.path.realpath(__file__), 2)  \
             + '/vendor/dirb/' + ':' \
             + original_pathvar
+
         host_name = "infosec.mozilla.org"
         # Give it a long wordlist to guarantee time out
         scanner = DirectoryEnumScanner(wordlist='long')
