@@ -47,41 +47,39 @@ class DirectoryEnumScanner():
             self.logger.info("[+] Running dirb scan on {}".format(hostname))
 
             results = {}
-            direnum_results = []
             results['host'] = hostname
             process_args = [dirb, "https://" + hostname, wordlist_options[self.wordlist]]
             process_args.extend(self.arguments)
 
             try:
-                # Even though a lambda function can only run for 15 mins max
-                # We should probably kill a scan after approx. 12 mins to be safe
-                p = subprocess.run(
+                p = subprocess.Popen(
                     process_args,
-                    check=True,
                     stdout=subprocess.PIPE,
-                    encoding='utf-8',
-                    timeout=720
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
+                    shell=False
                 )
             except Exception as e:
-                # If we are here, either the command did not run, or
-                # it did run but got killed after the timeout period
-                if isinstance(e, subprocess.TimeoutExpired):
-                    self.logger.warning("[!] Directory enum timed out, process killed")
-                    direnum_results = p.stdout
-                    results['routes'] = direnum_results
-                    return p.returncode, results
-                elif isinstance(e, subprocess.CalledProcessError):
-                    self.logger.error("[-] dirb could not run: {}".format(e))
-                    direnum_results = p.stdout
-                    results['routes'] = direnum_results
-                    return p.returncode, results
-                else:
-                    self.logger.error("[-] Process ended unexpectedly: {}".format(e))
-                    return p.returncode, False
+                self.logger.error("[-] File/executable not found, or an unexpected error occurred: {}".format(e))
+                return False, False
             else:
-                # No exception, dirb ran and finished on time
-                direnum_results = p.stdout
-                results['routes'] = direnum_results
-                return p.returncode, results
+                try:
+                    # Even though a lambda function can only run for 15 mins max
+                    # # We should probably kill a scan after 12 mins to be safe
+                    dirb_out, dirb_err = p.communicate(timeout=720)
+                except subprocess.TimeoutExpired as timeout:
+                    # If we are here, the command did run but got
+                    # killed after the timeout period
+                    self.logger.warning("[!] Directory enum timed out, killing process.")
+                    p.kill()
+                    dirb_out, dirb_err = p.communicate()
+                    results['output'] = dirb_out
+                    results['errors'] = dirb_err.join(' (TIMEDOUT)')
+                else:
+                    # No exception, dirb ran and finished on time
+                    results['output'] = dirb_out
+                    results['errors'] = dirb_err
+                finally:
+                    return p.returncode, results
         else:
             self.logger.error("[-] Unrecognized/unsupported tool for scan.")
