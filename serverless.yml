@@ -149,6 +149,18 @@ functions:
     tags:
       TYPE: ondemand
       SCAN_TYPE: search
+  onDemandDirectoryEnumeration:
+    handler: handler.queue_direnumscan
+    description: API endpoint which consumes a host and adds it to the scan queue for directory enumeration scan.
+    events:
+      - http:
+          patch: ondemand/direnum
+          method: POST
+          cors: true
+          private: ${self:custom.cfg.private}
+    tags:
+      TYPE: ondemand
+      SCAN_TYPE: direnum
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.
@@ -202,6 +214,20 @@ functions:
     tags:
       TYPE: cron
       SCAN_TYPE: ssh-observatory
+  cronDirectoryEnumeration:
+    handler: handler.queue_scheduled_direnumscan
+    description: Cron job which adds a list of hosts to the scan queue for directory enumeration scan.
+    timeout: 900
+    events:
+      # Invoke Lambda function once a week
+      # Run at 6 PM UTC every Thursday once
+      - schedule: 
+          rate: cron(0 18 ? * THU *)
+          # Not enabling this by default as it is intrusive in nature
+          enabled: false
+    tags:
+      TYPE: cron
+      SCAN_TYPE: direnum
   RunScanQueue:
     handler: handler.runScanFromQ
     description: Function that is triggered to run scans when new messages are in the queue.

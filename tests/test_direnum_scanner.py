@@ -17,6 +17,7 @@ class TestDirectoryEnumScanner():
 
     @pytest.mark.xfail(raises=AssertionError)
     def test_invalid_wordlist(self):
+        # We are expecting a failure here with an assertion error
         DirectoryEnumScanner(wordlist='invalid')
 
     # This will never succeed in Travis, because

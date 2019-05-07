@@ -1,6 +1,6 @@
 import logging
 import os
-import platform
+import sys
 import subprocess
 from lib.s3_helper import send_to_s3
 from lib.utilities import uppath
@@ -38,9 +38,9 @@ class DirectoryEnumScanner():
             # Here we also need to check the local platform we are
             # running. This is because we have 2 vendored binaries
             # for dirb, one for OSX and one for Linux
-            if "Darwin" in platform.platform():
+            if sys.platform.startswith('darwin'):
                 dirb = "dirb-osx"
-            elif "Linux" in platform.platform():
+            elif sys.platform.startswith('linux'):
                 dirb = "dirb"
             else:
                 self.logger.error("[-] Unable to run dirb, unidentified or unsupported architecture.")
@@ -79,7 +79,7 @@ class DirectoryEnumScanner():
                     # Even though a lambda function can only run for 15 mins max
                     # # We should probably kill a scan after 12 mins to be safe
                     dirb_out, dirb_err = p.communicate(timeout=720)
-                except subprocess.TimeoutExpired as timeout:
+                except subprocess.TimeoutExpired:
                     # If we are here, the command did run but got
                     # killed after the timeout period
                     self.logger.warning("[!] Directory enum timed out, killing process.")
