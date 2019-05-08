@@ -95,61 +95,64 @@ def queue_scheduled_direnumscan(event, context):
 # probably move this to another file/module also
 def runScanFromQ(event, context):
 
-    # This is needed for nmap static library to be added to the path
-    # TODO: Update here to include the statically compiled dirb binary
-    original_pathvar = os.environ['PATH']
-    os.environ['PATH'] = original_pathvar \
-        + ':' + os.environ['LAMBDA_TASK_ROOT'] \
-        + '/vendor/nmap-standalone/' \
-        + '/vendor/dirb/'
-
-    # Read the queue
-    for record, keys in event.items():
-        for item in keys:
-            if "body" in item:
-                message = item['body']
-                scan_type, target, uuid = message.split('|')
-                if scan_type == "httpobservatory":
-                    scanner = HTTPObservatoryScanner()
-                    scan_result = scanner.scan(target)
-                    send_to_s3(target + "_httpobservatory", scan_result)
-                elif scan_type == "sshobservatory":
-                    scanner = SSHObservatoryScanner()
-                    scan_result = scanner.scan(target)
-                    send_to_s3(target + "_sshobservatory", scan_result)
-                elif scan_type == "tlsobservatory":
-                    scanner = TLSObservatoryScanner()
-                    scan_result = scanner.scan(target)
-                    send_to_s3(target + "_tlsobservatory", scan_result)
-                elif scan_type == "portscan":
-                    scanner = PortScanner(target)
-                    nmap_scanner = scanner.scanTCP()
-                    while nmap_scanner.still_scanning():
-                        # Wait for 1 second after the end of the scan
-                        nmap_scanner.wait(1)
-                elif scan_type == "tenableio":
-                    scanner = TIOScanner(logger=logger)
-                    nessus_scanner = scanner.scan(target)
-                    nessus_scanner.launch(wait=False)
-                elif scan_type == "websearch":
-                    searcher = WebSearcher(logger=logger)
-                    search_results = searcher.search(target)
-                    send_to_s3(target + "_websearch", search_results)
-                elif scan_type == "direnumscan":
-                    scanner = DirectoryEnumScanner(logger=logger)
-                    return_code, direnum_scanner = scanner.scan(target)
-                    # TODO: Note this may not be handling timeout case (partial output)
-                    if not return_code:
-                        send_to_s3(target + "_direnum", direnum_scanner)
+    # This is needed for nmap static library and
+    # dirb to be added to the path
+    _environ = dict(os.environ)
+    nmap_path = os.environ['LAMBDA_TASK_ROOT'] + '/vendor/nmap-standalone/'
+    dirb_path = os.environ['LAMBDA_TASK_ROOT'] + '/vendor/dirb/'
+    try:
+        os.environ.update({'PATH': os.environ['PATH'] + ':' + nmap_path + ':' + dirb_path})
+        # Read the queue
+        for record, keys in event.items():
+            for item in keys:
+                if "body" in item:
+                    message = item['body']
+                    scan_type, target, uuid = message.split('|')
+                    if scan_type == "httpobservatory":
+                        scanner = HTTPObservatoryScanner()
+                        scan_result = scanner.scan(target)
+                        send_to_s3(target + "_httpobservatory", scan_result)
+                    elif scan_type == "sshobservatory":
+                        scanner = SSHObservatoryScanner()
+                        scan_result = scanner.scan(target)
+                        send_to_s3(target + "_sshobservatory", scan_result)
+                    elif scan_type == "tlsobservatory":
+                        scanner = TLSObservatoryScanner()
+                        scan_result = scanner.scan(target)
+                        send_to_s3(target + "_tlsobservatory", scan_result)
+                    elif scan_type == "portscan":
+                        scanner = PortScanner(target)
+                        nmap_scanner = scanner.scanTCP()
+                        while nmap_scanner.still_scanning():
+                            # Wait for 1 second after the end of the scan
+                            nmap_scanner.wait(1)
+                    elif scan_type == "tenableio":
+                        scanner = TIOScanner(logger=logger)
+                        nessus_scanner = scanner.scan(target)
+                        nessus_scanner.launch(wait=False)
+                    elif scan_type == "websearch":
+                        searcher = WebSearcher(logger=logger)
+                        search_results = searcher.search(target)
+                        send_to_s3(target + "_websearch", search_results)
+                    elif scan_type == "direnumscan":
+                        scanner = DirectoryEnumScanner(logger=logger)
+                        return_code, direnum_scanner = scanner.scan(target)
+                        # TODO: Note this may not be handling timeout case (partial output)
+                        if not return_code:
+                            send_to_s3(target + "_direnum", direnum_scanner)
+                        else:
+                            logger.error("Directory enumeration could not be performed for: {}".format(target))
                     else:
-                        logger.error("Directory enumeration could not be performed for: {}".format(target))
+                        # Manually invoked, just log the message
+                        logger.info("Message in queue: {}".format(message))
                 else:
-                    # Manually invoked, just log the message
-                    logger.info("Message in queue: {}".format(message))
-            else:
-                logger.error("Unrecognized message in queue: {}".format(message))
+                    logger.error("Unrecognized message in queue: {}".format(message))
 
-    os.environ['PATH'] = original_pathvar
+    except Exception as e:
+        logger.error("Exception occurred while running scans from the queue: {}".format(e))
+    finally:
+        # Restore environment variables to their original values
+        os.environ.update(_environ)
 
 
 def putInQueue(event, context):

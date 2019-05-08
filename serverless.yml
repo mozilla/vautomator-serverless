@@ -142,7 +142,7 @@ functions:
     description: API endpoint which consumes a host and adds it to the scan queue for a Google search of a host. 
     events:
       - http:
-          patch: ondemand/websearch
+          path: ondemand/websearch
           method: POST
           cors: true
           private: ${self:custom.cfg.private}
@@ -154,7 +154,7 @@ functions:
     description: API endpoint which consumes a host and adds it to the scan queue for directory enumeration scan.
     events:
       - http:
-          patch: ondemand/direnum
+          path: ondemand/direnum
           method: POST
           cors: true
           private: ${self:custom.cfg.private}
@@ -164,7 +164,7 @@ functions:
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.
-    timeout: 60
+    timeout: 120
     events:
       # Invoke Lambda function once a week
       # Run at 6 PM UTC every Wednesday once
@@ -178,7 +178,7 @@ functions:
   cronHttpObservatoryScan:
     handler: handler.queue_scheduled_httpobservatory
     description: Cron job which adds a list of hosts to the scan queue for HTTP Observartory scan.
-    timeout: 60
+    timeout: 120
     events:
       # Invoke Lambda function once a day
       # Run at 4 PM UTC every day
@@ -191,7 +191,7 @@ functions:
   cronTlsObservatoryScan:
     handler: handler.queue_scheduled_tlsobservatory
     description: Cron job which adds a list of hosts to the scan queue for TLS Observatory scan.
-    timeout: 60
+    timeout: 120
     events:
       # Invoke Lambda function once a day
       # Run at 4 PM UTC every day
@@ -204,7 +204,7 @@ functions:
   cronSshObservatoryScan:
     handler: handler.queue_scheduled_sshobservatory
     description: Cron job which adds a list of hosts to the scan queue for SSH Observatory scan.
-    timeout: 60
+    timeout: 120
     events:
       # Invoke Lambda function once a day
       # Run at 4 PM UTC every day
@@ -217,7 +217,7 @@ functions:
   cronDirectoryEnumeration:
     handler: handler.queue_scheduled_direnumscan
     description: Cron job which adds a list of hosts to the scan queue for directory enumeration scan.
-    timeout: 900
+    timeout: 120
     events:
       # Invoke Lambda function once a week
       # Run at 6 PM UTC every Thursday once
@@ -231,8 +231,8 @@ functions:
   RunScanQueue:
     handler: handler.runScanFromQ
     description: Function that is triggered to run scans when new messages are in the queue.
-    # Giving this function a large timeout so port scans could run
-    timeout: 300
+    # Increasing this function's timeout's so port scans & directory enum scans could run
+    timeout: 900
     events:
       - sqs:
           arn:
