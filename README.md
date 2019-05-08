@@ -8,9 +8,11 @@ This is under development with more features being added as different branches. 
 - Addition of a target to the scan queue for HTTP Observatory scan by an API endpoint (`/ondemand/httpobservatory`)
 - Addition of a target to the scan queue for TLS Observatory scan by an API endpoint (`/ondemand/tlsobservatory`)
 - Addition of a target to the scan queue for SSH Observatory scan by an API endpoint (`/ondemand/sshobservatory`).
+- Addition of a target to the scan queue for a directory enumeration scan (currently with `dirb`) by an API endpoint (`/ondemand/direnum`)
 - _[OPTIONAL]_ Addition of a target to the scan queue for a Tenable.io scan by an API endpoint (`/ondemand/tenablescan`).
 - Performing requested scan type (port, HTTP Observatory, TLS Observatory or SSH Observatory) on hosts in the queue
 - Scheduled port scans from a hard-coded list of hosts (disabled by default)
+- Scheduled directory enumeration scans (via `dirb`) from a hard-coded list of hosts (disabled by default)
 - Scheduled HTTP Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
 - Scheduled TLS Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
 - Scheduled SSH Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
@@ -22,7 +24,9 @@ Results from all scans are placed in an S3 bucket specified in `serverless.yml`.
 
 Port scans are performed using a [statically compiled `nmap` binary](https://github.com/ernw/static-toolbox/releases/download/1.0.2/nmap-7.70SVN-b5bd185-x86_64-portable.zip), [packaged within the serverless application](https://github.com/mozilla/vautomator-serverless/blob/master/serverless.yml#L64-L66).
 
-_**Note:** UDP port scans are not supported as Lamdba functions can not be as root/privileged users._
+Directory enumeration scans are performed via `dirb`, compiled specifically for Amazon Linux and the binary and all supporting files packaged within the serverless application, similar to the `nmap` binary.
+
+_**Note:** UDP port scans are not supported as Lamdba functions can not run as root/privileged users._
 
 ## Get ready to deploy
 
@@ -66,15 +70,17 @@ _**Note:** UDP port scans are not supported as Lamdba functions can not be as ro
 ```
 Provide the FQDN (Fully Qualified Domain Name) you want to scan: infosec.mozilla.org
 INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
-INFO:root:Triggered a Port Scan of: infosec.mozilla.org
+INFO:root:Triggered a port scan of: infosec.mozilla.org
 INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
-INFO:root:Triggered an HTTP Observatory Scan of: infosec.mozilla.org
+INFO:root:Triggered a httpobservatory scan of: infosec.mozilla.org
 INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
-INFO:root:Triggered a TLS Observatory Scan of: infosec.mozilla.org
+INFO:root:Triggered a tlsobservatory scan of: infosec.mozilla.org
 INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
-INFO:root:Triggered an SSH Observatory Scan of: infosec.mozilla.org
+INFO:root:Triggered an sshobservatory scan of: infosec.mozilla.org
 INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
-INFO:root:Triggered an Tenable Scan of: infosec.mozilla.org
+INFO:root:Triggered a tenable scan of: infosec.mozilla.org
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
+INFO:root:Triggered a direnum of: infosec.mozilla.org
 ```
 
 To confirm all scans were performed and results were stored in S3 bucket:

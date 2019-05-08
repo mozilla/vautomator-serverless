@@ -77,8 +77,8 @@ class DirectoryEnumScanner():
             else:
                 try:
                     # Even though a lambda function can only run for 15 mins max
-                    # # We should probably kill a scan after 12 mins to be safe
-                    dirb_out, dirb_err = p.communicate(timeout=720)
+                    # # We should probably kill a scan after 10 mins to be safe
+                    dirb_out, dirb_err = p.communicate(timeout=600)
                 except subprocess.TimeoutExpired:
                     # If we are here, the command did run but got
                     # killed after the timeout period

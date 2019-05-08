@@ -31,8 +31,8 @@
 #define STRING_SIZE   	256
 #define DUMP_TIMEOUT  	100
 
-#define DUMP_DIR    	".cache/dirb/resume"
-#define OPTIONS_DUMP  	".cache/dirb/resume/options.dump"
-#define WORDLIST_DUMP 	".cache/dirb/resume/wordlist.dump"
-#define DIRLIST_DUMP  	".cache/dirb/resume/dirlist.dump"
+#define DUMP_DIR    	"/dirb/resume"
+#define OPTIONS_DUMP  	"/dirb/resume/options.dump"
+#define WORDLIST_DUMP 	"/dirb/resume/wordlist.dump"
+#define DIRLIST_DUMP  	"/dirb/resume/dirlist.dump"
 

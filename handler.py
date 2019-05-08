@@ -136,12 +136,8 @@ def runScanFromQ(event, context):
                         send_to_s3(target + "_websearch", search_results)
                     elif scan_type == "direnumscan":
                         scanner = DirectoryEnumScanner(logger=logger)
-                        return_code, direnum_scanner = scanner.scan(target)
-                        # TODO: Note this may not be handling timeout case (partial output)
-                        if not return_code:
-                            send_to_s3(target + "_direnum", direnum_scanner)
-                        else:
-                            logger.error("Directory enumeration could not be performed for: {}".format(target))
+                        return_code, direnum_result = scanner.scan(target)
+                        send_to_s3(target + "_direnum", direnum_result)
                     else:
                         # Manually invoked, just log the message
                         logger.info("Message in queue: {}".format(message))

@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 
   if(strncmp(argv[1], "-resume", 7)==0) {
     printf("(!) RESUMING...\n\n");
-    resume();
+    // resume();
     }
 
   strncpy(options.url_inicial, argv[1], STRING_SIZE-1);

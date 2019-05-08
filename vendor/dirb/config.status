@@ -437,10 +437,10 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/app/vendor/dirb222'
+ac_pwd='/Users/caggles/Desktop/Moz/Dev/vautomator-sprint/vautomator-serverless/vendor/dirb'
 srcdir='.'
 INSTALL='/usr/bin/install -c'
-AWK='gawk'
+AWK='awk'
 test -n "$AWK" || AWK=awk
 # The default lists apply if the user does not specify any file.
 ac_need_defaults=:
@@ -638,19 +638,19 @@ S["NETWORK_LIBS"]="-lcurl"
 S["NETWORK_CFLAGS"]=""
 S["am__untar"]="${AMTAR} xf -"
 S["am__tar"]="${AMTAR} chof - \"$$tardir\""
-S["AMTAR"]="${SHELL} /app/vendor/dirb222/missing --run tar"
+S["AMTAR"]="${SHELL} /Users/caggles/Desktop/Moz/Dev/vautomator-sprint/vautomator-serverless/vendor/dirb/missing --run tar"
 S["am__leading_dot"]="."
 S["SET_MAKE"]=""
-S["AWK"]="gawk"
-S["mkdir_p"]="mkdir -p --"
+S["AWK"]="awk"
+S["mkdir_p"]="$(mkinstalldirs)"
 S["INSTALL_STRIP_PROGRAM"]="${SHELL} $(install_sh) -c -s"
 S["STRIP"]=""
-S["install_sh"]="/app/vendor/dirb222/install-sh"
-S["MAKEINFO"]="${SHELL} /app/vendor/dirb222/missing --run makeinfo"
-S["AUTOHEADER"]="${SHELL} /app/vendor/dirb222/missing --run autoheader"
-S["AUTOMAKE"]="${SHELL} /app/vendor/dirb222/missing --run automake-1.9"
-S["AUTOCONF"]="${SHELL} /app/vendor/dirb222/missing --run autoconf"
-S["ACLOCAL"]="${SHELL} /app/vendor/dirb222/missing --run aclocal-1.9"
+S["install_sh"]="/Users/caggles/Desktop/Moz/Dev/vautomator-sprint/vautomator-serverless/vendor/dirb/install-sh"
+S["MAKEINFO"]="${SHELL} /Users/caggles/Desktop/Moz/Dev/vautomator-sprint/vautomator-serverless/vendor/dirb/missing --run makeinfo"
+S["AUTOHEADER"]="${SHELL} /Users/caggles/Desktop/Moz/Dev/vautomator-sprint/vautomator-serverless/vendor/dirb/missing --run autoheader"
+S["AUTOMAKE"]="${SHELL} /Users/caggles/Desktop/Moz/Dev/vautomator-sprint/vautomator-serverless/vendor/dirb/missing --run automake-1.9"
+S["AUTOCONF"]="${SHELL} /Users/caggles/Desktop/Moz/Dev/vautomator-sprint/vautomator-serverless/vendor/dirb/missing --run autoconf"
+S["ACLOCAL"]="${SHELL} /Users/caggles/Desktop/Moz/Dev/vautomator-sprint/vautomator-serverless/vendor/dirb/missing --run aclocal-1.9"
 S["VERSION"]="2.22"
 S["PACKAGE"]="dirb"
 S["CYGPATH_W"]="echo"
@@ -662,8 +662,8 @@ S["host_alias"]=""
 S["build_alias"]=""
 S["LIBS"]="-lcurl "
 S["ECHO_T"]=""
-S["ECHO_N"]="-n"
-S["ECHO_C"]=""
+S["ECHO_N"]=""
+S["ECHO_C"]="\\c"
 S["DEFS"]="-DHAVE_CONFIG_H"
 S["mandir"]="${datarootdir}/man"
 S["localedir"]="${datarootdir}/locale"

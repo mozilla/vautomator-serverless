@@ -21,6 +21,7 @@ void dump(void) {
   struct tm *ptr;
   time_t tm;
   char *home=NULL;
+  char *tmp=NULL;
   char *dumppath=NULL;
   char *optionspath=NULL;
   char *wordlistpath=NULL;
@@ -35,10 +36,11 @@ void dump(void) {
   // Comprobamos si existe el directorio y sino intentamos crealo
 
   home = getenv("HOME");
-  asprintf(&dumppath,"%s/%s", home, DUMP_DIR);
-  asprintf(&optionspath, "%s/%s", home, OPTIONS_DUMP);
-  asprintf(&wordlistpath, "%s/%s", home, WORDLIST_DUMP);
-  asprintf(&dirlistpath, "%s/%s", home, DIRLIST_DUMP);
+  tmp = "/tmp";
+  asprintf(&dumppath,"%s/%s", tmp, DUMP_DIR);
+  asprintf(&optionspath, "%s/%s", tmp, OPTIONS_DUMP);
+  asprintf(&wordlistpath, "%s/%s", tmp, WORDLIST_DUMP);
+  asprintf(&dirlistpath, "%s/%s", tmp, DIRLIST_DUMP);
 
   if(stat(dumppath, &buffer)<0) {
     if(mkpath(dumppath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)<0) {
