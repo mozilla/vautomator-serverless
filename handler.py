@@ -1,7 +1,6 @@
 import logging
 import boto3
 import os
-
 from lib.s3_helper import send_to_s3
 from lib.target import Target
 from lib.portscan_handler import PortScanHandler
@@ -10,12 +9,14 @@ from lib.tlsobsscan_handler import TLSObsScanHandler
 from lib.sshscan_handler import SSHScanHandler
 from lib.tenableio_scan_handler import TIOScanHandler
 from lib.websearch_handler import WebSearchHandler
+from lib.direnum_scan_handler import DirectoryEnumScanHandler
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from scanners.ssh_observatory_scanner import SSHObservatoryScanner
 from scanners.tls_observatory_scanner import TLSObservatoryScanner
 from scanners.port_scanner import PortScanner
 from scanners.tenable_io_scanner import TIOScanner
 from scanners.websearcher import WebSearcher
+from scanners.direnum_scanner import DirectoryEnumScanner
 from lib.hosts import Hosts
 
 logger = logging.getLogger(__name__)
@@ -79,55 +80,75 @@ def queue_websearch(event, context):
     return response
 
 
+def queue_direnumscan(event, context):
+    direnum_scan_handler = DirectoryEnumScanHandler(sqs_client=SQS_CLIENT, logger=logger)
+    response = direnum_scan_handler.queue(event, context)
+    return response
+
+
+def queue_scheduled_direnumscan(event, context):
+    scheduled_direnum_scan_handler = DirectoryEnumScanHandler(sqs_client=SQS_CLIENT, logger=logger)
+    scheduled_direnum_scan_handler.queue_scheduled(event, context)
+
+
 # To leave handler as lean as possible, we should
 # probably move this to another file/module also
 def runScanFromQ(event, context):
 
-    # This is needed for nmap static library to be added to the path
-    original_pathvar = os.environ['PATH']
-    os.environ['PATH'] = original_pathvar \
-        + ':' + os.environ['LAMBDA_TASK_ROOT'] \
-        + '/vendor/nmap-standalone/'
-
-    # Read the queue
-    for record, keys in event.items():
-        for item in keys:
-            if "body" in item:
-                message = item['body']
-                scan_type, target, uuid = message.split('|')
-                if scan_type == "httpobservatory":
-                    scanner = HTTPObservatoryScanner()
-                    scan_result = scanner.scan(target)
-                    send_to_s3(target + "_httpobservatory", scan_result)
-                elif scan_type == "sshobservatory":
-                    scanner = SSHObservatoryScanner()
-                    scan_result = scanner.scan(target)
-                    send_to_s3(target + "_sshobservatory", scan_result)
-                elif scan_type == "tlsobservatory":
-                    scanner = TLSObservatoryScanner()
-                    scan_result = scanner.scan(target)
-                    send_to_s3(target + "_tlsobservatory", scan_result)
-                elif scan_type == "portscan":
-                    scanner = PortScanner(target)
-                    nmap_scanner = scanner.scanTCP()
-                    while nmap_scanner.still_scanning():
-                        # Wait for 1 second after the end of the scan
-                        nmap_scanner.wait(1)
-                elif scan_type == "tenableio":
-                    scanner = TIOScanner(logger=logger)
-                    nessus_scanner = scanner.scan(target)
-                    nessus_scanner.launch(wait=False)
-                elif scan_type == "websearch":
-                    searcher = WebSearcher(logger=logger)
-                    search_results = searcher.search(target)
-                    send_to_s3(target + "_websearch", search_results)
+    # This is needed for nmap static library and
+    # dirb to be added to the path
+    _environ = dict(os.environ)
+    nmap_path = os.environ['LAMBDA_TASK_ROOT'] + '/vendor/nmap-standalone/'
+    dirb_path = os.environ['LAMBDA_TASK_ROOT'] + '/vendor/dirb/'
+    try:
+        os.environ.update({'PATH': os.environ['PATH'] + ':' + nmap_path + ':' + dirb_path})
+        # Read the queue
+        for record, keys in event.items():
+            for item in keys:
+                if "body" in item:
+                    message = item['body']
+                    scan_type, target, uuid = message.split('|')
+                    if scan_type == "httpobservatory":
+                        scanner = HTTPObservatoryScanner()
+                        scan_result = scanner.scan(target)
+                        send_to_s3(target + "_httpobservatory", scan_result)
+                    elif scan_type == "sshobservatory":
+                        scanner = SSHObservatoryScanner()
+                        scan_result = scanner.scan(target)
+                        send_to_s3(target + "_sshobservatory", scan_result)
+                    elif scan_type == "tlsobservatory":
+                        scanner = TLSObservatoryScanner()
+                        scan_result = scanner.scan(target)
+                        send_to_s3(target + "_tlsobservatory", scan_result)
+                    elif scan_type == "portscan":
+                        scanner = PortScanner(target)
+                        nmap_scanner = scanner.scanTCP()
+                        while nmap_scanner.still_scanning():
+                            # Wait for 1 second after the end of the scan
+                            nmap_scanner.wait(1)
+                    elif scan_type == "tenableio":
+                        scanner = TIOScanner(logger=logger)
+                        nessus_scanner = scanner.scan(target)
+                        nessus_scanner.launch(wait=False)
+                    elif scan_type == "websearch":
+                        searcher = WebSearcher(logger=logger)
+                        search_results = searcher.search(target)
+                        send_to_s3(target + "_websearch", search_results)
+                    elif scan_type == "direnumscan":
+                        scanner = DirectoryEnumScanner(logger=logger)
+                        return_code, direnum_result = scanner.scan(target)
+                        send_to_s3(target + "_direnum", direnum_result)
+                    else:
+                        # Manually invoked, just log the message
+                        logger.info("Message in queue: {}".format(message))
                 else:
-                    # Manually invoked, just log the message
-                    logger.info("Message in queue: {}".format(message))
-            else:
-                logger.error("Unrecognized message in queue: {}".format(message))
+                    logger.error("Unrecognized message in queue: {}".format(message))
 
-    os.environ['PATH'] = original_pathvar
+    except Exception as e:
+        logger.error("Exception occurred while running scans from the queue: {}".format(e))
+    finally:
+        # Restore environment variables to their original values
+        os.environ.update(_environ)
 
 
 def putInQueue(event, context):
