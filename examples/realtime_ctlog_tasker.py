@@ -25,14 +25,16 @@ tlsobs_scan_url = API_GW_URL + "/dev/ondemand/tlsobservatory"
 sshobs_scan_url = API_GW_URL + "/dev/ondemand/sshobservatory"
 tenableio_scan_url = API_GW_URL + "/dev/ondemand/tenablescan"
 direnum_scan_url = API_GW_URL + "/dev/ondemand/direnum"
+websearch_url = API_GW_URL + "/dev/ondemand/websearch"
 
 scan_types = {
-    "port": portscan_url,
-    "httpobservatory": httpobs_scan_url,
-    "tlsobservatory": tlsobs_scan_url,
-    "sshobservatory": sshobs_scan_url,
-    "tenable": tenableio_scan_url,
-    "direnum": direnum_scan_url
+    'port': portscan_url,
+    'httpobservatory': httpobs_scan_url,
+    'tlsobservatory': tlsobs_scan_url,
+    'sshobservatory': sshobs_scan_url,
+    'websearch': websearch_url,
+    'tenable': tenableio_scan_url,
+    'direnum': direnum_scan_url
 }
 
 
