@@ -9,6 +9,7 @@ This is under development with more features being added as different branches. 
 - Addition of a target to the scan queue for TLS Observatory scan by an API endpoint (`/ondemand/tlsobservatory`)
 - Addition of a target to the scan queue for SSH Observatory scan by an API endpoint (`/ondemand/sshobservatory`).
 - Addition of a target to the scan queue for a directory enumeration scan (currently with `dirb`) by an API endpoint (`/ondemand/direnum`)
+- Addition of a target to the scan quque for a Google web search by an API endpoint (`/ondemand/websearch`)
 - _[OPTIONAL]_ Addition of a target to the scan queue for a Tenable.io scan by an API endpoint (`/ondemand/tenablescan`).
 - Performing requested scan type (port, HTTP Observatory, TLS Observatory or SSH Observatory) on hosts in the queue
 - Scheduled port scans from a hard-coded list of hosts (disabled by default)
@@ -69,18 +70,20 @@ _**Note:** UDP port scans are not supported as Lamdba functions can not run as r
 
 ```
 Provide the FQDN (Fully Qualified Domain Name) you want to scan: infosec.mozilla.org
-INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/portscan
 INFO:root:Triggered a port scan of: infosec.mozilla.org
-INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/httpobservatory
 INFO:root:Triggered a httpobservatory scan of: infosec.mozilla.org
-INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/tlsobservatory
 INFO:root:Triggered a tlsobservatory scan of: infosec.mozilla.org
-INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/sshobservatory
 INFO:root:Triggered an sshobservatory scan of: infosec.mozilla.org
-INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/tenablescan
 INFO:root:Triggered a tenable scan of: infosec.mozilla.org
-INFO:root:Sending POST to <YOUR-REST-ENDPOINT>
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/direnum
 INFO:root:Triggered a direnum of: infosec.mozilla.org
+INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/websearch
+INFO:root:Triggered a web search of: infosec.mozilla.org
 ```
 
 To confirm all scans were performed and results were stored in S3 bucket:
