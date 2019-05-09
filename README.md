@@ -45,9 +45,10 @@ _**Note:** UDP port scans are not supported as Lamdba functions can not run as r
         # Y for Tenable.io support, N or blank if not
         TENABLE_IO := Y / N 
         
-        # If you would like to create a dedicated KMS for vautomator
-        # Blank if you would like to use default AWS SSM key for
-        # encrypted storage
+        # If you would like to create a dedicated KMS for vautomator,
+        # specify a policy file here (an example policy file is
+        # provided in the repository). Otherwise leave blank if
+        # you would like to use default AWS SSM key for encrypted storage
         KMS_POLICY_FILE := <YOUR-KMS-POLICY-JSON-FILE>
         
         # Blank if a policy file is specified, 
@@ -66,7 +67,9 @@ _**Note:** UDP port scans are not supported as Lamdba functions can not run as r
 
 ## Examples
 
-- Once deployed properly, you can kick of an ondemand scan on a host, using: `API_GW_URL=<YOUR-REST-ENDPOINT> python3 examples/ondemand_tasker.py`
+- Once deployed properly, you can kick of an ondemand scan on a host, using: `API_PROFILE=<YOUR-AWS-PROFILE/ROLE> python3 examples/ondemand_tasker.py`. Alternatively, you can hard-code your AWS profile in a variable in the code for examples.
+  
+  Note: You must provide an AWS profile/role if you'd like to use them as clients. This is required in order to programmatically fetch the API gateway URL details for your vautomator-serverless instance, as well as the API gateway key which currently protects the REST APIs.
 
 ```
 Provide the FQDN (Fully Qualified Domain Name) you want to scan: infosec.mozilla.org
@@ -89,7 +92,7 @@ INFO:root:Triggered a web search of: infosec.mozilla.org
 To confirm all scans were performed and results were stored in S3 bucket:
 
 ```
-$ aws --profile <YOUR-PROFILE> s3 ls s3://<YOUR-S3-BUCKET> | sort -r
+$ aws --profile <YOUR-PROFILE> s3 ls s3://<YOUR-S3-BUCKET> | sort -r | head -n 10
 2019-04-10 00:03:17      10487 infosec.mozilla.org_httpobservatory.json
 2019-04-10 00:03:22      77028 infosec.mozilla.org_tlsobservatory.json
 2019-04-10 00:03:37       5709 infosec.mozilla.org_tcpscan.json
