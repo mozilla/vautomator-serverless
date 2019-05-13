@@ -56,6 +56,8 @@ provider:
     HOST_LIST: 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
     SQS_URL:
       Ref: SQSQueue
+    S3_BUCKET:
+      Ref: S3BucketResults
   apiKeys:
     - ${self:service}-api-key
 
