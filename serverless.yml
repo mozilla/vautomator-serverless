@@ -58,6 +58,8 @@ provider:
       Ref: SQSQueue
     S3_BUCKET:
       Ref: S3BucketResults
+    # Local folder to save the scan results to, make sure it exists and is a writeable folder
+    SCAN_RESULTS_BASE_PATH: '/tmp/vautomator-serverless/results'
   apiKeys:
     - ${self:service}-api-key
 
@@ -163,6 +165,16 @@ functions:
     tags:
       TYPE: ondemand
       SCAN_TYPE: direnum
+  onDemandDownloadScanResults:
+    handler: handler.download_results
+    description: API endpoint which consumes a host and serves a ZIP file containing all scan results for that host.
+    events:
+      - http:
+          path: results
+          method: POST
+          cors: true
+          private: ${self:custom.cfg.private}
+          contentHandling: CONVERT_TO_BINARY
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.
@@ -251,6 +263,9 @@ functions:
 plugins:
   - serverless-python-requirements
   - serverless-pseudo-parameters
+  - serverless-apigw-binary
+  - serverless-apigwy-binary
+
 resources:
   Resources:
     S3BucketResults:
@@ -287,3 +302,6 @@ custom:
     private: true # Change to 'false' to disable api-key authorization
   pythonRequirements:
     dockerizePip: true
+  apigwBinary:
+    types:
+      - 'application/gzip'
