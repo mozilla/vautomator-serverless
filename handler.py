@@ -10,6 +10,7 @@ from lib.sshscan_handler import SSHScanHandler
 from lib.tenableio_scan_handler import TIOScanHandler
 from lib.websearch_handler import WebSearchHandler
 from lib.direnum_scan_handler import DirectoryEnumScanHandler
+from lib.download_handler import DownloadHandler
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from scanners.ssh_observatory_scanner import SSHObservatoryScanner
 from scanners.tls_observatory_scanner import TLSObservatoryScanner
@@ -22,6 +23,7 @@ from lib.hosts import Hosts
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 SQS_CLIENT = boto3.client('sqs')
+S3_CLIENT = boto3.client('s3')
 
 
 def queue_portscan(event, context):
@@ -89,6 +91,12 @@ def queue_direnumscan(event, context):
 def queue_scheduled_direnumscan(event, context):
     scheduled_direnum_scan_handler = DirectoryEnumScanHandler(sqs_client=SQS_CLIENT, logger=logger)
     scheduled_direnum_scan_handler.queue_scheduled(event, context)
+
+
+def download_results(event, context):
+    download_handler = DownloadHandler(s3_client=S3_CLIENT, logger=logger)
+    response = download_handler.downloadResults(event, context)
+    return response
 
 
 # To leave handler as lean as possible, we should

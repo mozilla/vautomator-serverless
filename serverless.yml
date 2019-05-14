@@ -175,6 +175,8 @@ functions:
           cors: true
           private: ${self:custom.cfg.private}
           contentHandling: CONVERT_TO_BINARY
+    tags:
+      TYPE: ondemand
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.
