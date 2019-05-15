@@ -24,6 +24,16 @@ provider:
           - "/*"
    - Effect: "Allow"
      Action:
+       - "s3:ListBucket"
+     Resource: 
+      Fn::Join:
+        - ""
+        - - Fn::GetAtt:
+            - S3BucketResults
+            - Arn
+          - ""
+   - Effect: "Allow"
+     Action:
       - "sqs:SendMessage"
      Resource:
       Fn::GetAtt: [ SQSQueue, Arn ]
@@ -58,7 +68,7 @@ provider:
       Ref: SQSQueue
     S3_BUCKET:
       Ref: S3BucketResults
-    # Local folder to save the scan results to, make sure it exists and is a writeable folder
+    # Folder to save the scan results to, make sure it is located under /tmp
     SCAN_RESULTS_BASE_PATH: '/tmp/vautomator-serverless/results'
   apiKeys:
     - ${self:service}-api-key
@@ -174,7 +184,6 @@ functions:
           method: POST
           cors: true
           private: ${self:custom.cfg.private}
-          contentHandling: CONVERT_TO_BINARY
     tags:
       TYPE: ondemand
   cronPortScan:
@@ -266,7 +275,6 @@ plugins:
   - serverless-python-requirements
   - serverless-pseudo-parameters
   - serverless-apigw-binary
-  - serverless-apigwy-binary
 
 resources:
   Resources:

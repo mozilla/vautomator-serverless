@@ -41,12 +41,12 @@ class DownloadHandler(object):
             # Search S3 bucket for results matching the target host
             try:
                 scan_output_list = []
-                for scan_result in self.client.list_objects(Bucket=self.bucket_name, Prefix=target.name)['Contents']:
-                    scan_output_list.append = str(scan_result['Key'])
+                for scan_result in self.s3_client.list_objects(Bucket=self.bucket_name, Prefix=target.name)['Contents']:
+                    scan_output_list.append(str(scan_result['Key']))
             except Exception as e:
                 # If we are here, there are no results for that host,
                 # or the bucket name was wrong
-                self.logger.warning("No scan output found in the bucket for: {}".format(target.name))
+                self.logger.warning("No scan output found in the bucket for: {}, exception: {}".format(target.name, e))
                 return Response({
                     "statusCode": 404,
                     "body": json.dumps({'error': 'No results found for target'})
@@ -58,8 +58,8 @@ class DownloadHandler(object):
                 try:
                     if not os.path.exists(host_results_dir):
                         os.makedirs(host_results_dir)
-                except PermissionError:
-                    self.logger.error("Unable to store scan results at {}".format(host_results_dir))
+                except PermissionError as e:
+                    self.logger.error("Unable to store scan results at {}, exception: {}".format(host_results_dir, e))
                     return Response({
                         "statusCode": 500,
                         "body": json.dumps({'error': 'Unable to download scan results'})
@@ -68,7 +68,7 @@ class DownloadHandler(object):
                 # Downloading output files to /tmp/<hostname> on the
                 # "serverless" server, we should be OK to write to /tmp
                 for output in scan_output_list:
-                    self.client.download_file(
+                    self.s3_client.download_file(
                         self.bucket_name,
                         output,
                         host_results_dir + '/{}'.format(output)
@@ -77,11 +77,14 @@ class DownloadHandler(object):
                 # Downloaded the output for the target on the "serverless" server
                 # Now, we need to zip it up and return all
                 # TODO: Call the util function to zip it up
-                tgz_results = package_results(target.name + ".tar.gz", host_results_dir)
+                tgz_results = package_results(host_results_dir)
                 return Response({
                     "statusCode": 200,
-                    "headers": {"X-Content-Type": "application/gzip"},
-                    "body": base64.b64encode(tgz_results).decode("utf-8"),
+                    "headers": {
+                        "Content-Type": "application/gzip",
+                        "Content-Disposition": "attachment; filename={}.tgz".format(target.name)
+                    },
+                    "body": base64.b64encode(tgz_results.getvalue()).decode("utf-8"),
                     "isBase64Encoded" : True
                 }).with_security_headers()
 
