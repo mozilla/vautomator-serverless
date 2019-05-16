@@ -75,8 +75,7 @@ class DownloadHandler(object):
                     )
                 self.logger.info("Scan output for {} downloaded to {}".format(target.name, host_results_dir))
                 # Downloaded the output for the target on the "serverless" server
-                # Now, we need to zip it up and return all
-                # TODO: Call the util function to zip it up
+                # Now, we need to zip it up and return
                 tgz_results = package_results(host_results_dir)
                 return Response({
                     "statusCode": 200,

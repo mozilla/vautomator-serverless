@@ -74,6 +74,12 @@ def print_callback(message, context):
                 if fqdn.endswith(domain_pattern) and ('*' not in fqdn):
 
                     session = requests.Session()
+                    session.headers.update(
+                        {
+                            'X-Api-Key': gwapi_key,
+                            'Content-Type': 'application/json'
+                        }
+                    )
                     for scan, scan_url in scan_types.items():
                         logging.info("Sending POST to {}".format(scan_url))
                         response = session.post(scan_url, data="{\"target\":\"" + fqdn + "\"}")
@@ -81,6 +87,9 @@ def print_callback(message, context):
                             logging.info("Triggered a {} scan of: {}".format(scan, fqdn))
                             time.sleep(1)
                     session.close()
+                    logging.info(
+                        "Scans kicked off for {}. Run \"download_results.py\" to have the scan results.".format(fqdn)
+                    )
 
 
 certstream.listen_for_events(print_callback, url='wss://certstream.calidog.io/')

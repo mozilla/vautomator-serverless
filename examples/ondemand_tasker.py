@@ -62,7 +62,12 @@ scan_types = {
 }
 
 session = requests.Session()
-session.headers.update({'X-Api-Key': gwapi_key})
+session.headers.update(
+    {
+        'X-Api-Key': gwapi_key,
+        'Content-Type': 'application/json'
+    }
+)
 for scan, scan_url in scan_types.items():
     logging.info("Sending POST to {}".format(scan_url))
     response = session.post(scan_url, data="{\"target\":\"" + target.name + "\"}")
@@ -71,3 +76,7 @@ for scan, scan_url in scan_types.items():
         time.sleep(1)
 
 session.close()
+time.sleep(2)
+logging.info(
+    "Scans kicked off for {}. Run \"download_results.py\" in 15 minutes to have the scan results.".format(target.name)
+)

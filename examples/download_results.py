@@ -62,7 +62,6 @@ if response.status_code == 200 and response.headers['Content-Type'] == "applicat
     logging.info("Downloaded scan results for: {}, saving to disk...".format(target.name))
     time.sleep(1)
     with open(os.path.join(uppath(os.getcwd(), 1), "results/{}.tgz".format(target.name)), 'wb') as out_file:
-        # response.raw.decode_content = True
         shutil.copyfileobj(response.raw, out_file)
         logging.info("Scan results for {} are saved in the results folder.".format(target.name))
 else:
