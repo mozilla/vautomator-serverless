@@ -17,6 +17,7 @@ This is under development with more features being added as different branches. 
 - Scheduled HTTP Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
 - Scheduled TLS Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
 - Scheduled SSH Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
+- An endpoint to retrieve the scan results for a given host (`/results`)
 - Manually add a host to the scan queue (for PoC purposes).
 
 All API endpoints are currently protected by an API key. This will be replaced with SSO integration.
@@ -63,13 +64,11 @@ _**Note:** UDP port scans are not supported as Lamdba functions can not run as r
 
 9. Run `make deploy` to deploy to AWS!
 
-10. If you have no CloudFormation errors and if you see `Service Information` listing your lambda functions/endpoints, you are good to go.
+10. If you have no serverless/CloudFormation errors and if you see `Service Information` listing your lambda functions/endpoints, you are good to go.
 
 ## Examples
 
-- Once deployed properly, you can kick of an ondemand scan on a host, using: `API_PROFILE=<YOUR-AWS-PROFILE/ROLE> python3 examples/ondemand_tasker.py`. Alternatively, you can hard-code your AWS profile in a variable in the code for examples.
-  
-  Note: You must provide an AWS profile/role if you'd like to use them as clients. This is required in order to programmatically fetch the API gateway URL details for your vautomator-serverless instance, as well as the API gateway key which currently protects the REST APIs.
+- Once deployed properly, you can kick of an ondemand scan on a host, using: `AWS_PROFILE=<YOUR-AWS-PROFILE/ROLE> python3 examples/ondemand_tasker.py`. Alternatively, you can hard-code your AWS profile in a variable in the code for examples.
 
 ```
 Provide the FQDN (Fully Qualified Domain Name) you want to scan: infosec.mozilla.org
@@ -87,9 +86,25 @@ INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/direnum
 INFO:root:Triggered a direnum of: infosec.mozilla.org
 INFO:root:Sending POST to <YOUR-REST-ENDPOINT>/ondemand/websearch
 INFO:root:Triggered a web search of: infosec.mozilla.org
+INFO:root:Scans kicked off for infosec.mozilla.org. Run "download_results.py" in 15 minutes to have the scan results.
 ```
 
-To confirm all scans were performed and results were stored in S3 bucket:
+- You can retrieve all scan results hosted on S3 for a given host, by using the `download_results.py` client. This will download a tar.gz file containing all the scan output for a given host, to the `results` folder.
+
+```
+$ AWS_PROFILE=<YOUR-AWS-PROFILE/ROLE> python3 download_results.py
+Provide the FQDN (Fully Qualified Domain Name) you want the results for: infosec.mozilla.org
+
+INFO:root:Downloaded scan results for infosec.mozilla.org, saving to disk...
+
+$ file ../results/infosec.mozilla.org.tgz
+../results/infosec.mozilla.org.tgz: gzip compressed data, last modified: Wed May 15 13:49:36 2019, max compression
+```
+
+  _Note: You must provide an AWS profile/role if you'd like to use them as clients. This is required in order to programmatically fetch the API gateway URL details for your vautomator-serverless instance, as well as the API gateway key which currently protects the REST APIs._
+
+
+- To confirm all scans were performed and results were stored in S3 bucket:
 
 ```
 $ aws --profile <YOUR-PROFILE> s3 ls s3://<YOUR-S3-BUCKET> | sort -r | head -n 10
