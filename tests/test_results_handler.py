@@ -1,8 +1,6 @@
 import pytest
 import boto3
-import time
 from lib.results_handler import ResultsHandler
-from lib.hosts import Hosts
 from moto import mock_s3
 
 TEST_SCAN_RESULTS_BASE_PATH = '/tmp/vautomator-serverless/results'
@@ -19,7 +17,7 @@ class TestResultsHandler():
         boto3.setup_default_session()
 
         s3_client = boto3.client('s3', 'us-west-2')
-        test_bucket_name = "test-vautomator-results"
+        test_bucket_name = "test-results-handler"
         test_bucket = s3_client.create_bucket(
             Bucket=test_bucket_name
         )
@@ -68,7 +66,8 @@ class TestResultsHandler():
         client, bucket, bucket_name = s3
         target = "infosec.mozilla.org"
         path = "/abc/def"  # A path that does not exist
-        # Ensure we have matching objects in the test S3 bucket
+
+        # Ensure we have matching objects in the test S3 bucket to rule out other failure scenario
         client.put_object(Bucket=bucket_name, Body=b'ABCD', Key='{}_direnum.json'.format(target))
         client.put_object(Bucket=bucket_name, Body=b'ABCD', Key='{}_websearch.json'.format(target))
         test_event = {"body": '{"target": "' + target + '"}'}

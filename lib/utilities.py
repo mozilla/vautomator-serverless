@@ -16,8 +16,7 @@ def uppath(filepath, n):
 
 def package_results(source_dir, out_file=None):
     if out_file:
-        # Write to file on disk
-
+        # TODO: Write to file on disk
         return out_file
     else:
         targz = io.BytesIO()
