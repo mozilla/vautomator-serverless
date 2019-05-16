@@ -11,7 +11,7 @@ def send_to_s3(hostname, scan_json, client=S3_CLIENT):
     key = "{}.{}".format(hostname, "json")
 
     client.put_object(Body=json.dumps(scan_json, indent=4, sort_keys=True), Bucket=S3_BUCKET,
-                      Key=key, ACL='public-read')
+                      Key=key, ACL='private')
     url = "https://s3.amazonaws.com/{}/{}".format(S3_BUCKET, key)
     logging.info("Uploaded result file to URL: {}".format(url))
 
