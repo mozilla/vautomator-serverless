@@ -68,7 +68,7 @@ _**Note:** UDP port scans are not supported as Lamdba functions can not run as r
 
 ## Examples
 
-- Once deployed properly, you can kick of an ondemand scan on a host, using: `AWS_PROFILE=<YOUR-AWS-PROFILE/ROLE> python3 examples/ondemand_tasker.py`. Alternatively, you can hard-code your AWS profile in a variable in the code for examples.
+- Once deployed properly, you can kick off an ondemand scan on a host, using: `AWS_PROFILE=<YOUR-AWS-PROFILE/ROLE> python3 examples/ondemand_tasker.py`. Alternatively, you can hard-code your AWS profile in a variable in the code for examples.
 
 ```
 Provide the FQDN (Fully Qualified Domain Name) you want to scan: infosec.mozilla.org
