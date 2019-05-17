@@ -5,8 +5,10 @@ import time
 import os
 import sys
 import boto3
+import shutil
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from lib.target import Target
+from lib.utilities import uppath
 
 # This is an example of an on demand scan that an engineer might run should they have
 # interest in getting immediate vulnerability data about a given FQDN. This would be
@@ -36,47 +38,34 @@ rest_api_id, stage_name = "".join(aws_response['stageKeys']).split('/')
 gwapi_key = aws_response['value']
 API_GW_URL = "https://{}.execute-api.{}.amazonaws.com/".format(rest_api_id, session.region_name)
 
-fqdn = input("Provide the FQDN (Fully Qualified Domain Name) you want to scan: ")
+fqdn = input("Provide the FQDN (Fully Qualified Domain Name) you want the results for: ")
 try:
     target = Target(fqdn)
 except AssertionError:
     logging.error("Target validation failed: target must be an FQDN or IPv4 only.")
     sys.exit(-2)
 
-portscan_url = API_GW_URL + "{}/ondemand/portscan".format(stage_name)
-httpobs_scan_url = API_GW_URL + "{}/ondemand/httpobservatory".format(stage_name)
-tlsobs_scan_url = API_GW_URL + "{}/ondemand/tlsobservatory".format(stage_name)
-sshobs_scan_url = API_GW_URL + "{}/ondemand/sshobservatory".format(stage_name)
-tenableio_scan_url = API_GW_URL + "{}/ondemand/tenablescan".format(stage_name)
-direnum_scan_url = API_GW_URL + "{}/ondemand/direnum".format(stage_name)
-websearch_url = API_GW_URL + "{}/ondemand/websearch".format(stage_name)
-
-scan_types = {
-    'port': portscan_url,
-    'httpobservatory': httpobs_scan_url,
-    'tlsobservatory': tlsobs_scan_url,
-    'sshobservatory': sshobs_scan_url,
-    'websearch': websearch_url,
-    'tenable': tenableio_scan_url,
-    'direnum': direnum_scan_url
-}
+download_url = API_GW_URL + "{}/results".format(stage_name)
 
 session = requests.Session()
 session.headers.update(
     {
         'X-Api-Key': gwapi_key,
+        'Accept': 'application/gzip',
         'Content-Type': 'application/json'
     }
 )
-for scan, scan_url in scan_types.items():
-    logging.info("Sending POST to {}".format(scan_url))
-    response = session.post(scan_url, data="{\"target\":\"" + target.name + "\"}")
-    if response.status_code == 200 and 'uuid' in response.json():
-        logging.info("Triggered a {} scan of: {}".format(scan, target.name))
-        time.sleep(1)
+
+logging.info("Sending POST to {}".format(download_url))
+response = session.post(download_url, data="{\"target\":\"" + target.name + "\"}", stream=True)
+if response.status_code == 200 and response.headers['Content-Type'] == "application/gzip":
+    logging.info("Downloaded scan results for: {}, saving to disk...".format(target.name))
+    time.sleep(1)
+    with open(os.path.join(uppath(os.getcwd(), 1), "results/{}.tgz".format(target.name)), 'wb') as out_file:
+        shutil.copyfileobj(response.raw, out_file)
+        logging.info("Scan results for {} are saved in the results folder.".format(target.name))
+else:
+    logging.error("No results found for: {}".format(target.name))
+del response
 
 session.close()
-time.sleep(2)
-logging.info(
-    "Scans kicked off for {}. Run \"download_results.py\" in 15 minutes to have the scan results.".format(target.name)
-)

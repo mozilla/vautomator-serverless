@@ -24,6 +24,16 @@ provider:
           - "/*"
    - Effect: "Allow"
      Action:
+       - "s3:ListBucket"
+     Resource: 
+      Fn::Join:
+        - ""
+        - - Fn::GetAtt:
+            - S3BucketResults
+            - Arn
+          - ""
+   - Effect: "Allow"
+     Action:
       - "sqs:SendMessage"
      Resource:
       Fn::GetAtt: [ SQSQueue, Arn ]
@@ -56,6 +66,10 @@ provider:
     HOST_LIST: 'https://raw.githubusercontent.com/mozilla/http-observatory-dashboard/master/httpobsdashboard/conf/sites.json'
     SQS_URL:
       Ref: SQSQueue
+    S3_BUCKET:
+      Ref: S3BucketResults
+    # Folder to save the scan results to, make sure it is located under /tmp
+    SCAN_RESULTS_BASE_PATH: '/tmp/vautomator-serverless/results'
   apiKeys:
     - ${self:service}-api-key
 
@@ -161,6 +175,17 @@ functions:
     tags:
       TYPE: ondemand
       SCAN_TYPE: direnum
+  onDemandDownloadScanResults:
+    handler: handler.download_results
+    description: API endpoint which consumes a host and serves a ZIP file containing all scan results for that host.
+    events:
+      - http:
+          path: results
+          method: POST
+          cors: true
+          private: ${self:custom.cfg.private}
+    tags:
+      TYPE: ondemand
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.
@@ -249,6 +274,8 @@ functions:
 plugins:
   - serverless-python-requirements
   - serverless-pseudo-parameters
+  - serverless-apigw-binary
+
 resources:
   Resources:
     S3BucketResults:
@@ -285,3 +312,6 @@ custom:
     private: true # Change to 'false' to disable api-key authorization
   pythonRequirements:
     dockerizePip: true
+  apigwBinary:
+    types:
+      - 'application/gzip'
