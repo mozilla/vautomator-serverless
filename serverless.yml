@@ -271,10 +271,27 @@ functions:
     tags:
       TYPE: demo
 
+stepFunctions:
+  stateMachines:
+    OnDemandScanAll:
+      name: 'ScanAll'
+      definition: 
+        Comment: This step function consumes a host and runs all scan types subsequently.
+        StartAt: Portscan
+        States:
+          Portscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandPortScan"
+            Next: SSHscan
+          SSHscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandSshObservatoryScan"
+            End: True
 plugins:
   - serverless-python-requirements
   - serverless-pseudo-parameters
   - serverless-apigw-binary
+  - serverless-step-functions
 
 resources:
   Resources:
