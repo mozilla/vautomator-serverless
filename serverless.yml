@@ -4,6 +4,7 @@ frameworkVersion: ">=1.2.0 <2.0.0"
 
 provider:
   name: aws
+  stage: ${opt:stage, 'dev'}
   runtime: python3.6
   region: us-west-2
   stackTags:
@@ -273,7 +274,12 @@ functions:
 
 stepFunctions:
   stateMachines:
-    OnDemandScanAll:
+    ScanAllMachine:
+      events:
+        - http:
+           path: /scan
+           method: POST
+           cors: True
       name: 'ScanAll'
       definition: 
         Comment: This step function consumes a host and runs all scan types subsequently.
@@ -283,9 +289,45 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandPortScan"
             Next: SSHscan
+            ResultPath: $.results.Portscan
           SSHscan:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandSshObservatoryScan"
+            Next: HTTPObservatoryscan
+            ResultPath: $.results.SSHscan
+          HTTPObservatoryscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandHttpObservatoryScan"
+            Next: TLSObservatoryscan
+            ResultPath: $.results.HTTPObservatoryscan
+          TLSObservatoryscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandTlsObservatoryScan"
+            Next: Tenablescan
+            ResultPath: $.results.TLSObservatoryscan
+          Tenablescan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandTenableScan"
+            Next: Direnumscan
+            ResultPath: $.results.Tenablescan
+          Direnumscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDirectoryEnumeration"
+            Next: Websearch
+            ResultPath: $.results.Direnumscan
+          Websearch:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
+            Next: Waitforresults
+            ResultPath: $.results.Websearch
+          Waitforresults:
+            Type: Wait
+            Seconds: 60
+            Next: Pollresults
+          Pollresults:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
+            ResultPath: $
             End: True
 plugins:
   - serverless-python-requirements

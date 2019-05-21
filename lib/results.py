@@ -39,6 +39,7 @@ class Results(object):
             return False, status
 
     def generateURL(self):
+        # TODO: Incomplete function, not being used
         host_results_dir = os.path.join(self.base_results_path, self.hostname)
         ready, status = self.__prepareResults(host_results_dir)
         if ready:
