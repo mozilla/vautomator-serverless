@@ -3,7 +3,6 @@ import logging
 import boto3
 import json
 import os
-
 from lib.target import Target
 from lib.response import Response
 from lib.hosts import Hosts
@@ -21,7 +20,7 @@ class SSHScanHandler(object):
         print("Event: {}, context: {}".format(event, context.invoked_function_arn))
         source_event = Event(event, context)
         data = source_event.checkType()
-        
+
         if data:
             target = Target(data.get('target'))
             if not target:
@@ -48,7 +47,7 @@ class SSHScanHandler(object):
             return Response({
                 "statusCode": 400,
                 "body": json.dumps({'error': 'Unrecognized payload'})
-            }).with_security_headers()     
+            }).with_security_headers()
 
     def queue_scheduled(self, event, context, hostname_list=[]):
         if len(hostname_list) == 0:

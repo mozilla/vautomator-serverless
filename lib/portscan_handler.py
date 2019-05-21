@@ -3,7 +3,6 @@ import logging
 import boto3
 import json
 import os
-
 from lib.target import Target
 from lib.response import Response
 from lib.hosts import Hosts
