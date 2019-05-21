@@ -6,6 +6,7 @@ import os
 from lib.target import Target
 from lib.response import Response
 from lib.hosts import Hosts
+from lib.event import Event
 
 
 class TIOScanHandler(object):
@@ -21,15 +22,11 @@ class TIOScanHandler(object):
         self.region = region
 
     def queue(self, event, context):
-        try:
-            data = json.loads(event['body'])
-            if "target" not in str(data):
-                self.logger.error("Unrecognized payload")
-                return Response({
-                    "statusCode": 500,
-                    "body": json.dumps({'error': 'Unrecognized payload'})
-                }).with_security_headers()
+        print("Event: {}, context: {}".format(event, context.invoked_function_arn))
+        source_event = Event(event, context)
+        data = source_event.checkType()
 
+        if data:
             target = Target(data.get('target'))
             if not target:
                 self.logger.error("Target validation failed of: {}".format(target.name))
@@ -50,9 +47,9 @@ class TIOScanHandler(object):
                 "statusCode": 200,
                 "body": json.dumps({'uuid': scan_uuid})
             }).with_security_headers()
-        except ValueError:
-            self.logger.error("Unrecognized payload")
+        else:
+            self.logger.error("Unrecognized payload: {}".format(data))
             return Response({
-                "statusCode": 500,
+                "statusCode": 400,
                 "body": json.dumps({'error': 'Unrecognized payload'})
             }).with_security_headers()
