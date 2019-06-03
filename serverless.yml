@@ -16,6 +16,7 @@ provider:
      Action:
        - "s3:PutObject"
        - "s3:PutObjectAcl"
+       - "s3:GetObjectAcl"
      Resource: 
       Fn::Join:
         - ""
@@ -318,16 +319,13 @@ stepFunctions:
           Websearch:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
-            Next: Waitforresults
-            ResultPath: $.results.Websearch
-          Waitforresults:
-            Type: Wait
-            Seconds: 60
             Next: Pollresults
+            ResultPath: $.results.Websearch
           Pollresults:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
-            ResultPath: $
+            ResultPath: $.results.Pollresults
+            OutputPath: $.results.Pollresults
             End: True
 plugins:
   - serverless-python-requirements
