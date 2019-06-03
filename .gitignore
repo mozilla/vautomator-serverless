@@ -29,3 +29,8 @@ var/
 node_modules
 package-lock.json
 .vscode/
+
+# Sphinx stuff
+_build
+_static
+_templates
