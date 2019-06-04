@@ -8,6 +8,6 @@
    :caption: VAUTOMATOR-SERVERLESS DOCUMENTATION
 
    setup
-   rest-api
+   usage
 
 .. include:: ../README.rst

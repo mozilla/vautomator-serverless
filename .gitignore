@@ -15,6 +15,9 @@ var/
 .installed.cfg
 *.egg
 
+# We don't want results to be committed
+results/
+
 # Serverless directories
 .serverless
 

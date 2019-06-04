@@ -24,7 +24,7 @@ If you would like to deploy your own instance in your AWS environment, follow th
     supports role assumption, and so does the ``Makefile``, as long as
     your AWS config and credentials files are setup as per
     `here <https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html>`__.
-7.  *[OPTIONAL]* If you want Tenable.io integration via the
+7.  *[OPTIONAL]* If you want Tenable.io support via the
     ``/ondemand/tenablescan`` endpoint (otherwise skip to step 8):
 
     -  Create a Tenable.io user account with *standard* user
