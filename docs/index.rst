@@ -9,5 +9,6 @@
 
    setup
    usage
+   troubleshoot
 
 .. include:: ../README.rst
