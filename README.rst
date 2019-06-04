@@ -54,4 +54,4 @@ Please refer to the setup steps `here <https://vautomator-serverless.rtfd.io/en/
 On-demand Scan REST APIs
 =========================
 
-Please refer to REST API documentation `here <https://vautomator-serverless.rtfd.io/en/latest/rest-api.html>`_.
+Please refer to REST API documentation `here <https://vautomator-serverless.rtfd.io/en/latest/usage.html>`_.
