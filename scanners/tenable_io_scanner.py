@@ -49,6 +49,12 @@ class TIOScanner():
             self.logger.error("Tenable.io scan failed: {}".format(TIOException))
             return False
 
+    def scanResult(self, scan_ref):
+        nscan = self.client.scan_helper.id(scan_ref.id)
+        # Scan Details Object to dict
+        scan_details = nscan.details().as_payload()
+        return json.dumps(scan_details)
+
     def __getAPIKey(self):
         response = self.ssm_client.get_parameter(Name="TENABLEIO_ACCESS_KEY", WithDecryption=True)
         access_key = response['Parameter']['Value']

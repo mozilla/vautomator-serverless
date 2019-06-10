@@ -16,8 +16,10 @@ def uppath(filepath, n):
 
 def package_results(source_dir, out_file=None):
     if out_file:
-        # TODO: Write to file on disk
-        return out_file
+        # Write to file on disk
+        with tarfile.open(out_file, mode="w:gz") as tar:
+            tar.add(source_dir, arcname=os.path.sep)
+            return out_file
     else:
         targz = io.BytesIO()
         with tarfile.open(mode="w:gz", fileobj=targz) as tar:

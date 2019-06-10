@@ -3,6 +3,7 @@ import boto3
 import json
 import os
 import base64
+import time
 from lib.target import Target
 from lib.response import Response
 from lib.results import Results
@@ -29,6 +30,8 @@ class ResultsHandler(object):
 
     def getResults(self, event, context):
         print("Event: {}, context: {}".format(event, context.invoked_function_arn))
+        # setting default status, HTTP 202 means "Accepted"
+        status = 202
         source_event = Event(event, context)
         data = source_event.checkType()
 
@@ -42,28 +45,33 @@ class ResultsHandler(object):
                 }).with_security_headers()
 
             results = Results(target.name, self.s3_client, self.bucket, self.base_results_path)
-            scan_results, status = results.download()
-            if scan_results:
-                return Response({
-                    "statusCode": status,
-                    "headers": {
-                        "Content-Type": "application/gzip",
-                        "Content-Disposition": "attachment; filename={}.tgz".format(target.name)
-                    },
-                    "body": base64.b64encode(scan_results.getvalue()).decode("utf-8"),
-                    "isBase64Encoded" : True
-                }).with_security_headers()
+            if source_event.type == "step-function":
+                # Use generateURL route
+                return
             else:
-                if status == 404:
-                    resp_body = 'No results found for target'
-                elif status == 500:
-                    resp_body = 'Unable to download scan results'
+                # Use download route
+                scan_results, status = results.download()
+                if scan_results:
+                    return Response({
+                        "statusCode": status,
+                        "headers": {
+                            "Content-Type": "application/gzip",
+                            "Content-Disposition": "attachment; filename={}.tgz".format(target.name)
+                        },
+                        "body": base64.b64encode(scan_results.getvalue()).decode("utf-8"),
+                        "isBase64Encoded" : True
+                    }).with_security_headers()
                 else:
-                    resp_body = 'Unknown error'
-                return Response({
-                    "statusCode": status,
-                    "body": json.dumps({'error': resp_body})
-                }).with_security_headers()
+                    if status == 404:
+                        resp_body = 'No results found for target'
+                    elif status == 500:
+                        resp_body = 'Unable to download scan results'
+                    else:
+                        resp_body = 'Unknown error'
+                    return Response({
+                        "statusCode": status,
+                        "body": json.dumps({'error': resp_body})
+                    }).with_security_headers()
 
         else:
             self.logger.error("Unrecognized payload: {}".format(data))
