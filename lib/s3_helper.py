@@ -26,7 +26,7 @@ def search_s3(hostname, client=S3_CLIENT, bucket=S3_BUCKET):
 
 def download_s3(scan_output, target_dir, client=S3_CLIENT, bucket=S3_BUCKET):
     if isinstance(scan_output, list):
-        for output in scan_output_list:
+        for output in scan_output:
             client.download_file(
                 bucket,
                 output,

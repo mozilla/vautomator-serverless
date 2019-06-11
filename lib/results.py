@@ -48,7 +48,6 @@ class Results(object):
                 self.logger.warning("Not all scan output exists for {} ".format(self.hostname))
                 return self.scan_output_list, 202
 
-
     def __prepareResults(self, host_results_dir, return_status):
         # Create a temp results directory to download them
         status = return_status
@@ -65,7 +64,6 @@ class Results(object):
         download_s3(self.scan_output_list, host_results_dir, self.s3_client, self.bucket)
         self.logger.info("Scan output for {} downloaded to {}".format(self.hostname, host_results_dir))
         return True
-
 
     def download(self):
         # While downloading, let's just download whatever 
