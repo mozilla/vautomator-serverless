@@ -30,8 +30,6 @@ class ResultsHandler(object):
 
     def getResults(self, event, context):
         print("Event: {}, context: {}".format(event, context.invoked_function_arn))
-        # setting default status, HTTP 202 means "Accepted"
-        status = 202
         source_event = Event(event, context)
         data = source_event.checkType()
 
@@ -47,7 +45,23 @@ class ResultsHandler(object):
             results = Results(target.name, self.s3_client, self.bucket, self.base_results_path)
             if source_event.type == "step-function":
                 # Use generateURL route
-                return
+                download_url, status = results.generateDownloadURL()
+                if download_url:
+                    return Response({
+                        "statusCode": status,
+                        "body": json.dumps({'url': download_url})
+                    }).with_security_headers()
+                else:
+                    if status == 404:
+                        resp_body = 'No results found for target'
+                    elif status == 500:
+                        resp_body = 'Unable to download scan results'
+                    else:
+                        resp_body = 'Unknown error'
+                    return Response({
+                        "statusCode": status,
+                        "body": json.dumps({'error': resp_body})
+                    }).with_security_headers()
             else:
                 # Use download route
                 scan_results, status = results.download()
@@ -64,8 +78,6 @@ class ResultsHandler(object):
                 else:
                     if status == 404:
                         resp_body = 'No results found for target'
-                    elif status == 500:
-                        resp_body = 'Unable to download scan results'
                     else:
                         resp_body = 'Unknown error'
                     return Response({

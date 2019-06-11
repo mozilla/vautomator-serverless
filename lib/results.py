@@ -3,7 +3,7 @@ import time
 import os
 import boto3
 import logging
-from lib.s3_helper import search_s3, download_s3
+from lib.s3_helper import search_s3, download_s3, send_to_s3, create_presigned_url
 from lib.utilities import package_results
 
 S3_BUCKET = os.environ.get('S3_BUCKET')
@@ -48,9 +48,8 @@ class Results(object):
                 self.logger.warning("Not all scan output exists for {} ".format(self.hostname))
                 return self.scan_output_list, 202
 
-    def __prepareResults(self, host_results_dir, return_status):
+    def __prepareResults(self, host_results_dir):
         # Create a temp results directory to download them
-        status = return_status
         host_results_dir = os.path.join(self.base_results_path, self.hostname)
         try:
             if not os.path.exists(host_results_dir):
@@ -66,7 +65,7 @@ class Results(object):
         return True
 
     def download(self):
-        # While downloading, let's just download whatever 
+        # While downloading, let's just download whatever
         # results exist for a given host
         host_results_dir = os.path.join(self.base_results_path, self.hostname)
         self.scan_output_list, status = self.__poll()
@@ -74,7 +73,7 @@ class Results(object):
         
         if len(self.scan_output_list):
             # We have results, but we do not care how many
-            ready = self.__prepareResults(host_results_dir, status)
+            ready = self.__prepareResults(host_results_dir)
             if ready:
                 # Downloaded the output for the target on the "serverless" server
                 # Now, we need to zip it up and return
@@ -87,23 +86,28 @@ class Results(object):
             # No results found, return False
             return False, status
 
-    def generateURL(self):
-        # TODO: Incomplete function, not being used
-        # While generating a signed URL, let's only generate a URL if all
-        # tool output is available
+    def generateDownloadURL(self):
+        # While generating a signed URL, let's only generate
+        # a signed URLif all tool output is available
+        # zip_file = self.base_results_path + '/' + self.hostname + '.tgz'
+        # Setting default status, HTTP 202 means "Accepted"
         status = 202
+        # TODO: We need a timeout function here
         while status == 202:
             self.scan_output_list, status = self.__poll()
             time.sleep(1)
         # status here is either 200 or 404
 
         host_results_dir = os.path.join(self.base_results_path, self.hostname)
-        ready = self.__prepareResults(host_results_dir, status)
+        ready = self.__prepareResults(host_results_dir)
         if ready:
             # Downloaded the output for the target on the "serverless" server
-            # Now, we need to zip it up, save to disk and upload back to S3.
-            tgz_results = package_results(host_results_dir, self.base_results_path + '/' + self.hostname + '.tgz')
-            return tgz_results, status
+            # Now, we need to zip it up and upload back to S3.
+            tgz_results = package_results(host_results_dir)
+            s3_object = send_to_s3(self.hostname, tgz_results, client=self.s3_client)
+            # We need to generate a signed URL now
+            download_url = create_presigned_url(s3_object, client=self.s3_client, bucket=self.bucket)
+            return download_url, status
         else:
             # Something went wrong, return False
             return False, status
