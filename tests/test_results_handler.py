@@ -1,7 +1,10 @@
 import pytest
+import os
 import boto3
-from lib.results_handler import ResultsHandler
 from moto import mock_s3
+from lib.results_handler import ResultsHandler
+from lib.s3_helper import create_presigned_url
+from urllib.parse import urlparse, parse_qs
 
 TEST_SCAN_RESULTS_BASE_PATH = '/tmp/vautomator-serverless/results'
 
@@ -19,7 +22,8 @@ class TestResultsHandler():
         s3_client = boto3.client('s3', 'us-west-2')
         test_bucket_name = "test-results-handler"
         test_bucket = s3_client.create_bucket(
-            Bucket=test_bucket_name
+            Bucket=test_bucket_name,
+            ACL='public-read'
         )
 
         yield (s3_client, test_bucket, test_bucket_name)
@@ -29,7 +33,59 @@ class TestResultsHandler():
         results_handler = ResultsHandler()
         assert type(results_handler) is ResultsHandler
 
-    def test_getResults(self, s3):
+    def test_getResults_signedURL(self, s3):
+        client, bucket, bucket_name = s3
+        target = "infosec.mozilla.org"
+        # Ensure we have all matching objects in the test S3 bucket
+        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_direnum.json'.format(target))
+        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_websearch.json'.format(target))
+        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_portscan.json'.format(target))
+        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_httpobservatory.json'.format(target))
+        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_tlsobservatory.json'.format(target))
+        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_sshobservatory.json'.format(target))
+
+        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='/results/{}.tgz'.format(target))
+        response = create_presigned_url(object_name='/results/{}.tgz'.format(target), client=client, bucket=bucket_name)
+
+        test_event = {"target": target}
+        test_context = None
+        results_handler = ResultsHandler(s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
+        response = results_handler.getResults(test_event, test_context)
+
+        url = urlparse(response)
+        query = parse_qs(url.query)
+
+        assert type(response) is str
+        assert type(query) is dict
+        assert url['scheme'] == "https"
+        assert url['netloc'] == "s3.amazonaws.com"
+        assert url['path'] == "/test-results-handler/results/{}.tgz".format(target)
+        assert "AWSAccessKeyId" in query
+        assert "Expires" in query
+        assert "Signature" in query
+
+    def test_getResults_fullResults(self, s3):
+        client, bucket, bucket_name = s3
+        target = "infosec.mozilla.org"
+        # Ensure we have all matching objects in the test S3 bucket
+        client.put_object(Bucket=bucket_name, Body=b'ABCD', Key='{}_direnum.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'ABCD', Key='{}_websearch.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'ABCD', Key='{}_portscan.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'ABCD', Key='{}_httpobservatory.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'ABCD', Key='{}_tlsobservatory.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'ABCD', Key='{}_sshobservatory.json'.format(target))
+        test_event = {"body": '{"target": "' + target + '"}'}
+        test_context = None
+        results_handler = ResultsHandler(client, bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
+        response = results_handler.getResults(test_event, test_context)
+
+        assert type(response) is dict
+        assert response['statusCode'] == 200
+        assert response['isBase64Encoded'] is True
+        assert 'Content-Disposition' in response['headers']
+        assert response['headers']['Content-Type'] == "application/gzip"
+
+    def test_getResults_partialResults(self, s3):
         client, bucket, bucket_name = s3
         target = "infosec.mozilla.org"
         # Ensure we have matching objects in the test S3 bucket
@@ -41,7 +97,7 @@ class TestResultsHandler():
         response = results_handler.getResults(test_event, test_context)
 
         assert type(response) is dict
-        assert response['statusCode'] == 200
+        assert response['statusCode'] == 202
         assert response['isBase64Encoded'] is True
         assert 'Content-Disposition' in response['headers']
         assert response['headers']['Content-Type'] == "application/gzip"

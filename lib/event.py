@@ -9,7 +9,7 @@ class Event():
         self.type = "api-gw"
         self.logger = logger
 
-    def checkType(self):
+    def parse(self):
         try:
             json.loads(self.event['body'])
         except KeyError as e:

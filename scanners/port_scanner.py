@@ -1,6 +1,11 @@
 import nmap
+import boto3
+import os
 from lib.s3_helper import send_to_s3
 from lib.utilities import sanitise_shell_cmd
+
+S3_CLIENT = boto3.client('s3')
+S3_BUCKET = os.environ.get('S3_BUCKET')
 
 
 class PortScanner():
@@ -25,4 +30,4 @@ class PortScanner():
         return nma
 
     def callback_results(self, hostname, scan_result):
-        send_to_s3(self.host + "_tcpscan", scan_result)
+        send_to_s3(self.host + "_tcpscan", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)

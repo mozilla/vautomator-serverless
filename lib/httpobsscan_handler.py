@@ -17,9 +17,9 @@ class HTTPObsScanHandler(object):
         self.region = region
 
     def queue(self, event, context):
-        print("Event: {}, context: {}".format(event, context.invoked_function_arn))
+        # print("Event: {}, context: {}".format(event, context.invoked_function_arn))
         source_event = Event(event, context)
-        data = source_event.checkType()
+        data = source_event.parse()
 
         if data:
             target = Target(data.get('target'))

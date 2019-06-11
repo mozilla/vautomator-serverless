@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 SQS_CLIENT = boto3.client('sqs')
 S3_CLIENT = boto3.client('s3')
+S3_BUCKET = os.environ.get('S3_BUCKET')
 
 
 def queue_portscan(event, context):
@@ -119,15 +120,15 @@ def runScanFromQ(event, context):
                     if scan_type == "httpobservatory":
                         scanner = HTTPObservatoryScanner()
                         scan_result = scanner.scan(target)
-                        send_to_s3(target + "_httpobservatory", scan_result)
+                        send_to_s3(target + "_httpobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "sshobservatory":
                         scanner = SSHObservatoryScanner()
                         scan_result = scanner.scan(target)
-                        send_to_s3(target + "_sshobservatory", scan_result)
+                        send_to_s3(target + "_sshobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "tlsobservatory":
                         scanner = TLSObservatoryScanner()
                         scan_result = scanner.scan(target)
-                        send_to_s3(target + "_tlsobservatory", scan_result)
+                        send_to_s3(target + "_tlsobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "portscan":
                         scanner = PortScanner(target)
                         nmap_scanner = scanner.scanTCP()
@@ -141,11 +142,11 @@ def runScanFromQ(event, context):
                     elif scan_type == "websearch":
                         searcher = WebSearcher(logger=logger)
                         search_results = searcher.search(target)
-                        send_to_s3(target + "_websearch", search_results)
+                        send_to_s3(target + "_websearch", search_results, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "direnumscan":
                         scanner = DirectoryEnumScanner(logger=logger)
                         return_code, direnum_result = scanner.scan(target)
-                        send_to_s3(target + "_direnum", direnum_result)
+                        send_to_s3(target + "_direnum", direnum_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     else:
                         # Manually invoked, just log the message
                         logger.info("Message in queue: {}".format(message))
