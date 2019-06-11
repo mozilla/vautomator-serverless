@@ -33,7 +33,7 @@ class Event():
             self.logger.error("Invalid event: {}".format(self.event))
             self.type = "invalid"
             return False
-        
+
         if "step" in self.type:
             return self.event
         else:

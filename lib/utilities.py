@@ -14,7 +14,7 @@ def uppath(filepath, n):
     return os.sep.join(filepath.split(os.sep)[:-n])
 
 
-def package_results(source_dir, out_file=None):
+def package_results(source_dir):
     targz = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=targz) as tar:
         tar.add(source_dir, arcname=os.path.sep)

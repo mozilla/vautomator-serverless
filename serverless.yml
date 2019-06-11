@@ -188,11 +188,6 @@ functions:
           private: ${self:custom.cfg.private}
     tags:
       TYPE: ondemand
-  onDemandPollScanResults:
-    handler: handler.poll_results
-    description: A lambda function which polls for the scan results for a given host, used in the "scan all" state machine.
-    tags:
-      TYPE: ondemand
   cronPortScan:
     handler: handler.queue_scheduled_portscan
     description: Cron job which adds a list of hosts to the scan queue for port scan.

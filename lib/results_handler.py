@@ -54,8 +54,6 @@ class ResultsHandler(object):
                 else:
                     if status == 404:
                         resp_body = 'No results found for target'
-                    elif status == 500:
-                        resp_body = 'Unable to download scan results'
                     else:
                         resp_body = 'Unknown error'
                     return Response({
@@ -78,6 +76,8 @@ class ResultsHandler(object):
                 else:
                     if status == 404:
                         resp_body = 'No results found for target'
+                    elif status == 500:
+                        resp_body = 'Unable to download scan results'
                     else:
                         resp_body = 'Unknown error'
                     return Response({

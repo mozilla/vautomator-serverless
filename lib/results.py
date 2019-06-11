@@ -70,8 +70,8 @@ class Results(object):
         host_results_dir = os.path.join(self.base_results_path, self.hostname)
         self.scan_output_list, status = self.__poll()
         # status here is either 200, 202 or 404
-        
-        if len(self.scan_output_list):
+
+        if self.scan_output_list and len(self.scan_output_list):
             # We have results, but we do not care how many
             ready = self.__prepareResults(host_results_dir)
             if ready:
@@ -88,8 +88,8 @@ class Results(object):
 
     def generateDownloadURL(self):
         # While generating a signed URL, let's only generate
-        # a signed URLif all tool output is available
-        # zip_file = self.base_results_path + '/' + self.hostname + '.tgz'
+        # a signed URL if all tool output is available
+
         # Setting default status, HTTP 202 means "Accepted"
         status = 202
         # TODO: We need a timeout function here
