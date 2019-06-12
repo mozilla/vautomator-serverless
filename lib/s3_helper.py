@@ -4,18 +4,18 @@ import logging
 import os
 from botocore.exceptions import ClientError
 
-# S3_CLIENT = boto3.client('s3', 'us-west-2')
+S3_CLIENT = boto3.client('s3', 'us-west-2')
 S3_BUCKET = os.environ.get('S3_BUCKET')
 
 
-def send_to_s3(hostname, blob, client=None, bucket=S3_BUCKET):
+def send_to_s3(hostname, blob, client=S3_CLIENT, bucket=S3_BUCKET):
     print(bucket)
     print(client)
     if isinstance(blob, dict):
         key = "{}.{}".format(hostname, "json")
         body = json.dumps(blob, indent=4, sort_keys=True)
     else:
-        key = "/results/{}.{}".format(hostname, "tgz")
+        key = "results/{}.{}".format(hostname, "tgz")
         body = blob
 
     client.put_object(Body=body, Bucket=bucket,
@@ -25,7 +25,7 @@ def send_to_s3(hostname, blob, client=None, bucket=S3_BUCKET):
     return key
 
 
-def search_s3(hostname, client=None, bucket=S3_BUCKET):
+def search_s3(hostname, client=S3_CLIENT, bucket=S3_BUCKET):
     print(bucket)
     print(client)
     scan_output_list = []
@@ -35,7 +35,7 @@ def search_s3(hostname, client=None, bucket=S3_BUCKET):
     return scan_output_list
 
 
-def download_s3(scan_output, target_dir, client=None, bucket=S3_BUCKET):
+def download_s3(scan_output, target_dir, client=S3_CLIENT, bucket=S3_BUCKET):
     print(bucket)
     print(client)
     if isinstance(scan_output, list):
@@ -53,7 +53,7 @@ def download_s3(scan_output, target_dir, client=None, bucket=S3_BUCKET):
         )
 
 
-def create_presigned_url(object_name, client=None, bucket=S3_BUCKET, expiration=86400):
+def create_presigned_url(object_name, client=S3_CLIENT, bucket=S3_BUCKET, expiration=86400):
     # Generate a presigned URL for the S3 object
     # The URL will be valid for 24 hours
     try:

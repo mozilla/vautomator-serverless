@@ -102,3 +102,20 @@ class TestTIOScanner():
         # ScanRef object ID should the ScanDetail object ID
         assert scan_detail.info.object_id == nscan.id
         nscan.delete(force_stop=True)
+
+    def test_scanResult(self):
+        # See if the keys are available as env variables
+        try:
+            a_key = os.environ["TIOA"]
+            s_key = os.environ["TIOS"]
+        except Exception:
+            assert False
+        host_name = "www.mozilla.org"
+        scanner = TIOScanner(access_key=a_key, secret_key=s_key)
+        nscan = scanner.scan(host_name)
+
+        result_as_json = scanner.scanResult(nscan)
+        assert type(result_as_json) is dict
+        assert 'hosts' in result_as_json
+        assert 'history' in result_as_json
+        assert 'info' in result_as_json

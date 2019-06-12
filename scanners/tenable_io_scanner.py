@@ -53,7 +53,19 @@ class TIOScanner():
         nscan = self.client.scan_helper.id(scan_ref.id)
         # Scan Details Object to dict
         scan_details = nscan.details().as_payload()
-        return json.dumps(scan_details)
+
+        # This is a work-around, taken from: https://github.com/tenable/Tenable.io-SDK-for-Python/issues/84
+        # Hosts Objects to dicts
+        scan_details['hosts'] = [host.as_payload() for host in scan_details['_hosts']]
+        del scan_details['_hosts']
+        # History Objects to dicts
+        scan_details['history'] = [host.as_payload() for host in scan_details['_history']]
+        del scan_details['_history']
+        # Info Object to dict
+        scan_details['info'] = vars(scan_details['_info'])
+        del scan_details['_info']
+
+        return scan_details
 
     def __getAPIKey(self):
         response = self.ssm_client.get_parameter(Name="TENABLEIO_ACCESS_KEY", WithDecryption=True)

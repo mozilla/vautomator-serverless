@@ -3,7 +3,7 @@ import json
 
 
 class Event():
-    def __init__(self, event, context, logger=logging.getLogger(__name__)):
+    def __init__(self, event=None, context=None, logger=logging.getLogger(__name__)):
         self.event = event
         self.context = context
         self.type = "api-gw"

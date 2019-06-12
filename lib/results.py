@@ -14,8 +14,7 @@ class Results(object):
     def __init__(
         self,
         hostname,
-        # s3_client=boto3.client('s3'),
-        s3_client=None,
+        s3_client=boto3.client('s3'),
         bucket=S3_BUCKET,
         results_path=SCAN_RESULTS_BASE_PATH,
         logger=logging.getLogger(__name__)
@@ -103,18 +102,22 @@ class Results(object):
             time.sleep(1)
         # status here is either 200 or 404
 
-        host_results_dir = os.path.join(self.base_results_path, self.hostname)
-        ready = self.__prepareResults(host_results_dir)
-        if ready:
-            # Downloaded the output for the target on the "serverless" server
-            # Now, we need to zip it up and upload back to S3.
-            tgz_results = package_results(host_results_dir)
-            print(self.bucket)
-            print(self.s3_client)
-            s3_object = send_to_s3(self.hostname, tgz_results, client=self.s3_client, bucket=self.bucket)
-            # We need to generate a signed URL now
-            download_url = create_presigned_url(s3_object, client=self.s3_client, bucket=self.bucket)
-            return download_url, status
+        if status != 404:
+            host_results_dir = os.path.join(self.base_results_path, self.hostname)
+            ready = self.__prepareResults(host_results_dir)
+            if ready:
+                # Downloaded the output for the target on the "serverless" server
+                # Now, we need to zip it up and upload back to S3.
+                tgz_results = package_results(host_results_dir)
+                print(self.bucket)
+                print(self.s3_client)
+                s3_object = send_to_s3(self.hostname, tgz_results, client=self.s3_client, bucket=self.bucket)
+                # We need to generate a signed URL now
+                download_url = create_presigned_url(s3_object, client=self.s3_client, bucket=self.bucket)
+                return download_url, status
+            else:
+                # Something went wrong, return False
+                return False, status
         else:
-            # Something went wrong, return False
+            # No results for the host found
             return False, status

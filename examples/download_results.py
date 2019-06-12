@@ -58,7 +58,7 @@ session.headers.update(
 
 logging.info("Sending POST to {}".format(download_url))
 response = session.post(download_url, data="{\"target\":\"" + target.name + "\"}", stream=True)
-if response.status_code == 200 and response.headers['Content-Type'] == "application/gzip":
+if response.status_code == 200 or response.status_code == 202 and response.headers['Content-Type'] == "application/gzip":
     logging.info("Downloaded scan results for: {}, saving to disk...".format(target.name))
     time.sleep(1)
     with open(os.path.join(uppath(os.getcwd(), 1), "results/{}.tgz".format(target.name)), 'wb') as out_file:

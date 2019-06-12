@@ -43,7 +43,7 @@ class TestResults():
         success_result = Results(target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
         success, status = success_result.download()
         assert type(success) is io.BytesIO
-        assert status == 200
+        assert status == 202
 
         new_target = "www.mozilla.org"  # An object for this host does not exist in mocked S3 bucket
         result_404 = Results(new_target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
@@ -56,3 +56,25 @@ class TestResults():
         fail_500, status = result_500.download()
         assert fail_500 is False
         assert status == 500
+
+    def test_generateDownloadURL(self, s3):
+        target, client, bucket, bucket_name = s3
+        # This is the fail case, a signed URL will not be generated
+        new_target = "www.mozilla.org"
+        result_404 = Results(new_target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
+        fail_404, status = result_404.generateDownloadURL()
+        assert fail_404 is False
+        assert status == 404
+
+        # Add more objects to the mocked bucket, this is the success case
+        client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_direnum.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_portscan.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_websearch.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_sshobservatory.json'.format(target))
+
+        success_result = Results(target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
+        success, status = success_result.generateDownloadURL()
+        assert type(success) is str
+        assert status == 200
+
+

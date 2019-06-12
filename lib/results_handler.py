@@ -16,8 +16,7 @@ SCAN_RESULTS_BASE_PATH = os.environ.get('SCAN_RESULTS_BASE_PATH')
 class ResultsHandler(object):
     def __init__(
         self,
-        # s3_client=boto3.client('s3'),
-        s3_client=None,
+        s3_client=boto3.client('s3'),
         bucket=S3_BUCKET,
         logger=logging.getLogger(__name__),
         region='us-west-2',

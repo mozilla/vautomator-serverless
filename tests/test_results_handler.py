@@ -1,6 +1,7 @@
 import pytest
 import os
 import boto3
+import json
 from moto import mock_s3
 from lib.results_handler import ResultsHandler
 from lib.s3_helper import create_presigned_url
@@ -44,22 +45,21 @@ class TestResultsHandler():
         client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_tlsobservatory.json'.format(target))
         client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_sshobservatory.json'.format(target))
 
-        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='/results/{}.tgz'.format(target))
-        response = create_presigned_url(object_name='/results/{}.tgz'.format(target), client=client, bucket=bucket_name)
-
         test_event = {"target": target}
         test_context = None
         results_handler = ResultsHandler(s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
         response = results_handler.getResults(test_event, test_context)
+        print(response)
+        assert type(response) is dict
+        assert response['statusCode'] == 200
 
-        url = urlparse(response)
+        url = urlparse(json.loads(response['body'])['url'])
         query = parse_qs(url.query)
 
-        assert type(response) is str
         assert type(query) is dict
-        assert url['scheme'] == "https"
-        assert url['netloc'] == "s3.amazonaws.com"
-        assert url['path'] == "/test-results-handler/results/{}.tgz".format(target)
+        assert url.scheme == "https"
+        assert url.netloc == "{}.s3.amazonaws.com".format(bucket_name)
+        assert url.path == "/results/{}.tgz".format(target)
         assert "AWSAccessKeyId" in query
         assert "Expires" in query
         assert "Signature" in query
