@@ -82,6 +82,7 @@ while retries > 0:
             with tarfile.open(path) as tar:
                 tar.extractall()
                 logging.info("Scan results for {} are extracted in the results folder.".format(target.name))
+        break
     else:
         if args.retry:
             retries = retries - 1
