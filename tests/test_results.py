@@ -76,5 +76,3 @@ class TestResults():
         success, status = success_result.generateDownloadURL()
         assert type(success) is str
         assert status == 200
-
-
