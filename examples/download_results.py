@@ -76,11 +76,11 @@ while retries > 0:
             logging.info("Scan results for {} are saved in the results folder.".format(target.name))
 
         if args.extract:
-            tdirpath = os.path.join(dirpath, "{}/")
+            tdirpath = os.path.join(dirpath, "{}/".format(target.name))
             if not os.path.isdir(dirpath):
                 os.mkdir(tdirpath)
             with tarfile.open(path) as tar:
-                tar.extractall()
+                tar.extractall(path=tdirpath)
                 logging.info("Scan results for {} are extracted in the results folder.".format(target.name))
         break
     else:
