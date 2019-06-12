@@ -273,6 +273,75 @@ functions:
     tags:
       TYPE: demo
 
+stepFunctions:
+  stateMachines:
+    ScanAllMachine:
+      events:
+        - http:
+           path: /scan
+           method: POST
+           cors: true
+           private: ${self:custom.cfg.private}
+      name: 'ScanAll'
+      definition: 
+        Comment: This step function consumes a host and runs all scan types subsequently.
+        StartAt: Tenablescan
+        States:
+          Tenablescan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandTenableScan"
+            Next: Direnumscan
+            ResultPath: $.results.Tenablescan
+          Direnumscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDirectoryEnumeration"
+            Next: Portscan
+            ResultPath: $.results.Direnumscan
+          Portscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandPortScan"
+            Next: SSHscan
+            ResultPath: $.results.Portscan
+          SSHscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandSshObservatoryScan"
+            Next: HTTPObservatoryscan
+            ResultPath: $.results.SSHscan
+          HTTPObservatoryscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandHttpObservatoryScan"
+            Next: TLSObservatoryscan
+            ResultPath: $.results.HTTPObservatoryscan
+          TLSObservatoryscan:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandTlsObservatoryScan"
+            Next: Websearch
+            ResultPath: $.results.TLSObservatoryscan
+          Websearch:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
+          # Next: Waitforresults
+            Next: PublishresultURL
+            ResultPath: $.results.Websearch
+          # Here we should do a basic wait state
+          # Waitforresults:
+          #   Type: Wait
+          #   Seconds: 600
+          #   Next: Sendresults
+          PublishresultURL:
+            Type: Task
+            Resource: arn:aws:states:::sns:publish
+            Parameters:
+              Message: "{ \"answer\": 42 }"
+              TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-my-topic"
+            End: true
+          # Sendresults:
+          #   Type: Task
+          #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
+          #   ResultPath: $.results.Downloadresults
+          #   OutputPath: $.results.Downloadresults
+          #   End: True
+
 plugins:
   - serverless-python-requirements
   - serverless-pseudo-parameters
@@ -281,6 +350,14 @@ plugins:
 
 resources:
   Resources:
+    MyTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: my-topic
+        TopicName: ${self:service}-${self:provider.stage}-my-topic
+        Subscription:
+          - Protocol: email
+            Endpoint: culucenk@mozilla.com
     S3BucketResults:
       Type: AWS::S3::Bucket
       Properties:
