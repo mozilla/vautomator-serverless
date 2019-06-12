@@ -1,9 +1,10 @@
+boto3==1.9.165
+certstream==1.10
 netaddr==0.7.19
-requests>=2.20.0
+tenable_io==1.7.0
+google==2.0.2
+botocore==1.12.165
+requests==2.22.0
+pytest==4.6.2
 python_nmap==0.6.1
-boto3>=1.9.109
-pytest>=4.1.1
-moto>=1.3.7
-certstream>=1.10
-tenable_io>=1.3.0
-google>=2.0.2
+moto==1.3.8
