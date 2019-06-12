@@ -19,8 +19,11 @@ from lib.utilities import uppath
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--profile", help="Provide the AWS Profile from your boto configuration", default=os.environ["AWS_PROFILE"]
+    "--profile",
+    help="Provide the AWS Profile from your boto configuration",
+    default=os.environ.get("AWS_DEFAULT_PROFILE", None),
 )
+parser.add_argument("--region", help="Provide the AWS region manually", default="us-west-2")
 parser.add_argument("fqdn", type=str, help="The target to scan")
 parser.add_argument("-x", "--extract", help="Auto extract results", action="store_true")
 parser.add_argument("--results", help="Specify a results directory", default=os.path.join(os.getcwd(), "results/"))
@@ -34,8 +37,6 @@ else:
     logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 
 # Establish a session with that profile if given
-if len(args.profile) == 0:
-    args.profile = None
 session = boto3.Session(profile_name=args.profile)
 # Programmatically obtain the API GW URL, and the REST API key
 apigw_client = session.client("apigateway")
