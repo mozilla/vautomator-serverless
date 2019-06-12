@@ -17,6 +17,7 @@ var/
 
 # We don't want results to be committed
 results/
+examples/results
 
 # Serverless directories
 .serverless

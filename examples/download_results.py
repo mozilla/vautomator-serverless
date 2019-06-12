@@ -6,6 +6,9 @@ import os
 import sys
 import boto3
 import shutil
+import tarfile
+import argparse
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from lib.target import Target
 from lib.utilities import uppath
@@ -14,58 +17,78 @@ from lib.utilities import uppath
 # interest in getting immediate vulnerability data about a given FQDN. This would be
 # the interface an engineer could use to kick off a VA.
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-# Can specify the profile/role in the code...
-AWS_PROFILE = ""
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--profile", help="Provide the AWS Profile from your boto configuration", default=os.environ["AWS_PROFILE"]
+)
+parser.add_argument("fqdn", type=str, help="The target to scan")
+parser.add_argument("-x", "--extract", help="Auto extract results", action="store_true")
+parser.add_argument("--results", help="Specify a results directory", default=os.path.join(os.getcwd(), "results/"))
+parser.add_argument("-v", "--verbose", action="store_true")
+parser.add_argument("-r", "--retry", help="Retry until we get a result back", action="store_true")
+args = parser.parse_args()
 
-if not AWS_PROFILE:
-    try:
-        # ...or read from an environment variable
-        AWS_PROFILE = os.environ['AWS_PROFILE']
-    except KeyError:
-        logging.error("AWS profile not found. Either specify it as an environment variable"
-                      " (AWS_PROFILE) or change the AWS_PROFILE variable in the code.")
-        sys.exit(-1)
+if args.verbose:
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+else:
+    logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 
-# Establish a session with that profile
-session = boto3.Session(profile_name=AWS_PROFILE)
+# Establish a session with that profile if given
+if len(args.profile) == 0:
+    args.profile = None
+session = boto3.Session(profile_name=args.profile)
 # Programmatically obtain the API GW URL, and the REST API key
-apigw_client = session.client('apigateway')
-aws_response = apigw_client.get_api_keys(
-    nameQuery='vautomator-serverless',
-    includeValues=True)['items'][0]
-rest_api_id, stage_name = "".join(aws_response['stageKeys']).split('/')
-gwapi_key = aws_response['value']
+apigw_client = session.client("apigateway")
+aws_response = apigw_client.get_api_keys(nameQuery="vautomator-serverless", includeValues=True)["items"][0]
+rest_api_id, stage_name = "".join(aws_response["stageKeys"]).split("/")
+gwapi_key = aws_response["value"]
 API_GW_URL = "https://{}.execute-api.{}.amazonaws.com/".format(rest_api_id, session.region_name)
 
-fqdn = input("Provide the FQDN (Fully Qualified Domain Name) you want the results for: ")
 try:
-    target = Target(fqdn)
+    target = Target(args.fqdn)
 except AssertionError:
     logging.error("Target validation failed: target must be an FQDN or IPv4 only.")
-    sys.exit(-2)
+    sys.exit(127)
 
 download_url = API_GW_URL + "{}/results".format(stage_name)
 
 session = requests.Session()
-session.headers.update(
-    {
-        'X-Api-Key': gwapi_key,
-        'Accept': 'application/gzip',
-        'Content-Type': 'application/json'
-    }
-)
+session.headers.update({"X-Api-Key": gwapi_key, "Accept": "application/gzip", "Content-Type": "application/json"})
 
-logging.info("Sending POST to {}".format(download_url))
-response = session.post(download_url, data="{\"target\":\"" + target.name + "\"}", stream=True)
-if response.status_code == 200 or response.status_code == 202 and response.headers['Content-Type'] == "application/gzip":
-    logging.info("Downloaded scan results for: {}, saving to disk...".format(target.name))
-    time.sleep(1)
-    with open(os.path.join(uppath(os.getcwd(), 1), "results/{}.tgz".format(target.name)), 'wb') as out_file:
-        shutil.copyfileobj(response.raw, out_file)
-        logging.info("Scan results for {} are saved in the results folder.".format(target.name))
-else:
-    logging.error("No results found for: {}".format(target.name))
-del response
+# Make sure we eventually give up
+retries = 120
+while retries > 0:
+    logging.info("Sending POST to {}".format(download_url))
+    response = session.post(download_url, data='{"target":"' + target.name + '"}', stream=True)
+    if (
+        response.status_code == 200
+        or response.status_code == 202
+        and response.headers["Content-Type"] == "application/gzip"
+    ):
+        logging.info("Downloaded scan results for: {}, saving to disk...".format(target.name))
+        dirpath = args.results
+        if not os.path.isdir(dirpath):
+            os.mkdir(dirpath)
+        path = os.path.join(dirpath, "{}.tar.gz".format(target.name))
+        with open(path, "wb") as out_file:
+            shutil.copyfileobj(response.raw, out_file)
+            logging.info("Scan results for {} are saved in the results folder.".format(target.name))
+
+        if args.extract:
+            tdirpath = os.path.join(dirpath, "{}/")
+            if not os.path.isdir(dirpath):
+                os.mkdir(tdirpath)
+            with tarfile.open(path) as tar:
+                tar.extractall()
+                logging.info("Scan results for {} are extracted in the results folder.".format(target.name))
+    else:
+        if args.retry:
+            retries = retries - 1
+            time.sleep(5)
+            logging.info("No results available, retrying...")
+        else:
+            logging.error("No results found for: {}".format(target.name))
+            break
+    del response
 
 session.close()
