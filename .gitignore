@@ -16,7 +16,9 @@ var/
 *.egg
 
 # We don't want results to be committed
-results/
+results/*
+# But we want the results folder to be there
+!results/.gitkeep
 
 # Serverless directories
 .serverless

@@ -4,6 +4,7 @@ frameworkVersion: ">=1.2.0 <2.0.0"
 
 provider:
   name: aws
+  stage: ${opt:stage, 'dev'}
   runtime: python3.6
   region: us-west-2
   stackTags:
@@ -15,6 +16,7 @@ provider:
      Action:
        - "s3:PutObject"
        - "s3:PutObjectAcl"
+       - "s3:GetObjectAcl"
      Resource: 
       Fn::Join:
         - ""
@@ -275,6 +277,7 @@ plugins:
   - serverless-python-requirements
   - serverless-pseudo-parameters
   - serverless-apigw-binary
+  - serverless-step-functions
 
 resources:
   Resources:
