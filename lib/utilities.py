@@ -18,4 +18,5 @@ def package_results(source_dir):
     targz = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=targz) as tar:
         tar.add(source_dir, arcname=os.path.sep)
+    targz.seek(0)
     return targz

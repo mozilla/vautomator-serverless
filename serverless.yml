@@ -180,6 +180,9 @@ functions:
   onDemandDownloadScanResults:
     handler: handler.download_results
     description: API endpoint which consumes a host and serves a ZIP file containing all scan results for that host.
+    # This is apparently an API GW constraint, lambda functions
+    # attached to API GW should run & return in 30 seconds max.
+    timeout: 30
     events:
       - http:
           path: results
@@ -291,56 +294,56 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandTenableScan"
             Next: Direnumscan
-            ResultPath: $.results.Tenablescan
+            ResultPath: $.responses.Tenablescan
           Direnumscan:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDirectoryEnumeration"
             Next: Portscan
-            ResultPath: $.results.Direnumscan
+            ResultPath: $.responses.Direnumscan
           Portscan:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandPortScan"
             Next: SSHscan
-            ResultPath: $.results.Portscan
+            ResultPath: $.responses.Portscan
           SSHscan:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandSshObservatoryScan"
             Next: HTTPObservatoryscan
-            ResultPath: $.results.SSHscan
+            ResultPath: $.responses.SSHscan
           HTTPObservatoryscan:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandHttpObservatoryScan"
             Next: TLSObservatoryscan
-            ResultPath: $.results.HTTPObservatoryscan
+            ResultPath: $.responses.HTTPObservatoryscan
           TLSObservatoryscan:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandTlsObservatoryScan"
             Next: Websearch
-            ResultPath: $.results.TLSObservatoryscan
+            ResultPath: $.responses.TLSObservatoryscan
           Websearch:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
-          # Next: Waitforresults
-            Next: PublishresultURL
-            ResultPath: $.results.Websearch
+            Next: Getresults
+            ResultPath: $.responses.Websearch
           # Here we should do a basic wait state
           # Waitforresults:
           #   Type: Wait
           #   Seconds: 600
-          #   Next: Sendresults
+          #   Next: Getresults
+          Getresults:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
+            ResultPath: $.responses.Getresults.url
+            OutputPath: $
+            Next: PublishresultURL
           PublishresultURL:
             Type: Task
             Resource: arn:aws:states:::sns:publish
             Parameters:
-              Message: "{ \"answer\": 42 }"
+              # Message.$:  "$.target"
+              Message.$: "$.responses.Getresults.url"
               TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-my-topic"
             End: true
-          # Sendresults:
-          #   Type: Task
-          #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
-          #   ResultPath: $.results.Downloadresults
-          #   OutputPath: $.results.Downloadresults
-          #   End: True
 
 plugins:
   - serverless-python-requirements
@@ -353,7 +356,7 @@ resources:
     MyTopic:
       Type: AWS::SNS::Topic
       Properties:
-        DisplayName: my-topic
+        DisplayName: "Vulnerability Assessment Results"
         TopicName: ${self:service}-${self:provider.stage}-my-topic
         Subscription:
           - Protocol: email

@@ -29,8 +29,6 @@ class Results(object):
     def __poll(self):
         # Search S3 bucket for results matching the target host
         try:
-            print(self.bucket)
-            print(self.s3_client)
             self.scan_output_list = search_s3(self.hostname, self.s3_client, self.bucket)
         except Exception as e:
             # If we are here, there are no results for that host,
@@ -62,8 +60,6 @@ class Results(object):
 
         # Downloading output files to /tmp/<hostname> on the
         # "serverless" server, we should be OK to write to /tmp
-        print(self.bucket)
-        print(self.s3_client)
         download_s3(self.scan_output_list, host_results_dir, self.s3_client, self.bucket)
         self.logger.info("Scan output for {} downloaded to {}".format(self.hostname, host_results_dir))
         return True
@@ -109,8 +105,6 @@ class Results(object):
                 # Downloaded the output for the target on the "serverless" server
                 # Now, we need to zip it up and upload back to S3.
                 tgz_results = package_results(host_results_dir)
-                print(self.bucket)
-                print(self.s3_client)
                 s3_object = send_to_s3(self.hostname, tgz_results, client=self.s3_client, bucket=self.bucket)
                 # We need to generate a signed URL now
                 download_url = create_presigned_url(s3_object, client=self.s3_client, bucket=self.bucket)

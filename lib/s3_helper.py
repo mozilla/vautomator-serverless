@@ -9,8 +9,6 @@ S3_BUCKET = os.environ.get('S3_BUCKET')
 
 
 def send_to_s3(hostname, blob, client=S3_CLIENT, bucket=S3_BUCKET):
-    print(bucket)
-    print(client)
     if isinstance(blob, dict):
         key = "{}.{}".format(hostname, "json")
         body = json.dumps(blob, indent=4, sort_keys=True)
@@ -26,8 +24,6 @@ def send_to_s3(hostname, blob, client=S3_CLIENT, bucket=S3_BUCKET):
 
 
 def search_s3(hostname, client=S3_CLIENT, bucket=S3_BUCKET):
-    print(bucket)
-    print(client)
     scan_output_list = []
     for scan_result in client.list_objects(Bucket=bucket, Prefix=hostname)['Contents']:
         scan_output_list.append(str(scan_result['Key']))
@@ -36,8 +32,6 @@ def search_s3(hostname, client=S3_CLIENT, bucket=S3_BUCKET):
 
 
 def download_s3(scan_output, target_dir, client=S3_CLIENT, bucket=S3_BUCKET):
-    print(bucket)
-    print(client)
     if isinstance(scan_output, list):
         for output in scan_output:
             client.download_file(

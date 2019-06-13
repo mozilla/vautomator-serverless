@@ -29,10 +29,8 @@ class ResultsHandler(object):
         self.base_results_path = results_path
 
     def getResults(self, event, context):
-        # print("Event: {}, context: {}".format(event, context))
         source_event = Event(event, context)
         data = source_event.parse()
-        print(source_event.type)
 
         if data:
             target = Target(data.get('target'))
