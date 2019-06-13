@@ -46,10 +46,18 @@ class ResultsHandler(object):
                 # Use generateURL route
                 download_url, status = results.generateDownloadURL()
                 if download_url:
-                    return Response({
-                        "statusCode": status,
-                        "body": json.dumps({'url': download_url})
-                    }).with_security_headers()
+                    if status == 200:
+                        message = "All scan results available at the URL for the next 24 hours."
+                        return Response({
+                            "statusCode": status,
+                            "body": json.dumps({'message': message, 'url': download_url})
+                        }).with_security_headers()
+                    else:
+                        message = "Partial scan results available at the URL for the next 24 hours."
+                        return Response({
+                            "statusCode": status,
+                            "body": json.dumps({'message': message, 'url': download_url})
+                        }).with_security_headers()
                 else:
                     if status == 404:
                         resp_body = 'No results found for target'

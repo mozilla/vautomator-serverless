@@ -6,7 +6,7 @@ provider:
   name: aws
   stage: ${opt:stage, 'dev'}
   runtime: python3.6
-  region: us-west-2
+  region: ${opt:region, 'us-west-2'}
   stackTags:
     PRODUCT_NAME: "vautomator-serverless-app"
     SERVICE_NAME: "vautomator"
@@ -323,26 +323,26 @@ stepFunctions:
           Websearch:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
-            Next: Getresults
+            Next: Waitforresults
             ResultPath: $.responses.Websearch
           # Here we should do a basic wait state
-          # Waitforresults:
-          #   Type: Wait
-          #   Seconds: 600
-          #   Next: Getresults
+          Waitforresults:
+            Type: Wait
+            Seconds: 600
+            Next: Getresults
           Getresults:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
-            ResultPath: $.responses.Getresults.url
+            ResultPath: $.responses.Getresults
             OutputPath: $
             Next: PublishresultURL
           PublishresultURL:
             Type: Task
             Resource: arn:aws:states:::sns:publish
             Parameters:
-              # Message.$:  "$.target"
-              Message.$: "$.responses.Getresults.url"
-              TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-my-topic"
+              Subject.$: "$.target"
+              Message.$: "$.responses.Getresults.body"
+              TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-vautomator-results-topic"
             End: true
 
 plugins:
@@ -356,8 +356,8 @@ resources:
     MyTopic:
       Type: AWS::SNS::Topic
       Properties:
-        DisplayName: "Vulnerability Assessment Results"
-        TopicName: ${self:service}-${self:provider.stage}-my-topic
+        DisplayName: ${self:custom.cfg.vautomatorSNS}
+        TopicName: ${self:service}-${self:provider.stage}-vautomator-results-topic
         Subscription:
           - Protocol: email
             Endpoint: culucenk@mozilla.com
@@ -389,6 +389,7 @@ custom:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
+    vautomatorSNS: "Vulnerability Assessment Results"
     ssmKms: beaede06-f6f5-4183-90bf-64a13edcea15
     ssmAKey: TENABLEIO_ACCESS_KEY
     ssmSKey: TENABLEIO_SECRET_KEY

@@ -38,9 +38,14 @@ class Results(object):
         else:
             # At this stage we know there are output files for the host
             # But we don't know if we have all the results, we should poll
-            if len(self.scan_output_list) == 6:
-                # This should be 7 with Tenable.io, however we
-                # do not download the results of that scan yet (TODO)
+            if len(self.scan_output_list) >= 4:
+                # With the current implementation, this should be
+                # max. 6 (including Tenable.io results), however
+                # at a minimum we should have 4 results (port scan,
+                # direnum scan, web search scan, HTTP Observatory
+                # scan) before return. This is because some targets
+                # may not have an HTTPS service.
+                # TODO: We should improve this implementation.
                 return self.scan_output_list, 200
             else:
                 # We do not have all the scan output yet
@@ -92,11 +97,14 @@ class Results(object):
 
         # Setting default status, HTTP 202 means "Accepted"
         status = 202
-        # TODO: We need a timeout function here
-        while status == 202:
+        # Make sure we eventually give up polling after approx.
+        # 20+ seconds.
+        retries = 20
+        while status == 202 or retries > 0:
             self.scan_output_list, status = self.__poll()
+            retries = retries - 1
             time.sleep(1)
-        # status here is either 200 or 404
+        # status here can still be 200, 404 or 202
 
         if status != 404:
             host_results_dir = os.path.join(self.base_results_path, self.hostname)
