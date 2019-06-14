@@ -13,7 +13,7 @@ class Event():
         try:
             json.loads(self.event['body'])
         except KeyError as e:
-            if len(self.event) == 1 or 'results' in self.event:
+            if len(self.event) == 1 or 'responses' in self.event:
                 # If we are here, the event source is a step function
                 self.type = "step-function"
             else:

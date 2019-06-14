@@ -29,8 +29,6 @@ class Results(object):
     def __poll(self):
         # Search S3 bucket for results matching the target host
         try:
-            print(self.bucket)
-            print(self.s3_client)
             self.scan_output_list = search_s3(self.hostname, self.s3_client, self.bucket)
         except Exception as e:
             # If we are here, there are no results for that host,
@@ -40,9 +38,14 @@ class Results(object):
         else:
             # At this stage we know there are output files for the host
             # But we don't know if we have all the results, we should poll
-            if len(self.scan_output_list) == 6:
-                # This should be 7 with Tenable.io, however we
-                # do not download the results of that scan yet (TODO)
+            if len(self.scan_output_list) >= 4:
+                # With the current implementation, this should be
+                # max. 6 (including Tenable.io results), however
+                # at a minimum we should have 4 results (port scan,
+                # direnum scan, web search scan, HTTP Observatory
+                # scan) before return. This is because some targets
+                # may not have an HTTPS service.
+                # TODO: We should improve this implementation.
                 return self.scan_output_list, 200
             else:
                 # We do not have all the scan output yet
@@ -62,8 +65,6 @@ class Results(object):
 
         # Downloading output files to /tmp/<hostname> on the
         # "serverless" server, we should be OK to write to /tmp
-        print(self.bucket)
-        print(self.s3_client)
         download_s3(self.scan_output_list, host_results_dir, self.s3_client, self.bucket)
         self.logger.info("Scan output for {} downloaded to {}".format(self.hostname, host_results_dir))
         return True
@@ -96,11 +97,14 @@ class Results(object):
 
         # Setting default status, HTTP 202 means "Accepted"
         status = 202
-        # TODO: We need a timeout function here
-        while status == 202:
+        # Make sure we eventually give up polling after approx.
+        # 20+ seconds.
+        retries = 20
+        while status == 202 or retries > 0:
             self.scan_output_list, status = self.__poll()
+            retries = retries - 1
             time.sleep(1)
-        # status here is either 200 or 404
+        # status here can still be 200, 404 or 202
 
         if status != 404:
             host_results_dir = os.path.join(self.base_results_path, self.hostname)
@@ -109,8 +113,6 @@ class Results(object):
                 # Downloaded the output for the target on the "serverless" server
                 # Now, we need to zip it up and upload back to S3.
                 tgz_results = package_results(host_results_dir)
-                print(self.bucket)
-                print(self.s3_client)
                 s3_object = send_to_s3(self.hostname, tgz_results, client=self.s3_client, bucket=self.bucket)
                 # We need to generate a signed URL now
                 download_url = create_presigned_url(s3_object, client=self.s3_client, bucket=self.bucket)
