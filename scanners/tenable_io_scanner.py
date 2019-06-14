@@ -73,3 +73,7 @@ class TIOScanner():
         response = self.ssm_client.get_parameter(Name="TENABLEIO_SECRET_KEY", WithDecryption=True)
         secret_key = response['Parameter']['Value']
         return access_key, secret_key
+
+    def __poll(self):
+        # This function will poll Tenable.io API for a scan status
+        return

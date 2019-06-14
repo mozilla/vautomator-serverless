@@ -77,6 +77,12 @@ def queue_tenableioscan(event, context):
     return response
 
 
+def check_tenableioscan(event, context):
+    tenableio_scan_handler = TIOScanHandler(sqs_client=SQS_CLIENT, logger=logger)
+    response = tenableio_scan_handler.pollScanResults(event, context)
+    return response
+
+
 def queue_websearch(event, context):
     websearch_handler = WebSearchHandler(sqs_client=SQS_CLIENT, logger=logger)
     response = websearch_handler.queue(event, context)

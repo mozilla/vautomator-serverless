@@ -270,6 +270,11 @@ functions:
           batchSize: 1
     tags:
       TYPE: async
+  pollTenableScan:
+    handler: handler.check_tenableioscan
+    description: Lambda to be triggered to check and download Tenable scan result for a given host.
+    tags:
+      SCAN_TYPE: tenableio
   ingest:
     handler: handler.putInQueue
     description: This is a demo function that can be called manually, not called on an event.
@@ -329,7 +334,12 @@ stepFunctions:
           Waitforresults:
             Type: Wait
             Seconds: 600
+            Next: Pollresults
+          Pollresults:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
             Next: Getresults
+            ResultPath: $.responses.Pollresults
           Getresults:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
@@ -363,6 +373,8 @@ resources:
             Endpoint: culucenk@mozilla.com
           - Protocol: email
             Endpoint: jclaudius@gmail.com
+          - Protocol: email
+            Endpoint: gdestuynder@mozilla.com
     S3BucketResults:
       Type: AWS::S3::Bucket
       Properties:

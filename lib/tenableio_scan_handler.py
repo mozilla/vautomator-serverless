@@ -53,3 +53,10 @@ class TIOScanHandler(object):
                 "statusCode": 400,
                 "body": json.dumps({'error': 'Unrecognized payload'})
             }).with_security_headers()
+
+    def pollScanResults(self, event, context):
+        # This function will take a hostname, and query Tenable.io
+        # API for the latest scan information for that host, and
+        # if found, return the results a HTML or JSON object
+        
+        return
