@@ -47,16 +47,18 @@ class ResultsHandler(object):
                 download_url, status = results.generateDownloadURL()
                 if download_url:
                     if status == 200:
-                        message = "All scan results available at the URL for the next 24 hours."
+                        # message = "All scan results available at the URL for the next 24 hours."
                         return Response({
                             "statusCode": status,
-                            "body": json.dumps({'message': message, 'url': download_url})
+                            # "body": json.dumps({'message': message, 'url': download_url})
+                            "body": download_url
                         }).with_security_headers()
                     else:
-                        message = "Partial scan results available at the URL for the next 24 hours."
+                        # message = "Partial scan results available at the URL for the next 24 hours."
                         return Response({
                             "statusCode": status,
-                            "body": json.dumps({'message': message, 'url': download_url})
+                            # "body": json.dumps({'message': message, 'url': download_url})
+                            "body": download_url
                         }).with_security_headers()
                 else:
                     if status == 404:

@@ -361,6 +361,8 @@ resources:
         Subscription:
           - Protocol: email
             Endpoint: culucenk@mozilla.com
+          - Protocol: email
+            Endpoint: jclaudius@gmail.com
     S3BucketResults:
       Type: AWS::S3::Bucket
       Properties:
