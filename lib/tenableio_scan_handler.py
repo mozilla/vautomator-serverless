@@ -7,6 +7,8 @@ from lib.target import Target
 from lib.response import Response
 from lib.hosts import Hosts
 from lib.event import Event
+from scanners.tenable_io_scanner import TIOScanner
+from lib.s3_helper import send_to_s3
 
 
 class TIOScanHandler(object):
@@ -54,9 +56,33 @@ class TIOScanHandler(object):
                 "body": json.dumps({'error': 'Unrecognized payload'})
             }).with_security_headers()
 
+    def runFromStepFunction(self, event, context):
+        source_event = Event(event, context)
+        data = source_event.parse()
+
+        if data:
+            target = Target(data.get('target'))
+            if not target:
+                self.logger.error("Target validation failed of: {}".format(target.name))
+                return False
+
+            # Run the scan here and return the ScanRef object
+            scanner = TIOScanner(logger=self.logger)
+            scanner_ref = scanner.scan(target)
+            if scanner_ref:
+                scanner_ref.launch(wait=False)
+            return scanner_ref
+        else:
+            self.logger.error("Unrecognized payload: {}".format(data))
+            return False
+
     def pollScanResults(self, event, context):
-        # This function will take a hostname, and query Tenable.io
-        # API for the latest scan information for that host, and
-        # if found, return the results a HTML or JSON object
-        
-        return
+        # This function will take a Tenable.io ScanRef object, and
+        # query Tenable.io API for the status of that scan, and
+        # if completed, return the results a HTML or JSON object
+
+        scan_ref = event['responses']['Tenablescan']
+        scanner = TIOScanner(logger=self.logger)
+        result = scanner.scanResult(scan_ref)
+
+        return result

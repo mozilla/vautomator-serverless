@@ -270,6 +270,11 @@ functions:
           batchSize: 1
     tags:
       TYPE: async
+  runTenableScanFromStepFunc:
+    handler: handler.run_tenableioscan
+    description: Lambda to be triggered by a Step Function which would kick off a Tenable.io scan for a given host.
+    tags:
+      SCAN_TYPE: tenable.io
   pollTenableScan:
     handler: handler.check_tenableioscan
     description: Lambda to be triggered to check and download Tenable scan result for a given host.
@@ -297,7 +302,7 @@ stepFunctions:
         States:
           Tenablescan:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandTenableScan"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-runTenableScanFromStepFunc"
             Next: Direnumscan
             ResultPath: $.responses.Tenablescan
           Direnumscan:
@@ -328,32 +333,42 @@ stepFunctions:
           Websearch:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
-            Next: Waitforresults
+          #  Next: Waitforresults
+            Next: Pollresults
             ResultPath: $.responses.Websearch
           # Here we should do a basic wait state
-          Waitforresults:
-            Type: Wait
-            Seconds: 600
-            Next: Pollresults
+          # Waitforresults:
+          #  Type: Wait
+          #  Seconds: 600
+          #  Next: Pollresults
           Pollresults:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
-            Next: Getresults
-            ResultPath: $.responses.Pollresults
-          Getresults:
-            Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
-            ResultPath: $.responses.Getresults
+            InputPath: $.responses.Tenablescan
             OutputPath: $
-            Next: PublishresultURL
-          PublishresultURL:
-            Type: Task
-            Resource: arn:aws:states:::sns:publish
-            Parameters:
-              Subject.$: "$.target"
-              Message.$: "$.responses.Getresults.body"
-              TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-vautomator-results-topic"
+            ResultPath: $.responses.Pollresults
+            Retry:
+              - ErrorEquals:
+                - ["TenableScanUnexpectedStateException", "TenableScanRunningException"]
+                IntervalSeconds: 60
+                MaxAttempts: 5
+                BackoffRate: 20
+            # Next: Getresults
             End: true
+          # Getresults:
+          #   Type: Task
+          #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
+          #   ResultPath: $.responses.Getresults
+          #   OutputPath: $
+          #   Next: PublishresultURL
+          # PublishresultURL:
+          #   Type: Task
+          #   Resource: arn:aws:states:::sns:publish
+          #   Parameters:
+          #     Subject.$: "$.target"
+          #     Message.$: "$.responses.Getresults.body"
+          #     TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-vautomator-results-topic"
+          #   End: true
 
 plugins:
   - serverless-python-requirements
