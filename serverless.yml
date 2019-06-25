@@ -280,6 +280,16 @@ functions:
     description: Lambda to be triggered to check and download Tenable scan result for a given host.
     tags:
       SCAN_TYPE: tenableio
+  pollResults:
+    handler: handler.check_results
+    description: Lamdba to check if all scan output exists for a given host, and generate a download link if true.
+    tags:
+      TYPE: auxiliary
+  formatForSNSEmail:
+    handler: handler.formatMessage
+    description: Lambda to format a message to be delivered with SNS (email).
+    tags:
+      TYPE: auxiliary
   ingest:
     handler: handler.putInQueue
     description: This is a demo function that can be called manually, not called on an event.
@@ -334,33 +344,54 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
           #  Next: Waitforresults
-            Next: Pollresults
+            Next: Polltenableresults
             ResultPath: $.responses.Websearch
           # Here we should do a basic wait state
           # Waitforresults:
           #  Type: Wait
           #  Seconds: 600
           #  Next: Pollresults
-          Pollresults:
+          Polltenableresults:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
-            InputPath: $.responses.Tenablescan
             OutputPath: $
-            ResultPath: $.responses.Pollresults
+            ResultPath: $.responses.Polltenableresults
             Retry:
+              # The below configuration allows polling for approx. 1 hour
               - ErrorEquals:
-                - ["TenableScanUnexpectedStateException", "TenableScanRunningException"]
-                IntervalSeconds: 60
-                MaxAttempts: 5
-                BackoffRate: 20
-            # Next: Getresults
+                - TenableScanRunningException
+                IntervalSeconds: 120
+                MaxAttempts: 10
+                BackoffRate: 1.5
+              - ErrorEquals:
+                - TenableScanUnexpectedStateException
+                IntervalSeconds: 120
+                MaxAttempts: 3
+                BackoffRate: 1.5
+            Catch:
+              - ErrorEquals:
+                - TenableScanCompleteException
+                Next: Generatedownloadlink
+            # We may want to change this
             End: true
-          # Getresults:
-          #   Type: Task
-          #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
-          #   ResultPath: $.responses.Getresults
-          #   OutputPath: $
-          #   Next: PublishresultURL
+          Generatedownloadlink:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollResults"
+            Catch:
+              # Wait for approx. 5 minutes for all scan output to be available
+              - ErrorEquals:
+                - PartialScanResultsException
+                Next: Formatmessage
+            End: True
+            ResultPath: $.responses.Generatedownloadlink
+            Next: PublishresultURL
+          Formatmessage:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-formatForSNSEmail"
+            ResultPath: $.responses.Formatmessage
+            OutputPath: $
+          #  Next: PublishresultURL
+            End: true
           # PublishresultURL:
           #   Type: Task
           #   Resource: arn:aws:states:::sns:publish

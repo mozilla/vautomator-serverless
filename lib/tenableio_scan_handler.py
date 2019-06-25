@@ -8,7 +8,11 @@ from lib.response import Response
 from lib.hosts import Hosts
 from lib.event import Event
 from scanners.tenable_io_scanner import TIOScanner
+from lib.custom_exceptions import TenableScanCompleteException
 from lib.s3_helper import send_to_s3
+
+S3_CLIENT = boto3.client('s3')
+S3_BUCKET = os.environ.get('S3_BUCKET')
 
 
 class TIOScanHandler(object):
@@ -68,21 +72,34 @@ class TIOScanHandler(object):
 
             # Run the scan here and return the ScanRef object
             scanner = TIOScanner(logger=self.logger)
-            scanner_ref = scanner.scan(target)
+            scanner_ref = scanner.scan(target.name)
             if scanner_ref:
                 scanner_ref.launch(wait=False)
-            return scanner_ref
+            return {'id': scanner_ref.id}
         else:
             self.logger.error("Unrecognized payload: {}".format(data))
             return False
 
     def pollScanResults(self, event, context):
-        # This function will take a Tenable.io ScanRef object, and
+        # This function will take a Tenable.io scan ID, and
         # query Tenable.io API for the status of that scan, and
-        # if completed, return the results a HTML or JSON object
+        # if completed, return the results a JSON object
 
-        scan_ref = event['responses']['Tenablescan']
-        scanner = TIOScanner(logger=self.logger)
-        result = scanner.scanResult(scan_ref)
+        source_event = Event(event, context)
+        data = source_event.parse()
 
-        return result
+        if data:
+            target = Target(data.get('target'))
+            if not target:
+                self.logger.error("Target validation failed of: {}".format(target.name))
+                return False
+
+            scanID = event['responses']['Tenablescan']['id']
+            scanner = TIOScanner(logger=self.logger)
+            result = scanner.scanResult(scanID)
+            if result:
+                send_to_s3(target.name + "_tenablescan", result, client=S3_CLIENT, bucket=S3_BUCKET)
+                raise TenableScanCompleteException("Tenable.io scan completed and results uploaded.")
+        else:
+            self.logger.error("Unrecognized payload: {}".format(data))
+            return False

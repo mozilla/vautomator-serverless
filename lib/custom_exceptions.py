@@ -4,3 +4,11 @@ class TenableScanRunningException(Exception):
 
 class TenableScanUnexpectedStateException(Exception):
     pass
+
+
+class TenableScanCompleteException(Exception):
+    pass
+
+
+class PartialScanResultsException(Exception):
+    pass
