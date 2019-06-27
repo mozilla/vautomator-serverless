@@ -108,8 +108,24 @@ def queue_scheduled_direnumscan(event, context):
 
 def download_results(event, context):
     results_handler = ResultsHandler(s3_client=S3_CLIENT, logger=logger)
-    response = results_handler.getResults(event, context)
+    response = results_handler.downloadResults(event, context)
     return response
+
+
+def check_results(event, context):
+    results_handler = ResultsHandler(s3_client=S3_CLIENT, logger=logger)
+    response = results_handler.generateDownloadLink(event, context)
+    return response
+
+
+def formatMessage(event, context):
+
+    return event
+
+
+def error(event, context):
+
+    return {'ERROR': 'EVERYTHING IS BROKEN!'}
 
 
 # To leave handler as lean as possible, we should

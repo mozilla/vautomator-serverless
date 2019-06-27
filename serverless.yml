@@ -290,6 +290,11 @@ functions:
     description: Lambda to format a message to be delivered with SNS (email).
     tags:
       TYPE: auxiliary
+  unhandledError:
+    handler: handler.error
+    description: ""
+    tags:
+      TYPE: auxiliary
   ingest:
     handler: handler.putInQueue
     description: This is a demo function that can be called manually, not called on an event.
@@ -346,18 +351,14 @@ stepFunctions:
           #  Next: Waitforresults
             Next: Polltenableresults
             ResultPath: $.responses.Websearch
-          # Here we should do a basic wait state
-          # Waitforresults:
-          #  Type: Wait
-          #  Seconds: 600
-          #  Next: Pollresults
           Polltenableresults:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
             OutputPath: $
             ResultPath: $.responses.Polltenableresults
             Retry:
-              # The below configuration allows polling for approx. 1 hour
+              # The below configuration allows polling for up to approx. 1 hour
+              # This is generous but safe, most Tenable scans finish in 20-30 minutes
               - ErrorEquals:
                 - TenableScanRunningException
                 IntervalSeconds: 120
@@ -369,28 +370,41 @@ stepFunctions:
                 MaxAttempts: 3
                 BackoffRate: 1.5
             Catch:
+              # This is the success case, represented as an error here
+              # If we hit this exception it means we have results from
+              # Tenable.io, and can move on to generate a download link
               - ErrorEquals:
                 - TenableScanCompleteException
                 Next: Generatedownloadlink
-            # We may want to change this
-            End: true
+              - ErrorEquals:
+                - States.Timeout
+                Next: Fatalerror
+            # We may want to change this, if this times out the state 
+            # machine will stop without sending results.
+            # End: true
           Generatedownloadlink:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollResults"
             Catch:
-              # Wait for approx. 5 minutes for all scan output to be available
               - ErrorEquals:
                 - PartialScanResultsException
                 Next: Formatmessage
-            End: True
+              - ErrorEquals:
+                - NoResultsFoundException
+                Next: Fatalerror
             ResultPath: $.responses.Generatedownloadlink
-            Next: PublishresultURL
+            Next: Formatmessage
           Formatmessage:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-formatForSNSEmail"
             ResultPath: $.responses.Formatmessage
             OutputPath: $
           #  Next: PublishresultURL
+            End: true
+          Fatalerror:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-unhandledError"
+            ResultPath: $.responses.Fatalerror
             End: true
           # PublishresultURL:
           #   Type: Task
