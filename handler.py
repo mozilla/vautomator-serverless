@@ -12,6 +12,7 @@ from lib.tenableio_scan_handler import TIOScanHandler
 from lib.websearch_handler import WebSearchHandler
 from lib.direnum_scan_handler import DirectoryEnumScanHandler
 from lib.results_handler import ResultsHandler
+from lib.format_handler import FormatHandler
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from scanners.ssh_observatory_scanner import SSHObservatoryScanner
 from scanners.tls_observatory_scanner import TLSObservatoryScanner
@@ -119,8 +120,9 @@ def check_results(event, context):
 
 
 def formatMessage(event, context):
-
-    return event
+    format_handler = FormatHandler(s3_client=S3_CLIENT, logger=logger)
+    response = format_handler.formatForSNS(event, context)
+    return response
 
 
 def error(event, context):
