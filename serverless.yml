@@ -278,6 +278,7 @@ functions:
   pollTenableScan:
     handler: handler.check_tenableioscan
     description: Lambda to be triggered to check and download Tenable scan result for a given host.
+    timeout: 60
     tags:
       SCAN_TYPE: tenableio
   pollResults:
@@ -348,12 +349,12 @@ stepFunctions:
           Websearch:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
-          #  Next: Waitforresults
             Next: Polltenableresults
             ResultPath: $.responses.Websearch
           Polltenableresults:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
+            TimeoutSeconds: 3600
             OutputPath: $
             ResultPath: $.responses.Polltenableresults
             Retry:
@@ -362,36 +363,25 @@ stepFunctions:
               - ErrorEquals:
                 - TenableScanRunningException
                 IntervalSeconds: 120
-                MaxAttempts: 10
+                MaxAttempts: 7
                 BackoffRate: 1.5
               - ErrorEquals:
                 - TenableScanUnexpectedStateException
                 IntervalSeconds: 120
                 MaxAttempts: 3
                 BackoffRate: 1.5
-            Catch:
-              # This is the success case, represented as an error here
-              # If we hit this exception it means we have results from
-              # Tenable.io, and can move on to generate a download link
-              - ErrorEquals:
-                - TenableScanCompleteException
-                Next: Generatedownloadlink
+            Catch:            
               - ErrorEquals:
                 - States.Timeout
                 Next: Fatalerror
             # We may want to change this, if this times out the state 
             # machine will stop without sending results.
             # End: true
+            # If no exceptions ...
+            Next: Generatedownloadlink
           Generatedownloadlink:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollResults"
-            Catch:
-              - ErrorEquals:
-                - PartialScanResultsException
-                Next: Formatmessage
-              - ErrorEquals:
-                - NoResultsFoundException
-                Next: Fatalerror
             ResultPath: $.responses.Generatedownloadlink
             Next: Formatmessage
           Formatmessage:

@@ -5,7 +5,6 @@ import boto3
 import logging
 from lib.s3_helper import search_s3, download_s3, send_to_s3, create_presigned_url
 from lib.utilities import package_results
-from lib.custom_exceptions import NoResultsFoundException, PartialScanResultsException
 
 S3_BUCKET = os.environ.get('S3_BUCKET')
 SCAN_RESULTS_BASE_PATH = os.environ.get('SCAN_RESULTS_BASE_PATH')
@@ -59,22 +58,16 @@ class Results(object):
             return False, status
 
     def generateURL(self):
-        # While generating a signed URL, let's only generate
-        # a signed URL if all tool output is available.
-        # This is because we can use the state machine to
-        # wait for a reasonable amount of time until all results
-        # are available
-
+        # Generate a download URL for whichever results are in
+        # the S3 bucket for that host, while keeping track of
+        # missing results
         self.scan_output_dict, self.scan_output_list, status = self.__poll()
         if status == 404:
-            raise NoResultsFoundException("No scan output found in the bucket for: {}".format(self.hostname))
             return status, False, False
-        elif status == 202:
-            raise PartialScanResultsException("Not all scan output exists for {} ".format(self.hostname))
-            return status, self.scan_output_dict, False
         else:
-            # Status is 200 here, which means all results exists
-            # in the S3 bucket
+            # Does not matter if status is 200 or 202, we
+            # will generate a signed URL, but also return
+            # the result dictionary
             host_results_dir = os.path.join(self.base_results_path, self.hostname)
             ready = self.__prepareResults(host_results_dir)
             if ready:
@@ -99,7 +92,7 @@ class Results(object):
             self.logger.warning("No scan output found in the bucket for: {}, exception: {}".format(self.hostname, e))
             return False, False, 404
         else:
-            # At this stage we know there are output files for the host
+            # At this stage we know there are scan output files for the host
             output_mapping = self.scan_output_dict.copy()
             for file in self.scan_output_list:
                 hostname, output_type = file.split('_')

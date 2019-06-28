@@ -8,7 +8,7 @@ from lib.response import Response
 from lib.hosts import Hosts
 from lib.event import Event
 from scanners.tenable_io_scanner import TIOScanner
-from lib.custom_exceptions import TenableScanCompleteException
+# from lib.custom_exceptions import TenableScanCompleteException
 from lib.s3_helper import send_to_s3
 
 S3_CLIENT = boto3.client('s3')
@@ -99,7 +99,7 @@ class TIOScanHandler(object):
             result = scanner.scanResult(scanID)
             if result:
                 send_to_s3(target.name + "_tenablescan", result, client=S3_CLIENT, bucket=S3_BUCKET)
-                raise TenableScanCompleteException("Tenable.io scan completed and results uploaded.")
+                return {'statusCode': 200}
         else:
             self.logger.error("Unrecognized payload: {}".format(data))
             return False

@@ -85,26 +85,18 @@ class ResultsHandler(object):
             if not target:
                 self.logger.error("Target validation failed of: {}".format(target.name))
                 return False
-            
+
             results = Results(target.name, self.s3_client, self.bucket, self.base_results_path)
             status, output, download_url = results.generateURL()
             # download_url, status = results.generateURL()
             if download_url:
-                if status == 200:
-                    return {
-                        'status': status,
-                        'output': output,
-                        'url': download_url
-                    }
+                return {
+                    'status': status,
+                    'output': output,
+                    'url': download_url
+                }
             else:
-                if status == 202:
-                    message = 'Partial results found for target'
-                    return {
-                        'status': status,
-                        'output': output,
-                        'message': message
-                    }
-                elif status == 404:
+                if status == 404:
                     message = 'No results found for target'
                 else:
                     message = 'Unknown error'

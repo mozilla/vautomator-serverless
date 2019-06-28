@@ -1,21 +1,10 @@
-from tenable_io.exceptions import TenableIOApiException, TenableIOException
-
-
-class TenableScanRunningException(TenableIOApiException):
+class TenableScanRunningException(Exception):
     pass
 
 
-class TenableScanUnexpectedStateException(TenableIOApiException):
+class TenableScanUnexpectedStateException(Exception):
     pass
 
 
-class TenableScanCompleteException(TenableIOException):
-    pass
-
-
-class PartialScanResultsException(Exception):
-    pass
-
-
-class NoResultsFoundException(Exception):
+class TenableScanCompleteException(Exception):
     pass
