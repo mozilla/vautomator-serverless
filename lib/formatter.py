@@ -3,9 +3,6 @@ import os
 import boto3
 import logging
 
-S3_BUCKET = os.environ.get('S3_BUCKET')
-SCAN_RESULTS_BASE_PATH = os.environ.get('SCAN_RESULTS_BASE_PATH')
-
 
 class Formatter(object):
 
@@ -24,37 +21,37 @@ class Formatter(object):
             if "tcp" in scan:
                 scan_type_summary = 'Port scan is '
                 body_summary.append(
-                    scan_type_summary + 'SUCCESSFUL' if success == 'true' else scan_type_summary + 'UNSUCCESSFUL'
+                    scan_type_summary + 'SUCCESSFUL' if success else scan_type_summary + 'UNSUCCESSFUL'
                 )
             if "tenable" in scan:
                 scan_type_summary = 'Tenable.io scan is '
                 body_summary.append(
-                    scan_type_summary + 'SUCCESSFUL' if success == 'true' else scan_type_summary + 'UNSUCCESSFUL'
+                    scan_type_summary + 'SUCCESSFUL' if success else scan_type_summary + 'UNSUCCESSFUL'
                 )
             if "dir" in scan:
                 scan_type_summary = 'Directory enumeration scan is '
                 body_summary.append(
-                    scan_type_summary + 'SUCCESSFUL' if success == 'true' else scan_type_summary + 'UNSUCCESSFUL'
+                    scan_type_summary + 'SUCCESSFUL' if success else scan_type_summary + 'UNSUCCESSFUL'
                 )
             if "ssh" in scan:
                 scan_type_summary = 'SSH Observatory scan is '
                 body_summary.append(
-                    scan_type_summary + 'SUCCESSFUL' if success == 'true' else scan_type_summary + 'UNSUCCESSFUL'
+                    scan_type_summary + 'SUCCESSFUL' if success else scan_type_summary + 'UNSUCCESSFUL'
                 )
             if "tls" in scan:
                 scan_type_summary = 'TLS Observatory scan is '
                 body_summary.append(
-                    scan_type_summary + 'SUCCESSFUL' if success == 'true' else scan_type_summary + 'UNSUCCESSFUL'
+                    scan_type_summary + 'SUCCESSFUL' if success else scan_type_summary + 'UNSUCCESSFUL'
                 )
             if "http" in scan:
                 scan_type_summary = 'HTTP Observatory scan is '
                 body_summary.append(
-                    scan_type_summary + 'SUCCESSFUL' if success == 'true' else scan_type_summary + 'UNSUCCESSFUL'
+                    scan_type_summary + 'SUCCESSFUL' if success else scan_type_summary + 'UNSUCCESSFUL'
                 )
             if "web" in scan:
                 scan_type_summary = 'Web search is '
                 body_summary.append(
-                    scan_type_summary + 'SUCCESSFUL' if success == 'true' else scan_type_summary + 'UNSUCCESSFUL'
+                    scan_type_summary + 'SUCCESSFUL' if success else scan_type_summary + 'UNSUCCESSFUL'
                 )
 
         if "UNSUCCESSFUL" in str(body_summary):

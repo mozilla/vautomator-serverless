@@ -120,7 +120,7 @@ def check_results(event, context):
 
 
 def formatMessage(event, context):
-    format_handler = FormatHandler(s3_client=S3_CLIENT, logger=logger)
+    format_handler = FormatHandler(logger=logger)
     response = format_handler.formatForSNS(event, context)
     return response
 

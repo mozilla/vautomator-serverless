@@ -7,6 +7,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   runtime: python3.6
   region: ${opt:region, 'us-west-2'}
+  versionFunctions: false
   stackTags:
     PRODUCT_NAME: "vautomator-serverless-app"
     SERVICE_NAME: "vautomator"
@@ -388,28 +389,33 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-formatForSNSEmail"
             ResultPath: $.responses.Formatmessage
-            OutputPath: $
-          #  Next: PublishresultURL
-            End: true
+            OutputPath: $.responses.Formatmessage
+            Next: PublishresultURL
+          #  End: true
           Fatalerror:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-unhandledError"
             ResultPath: $.responses.Fatalerror
             End: true
-          # PublishresultURL:
-          #   Type: Task
-          #   Resource: arn:aws:states:::sns:publish
-          #   Parameters:
-          #     Subject.$: "$.target"
-          #     Message.$: "$.responses.Getresults.body"
-          #     TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-vautomator-results-topic"
-          #   End: true
+          PublishresultURL:
+            Type: Task
+            Resource: arn:aws:states:::sns:publish
+            Parameters:
+              Subject.$: "$.subject"
+              Message.$: "$.url"
+              MessageAttributes:
+                MyAttribute:
+                  DataType: "String"
+                  StringValue: "TEST TEST TEST TEST TEST"
+              TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-vautomator-results-topic"
+            End: true
 
 plugins:
   - serverless-python-requirements
   - serverless-pseudo-parameters
   - serverless-apigw-binary
   - serverless-step-functions
+  - serverless-prune-plugin
 
 resources:
   Resources:
@@ -449,6 +455,9 @@ resources:
               - Arn
           maxReceiveCount: 2
 custom:
+  prune:
+    automatic: true
+    number: 5
   cfg:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"

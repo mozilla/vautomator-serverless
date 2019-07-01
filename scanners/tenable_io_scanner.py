@@ -70,7 +70,8 @@ class TIOScanner():
         scan_ref = self.client.scan_helper.id(scan_id)
         status = scan_ref.status()
 
-        if status == Scan.STATUS_COMPLETED:
+        # TODO: Remove the cancel and aborted status later, added for debugging
+        if status == Scan.STATUS_COMPLETED or status == Scan.STATUS_ABORTED or status == Scan.STATUS_CANCELED or status == Scan.STATUS_STOPPING:
             return True
         elif status == Scan.STATUS_INITIALIZING or status == Scan.STATUS_PENDING or status == Scan.STATUS_RUNNING:
             raise TenableScanRunningException("Tenable.io scan still underway.")

@@ -16,7 +16,7 @@ class FormatHandler(object):
         self.logger = logger
         self.default_format = "email"
 
-    def formatforSNS(self, event, context):
+    def formatForSNS(self, event, context):
         # This is a step function called from a state machine
         # Event type will always be "step-function"
         source_event = Event(event, context)
@@ -34,9 +34,15 @@ class FormatHandler(object):
             contents = (target.name , output_tracker, signed_url)
             formatter = Formatter(self.logger)
             subject, body = formatter.formatForEmail(contents)
+            body_url, body_summary, body_warning = body
 
-            # Process here and return as JSON
-            return subject, body
+            return {
+                'subject': subject,
+                'url': body_url,
+                'summary': body_summary,
+                'warning': body_warning
+            }
+
         else:
             self.logger.error("Unrecognized payload: {}".format(data))
             return False
