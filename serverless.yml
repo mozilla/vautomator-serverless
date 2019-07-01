@@ -402,11 +402,7 @@ stepFunctions:
             Resource: arn:aws:states:::sns:publish
             Parameters:
               Subject.$: "$.subject"
-              Message.$: "$.url"
-              MessageAttributes:
-                MyAttribute:
-                  DataType: "String"
-                  StringValue: "TEST TEST TEST TEST TEST"
+              Message.$: "$.body"
               TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-vautomator-results-topic"
             End: true
 

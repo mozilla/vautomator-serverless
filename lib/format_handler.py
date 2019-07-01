@@ -34,13 +34,10 @@ class FormatHandler(object):
             contents = (target.name , output_tracker, signed_url)
             formatter = Formatter(self.logger)
             subject, body = formatter.formatForEmail(contents)
-            body_url, body_summary, body_warning = body
 
             return {
                 'subject': subject,
-                'url': body_url,
-                'summary': body_summary,
-                'warning': body_warning
+                'body': body
             }
 
         else:
