@@ -4,7 +4,7 @@ import os
 import logging
 import json
 import boto3
-from lib.custom_exceptions import TenableScanRunningException, TenableScanUnexpectedStateException
+from lib.custom_exceptions import TenableScanRunningException, TenableScanUnexpectedStateException, TenableScanInterruptedException
 from tenable_io.client import TenableIOClient
 from tenable_io.exceptions import TenableIOApiException, TenableIOException
 from tenable_io.api.scans import ScanExportRequest
@@ -70,9 +70,10 @@ class TIOScanner():
         scan_ref = self.client.scan_helper.id(scan_id)
         status = scan_ref.status()
 
-        # TODO: Remove the cancel and aborted status later, added for debugging
-        if status == Scan.STATUS_COMPLETED or status == Scan.STATUS_ABORTED or status == Scan.STATUS_CANCELED or status == Scan.STATUS_STOPPING:
+        if status == Scan.STATUS_COMPLETED:
             return True
+        elif status == Scan.STATUS_ABORTED or status == Scan.STATUS_CANCELED or status == Scan.STATUS_STOPPING:
+            raise TenableScanInterruptedException("Tenable.io scan ended abruptly, likely stopped or aborted manually.")
         elif status == Scan.STATUS_INITIALIZING or status == Scan.STATUS_PENDING or status == Scan.STATUS_RUNNING:
             raise TenableScanRunningException("Tenable.io scan still underway.")
         else:

@@ -125,11 +125,6 @@ def formatMessage(event, context):
     return response
 
 
-def error(event, context):
-
-    return {'ERROR': 'EVERYTHING IS BROKEN!'}
-
-
 # To leave handler as lean as possible, we should
 # probably move this to another file/module also
 def runScanFromQ(event, context):

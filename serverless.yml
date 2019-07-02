@@ -292,11 +292,6 @@ functions:
     description: Lambda to format a message to be delivered with SNS (email).
     tags:
       TYPE: auxiliary
-  unhandledError:
-    handler: handler.error
-    description: ""
-    tags:
-      TYPE: auxiliary
   ingest:
     handler: handler.putInQueue
     description: This is a demo function that can be called manually, not called on an event.
@@ -374,10 +369,10 @@ stepFunctions:
             Catch:            
               - ErrorEquals:
                 - States.Timeout
-                Next: Fatalerror
-            # We may want to change this, if this times out the state 
-            # machine will stop without sending results.
-            # End: true
+                Next: Generatedownloadlink
+              - ErrorEquals:
+                - TenableScanInterruptedException
+                Next: Generatedownloadlink
             # If no exceptions ...
             Next: Generatedownloadlink
           Generatedownloadlink:
@@ -391,12 +386,6 @@ stepFunctions:
             ResultPath: $.responses.Formatmessage
             OutputPath: $.responses.Formatmessage
             Next: PublishresultURL
-          #  End: true
-          Fatalerror:
-            Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-unhandledError"
-            ResultPath: $.responses.Fatalerror
-            End: true
           PublishresultURL:
             Type: Task
             Resource: arn:aws:states:::sns:publish

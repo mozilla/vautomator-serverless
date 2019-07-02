@@ -8,3 +8,7 @@ class TenableScanUnexpectedStateException(Exception):
 
 class TenableScanCompleteException(Exception):
     pass
+
+
+class TenableScanInterruptedException(Exception):
+    pass
