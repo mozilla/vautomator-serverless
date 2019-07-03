@@ -12,6 +12,7 @@ Transparency logs.
 This is under development with more features being added as different
 branches. The tool currently supports:
 
+*   A single API endpoint (``/scan``) which performs all scans on a given host, and emails the results to desired mailbox(es).
 *   Addition of a target to the scan queue for port scan by an API endpoint (``/ondemand/portscan``). 
 *   Addition of a target to the scan queue for HTTP Observatory scan by an API endpoint (``/ondemand/httpobservatory``) 
 *   Addition of a target to the scan queue for TLS Observatory scan by an API endpoint (``/ondemand/tlsobservatory``) 

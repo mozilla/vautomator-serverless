@@ -62,6 +62,32 @@ There are 3 clients:
 REST API
 ===========
 
+POST /scan
+------------
+Perform all supported scans on a given host.
+
+Parameters
++++++++++++
+*   ``target`` is the host (FQDN or IPv4 address)
+Output
++++++++
+*   A ``json`` document containing step function execution name.
+
+Example
+++++++++
+.. parsed-literal::
+   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/scan' \
+   -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
+
+   {"executionArn":"<executionARN>:ScanAll:e9648493-9c01-11e9-85f4-874b479eba5f","startDate":1.561986763711E9}
+
+.. note:: This is an asynchronous endpoint. Behind the scenes, the host is processed 
+   by a state machine, which invokes a number of Lambda functions tp perform all scans 
+   on the host, and an email is sent to desired parties when all scans are completed 
+   and results are available.
+
+----
+
 POST /ondemand/portscan
 -------------------------
 Add a target to the scan queue for port scan.
