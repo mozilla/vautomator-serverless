@@ -88,7 +88,6 @@ class ResultsHandler(object):
 
             results = Results(target.name, self.s3_client, self.bucket, self.base_results_path)
             status, output, download_url = results.generateURL()
-            # download_url, status = results.generateURL()
             if download_url:
                 return {
                     'status': status,

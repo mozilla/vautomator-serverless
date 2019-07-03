@@ -57,22 +57,36 @@ class TestResults():
         assert fail_500 is False
         assert status == 500
 
-    def test_generateDownloadURL(self, s3):
+    def test_generateURL(self, s3):
         target, client, bucket, bucket_name = s3
         # This is the fail case, a signed URL will not be generated
         new_target = "www.mozilla.org"
         result_404 = Results(new_target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
-        fail_404, status = result_404.generateDownloadURL()
-        assert fail_404 is False
+        status, output_dict, fail_404 = result_404.generateURL()
         assert status == 404
+        assert fail_404 is False
+        assert output_dict is False
 
-        # Add more objects to the mocked bucket, this is the success case
+        # Add more objects to the mocked bucket, this is the success 200 case
         client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_direnum.json'.format(target))
-        client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_portscan.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_tcpscan.json'.format(target))
         client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_websearch.json'.format(target))
         client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_sshobservatory.json'.format(target))
+        client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_tenablescan.json'.format(target))
 
         success_result = Results(target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
-        success, status = success_result.generateDownloadURL()
-        assert type(success) is str
+        status, output_dict, success_200 = success_result.generateURL()
+        assert type(success_200) is str
         assert status == 200
+        assert True in output_dict.values()
+        assert False not in output_dict.values()
+
+        # Remove an object from the mocked bucket, this is the success 202 case
+        client.delete_object(Bucket=bucket_name, Key='{}_tenablescan.json'.format(target))
+
+        success_result = Results(target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
+        status, output_dict, success_202 = success_result.generateURL()
+        assert type(success_202) is str
+        assert status == 202
+        assert True in output_dict.values()
+        assert False in output_dict.values()

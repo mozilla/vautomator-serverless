@@ -39,7 +39,7 @@ class Results(object):
         # While downloading, let's just download whatever
         # results exist for a given host
         host_results_dir = os.path.join(self.base_results_path, self.hostname)
-        self.scan_output_list, status = self.__poll()
+        self.scan_output_dict, self.scan_output_list, status = self.__poll()
         # status here is either 200, 202 or 404
 
         if self.scan_output_list and len(self.scan_output_list):
@@ -94,6 +94,7 @@ class Results(object):
         else:
             # At this stage we know there are scan output files for the host
             output_mapping = self.scan_output_dict.copy()
+            print(self.scan_output_list)
             for file in self.scan_output_list:
                 hostname, output_type = file.split('_')
                 del hostname
@@ -102,6 +103,7 @@ class Results(object):
                         output_mapping.update({key: True})
 
             if False in output_mapping.values():
+                print(key, value)
                 self.logger.warning("Not all scan output exists for {} ".format(self.hostname))
                 return output_mapping, self.scan_output_list, 202
             else:
