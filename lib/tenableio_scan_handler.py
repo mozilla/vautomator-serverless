@@ -11,7 +11,7 @@ from scanners.tenable_io_scanner import TIOScanner
 # from lib.custom_exceptions import TenableScanCompleteException
 from lib.s3_helper import send_to_s3
 
-S3_CLIENT = boto3.client('s3')
+S3_CLIENT = boto3.client('s3', region_name='us-west-2')
 S3_BUCKET = os.environ.get('S3_BUCKET')
 
 
@@ -19,16 +19,19 @@ class TIOScanHandler(object):
     def __init__(
         self, sqs_client=boto3.client('sqs', region_name='us-west-2'),
         queueURL=os.getenv('SQS_URL'),
+        s3_client=S3_CLIENT,
+        bucket=S3_BUCKET,
         logger=logging.getLogger(__name__),
         region='us-west-2'
     ):
         self.sqs_client = sqs_client
         self.queueURL = queueURL
+        self.s3_client = s3_client
+        self.s3_bucket = bucket
         self.logger = logger
         self.region = region
 
     def queue(self, event, context):
-        # print("Event: {}, context: {}".format(event, context.invoked_function_arn))
         source_event = Event(event, context)
         data = source_event.parse()
 
@@ -75,7 +78,9 @@ class TIOScanHandler(object):
             scanner_ref = scanner.scan(target.name)
             if scanner_ref:
                 scanner_ref.launch(wait=False)
-            return {'id': scanner_ref.id}
+                return {'id': scanner_ref.id}
+            else:
+                return False
         else:
             self.logger.error("Unrecognized payload: {}".format(data))
             return False
@@ -98,7 +103,7 @@ class TIOScanHandler(object):
             scanner = TIOScanner(logger=self.logger)
             result = scanner.scanResult(scanID)
             if result:
-                send_to_s3(target.name + "_tenablescan", result, client=S3_CLIENT, bucket=S3_BUCKET)
+                send_to_s3(target.name + "_tenablescan", result, client=self.s3_client, bucket=self.s3_bucket)
                 return {'statusCode': 200}
         else:
             self.logger.error("Unrecognized payload: {}".format(data))

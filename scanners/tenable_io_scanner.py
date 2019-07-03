@@ -81,10 +81,16 @@ class TIOScanner():
             return False
 
     def __getAPIKey(self):
-        response = self.ssm_client.get_parameter(Name="TENABLEIO_ACCESS_KEY", WithDecryption=True)
-        access_key = response['Parameter']['Value']
-        response = self.ssm_client.get_parameter(Name="TENABLEIO_SECRET_KEY", WithDecryption=True)
-        secret_key = response['Parameter']['Value']
+        try:
+            access_key = os.environ["TIOA"]
+            secret_key = os.environ["TIOS"]
+        except Exception:
+            self.logger.warning("Cannot obtain Tenable.io API key(s) as environment variables. Checking SSM.")
+            response = self.ssm_client.get_parameter(Name="TENABLEIO_ACCESS_KEY", WithDecryption=True)
+            access_key = response['Parameter']['Value']
+            response = self.ssm_client.get_parameter(Name="TENABLEIO_SECRET_KEY", WithDecryption=True)
+            secret_key = response['Parameter']['Value']
+
         return access_key, secret_key
 
     def __createClient(self):
@@ -94,7 +100,7 @@ class TIOScanner():
                 # See if we can load the API keys from SSM
                 self.tio_access_key, self.tio_secret_key = self.__getAPIKey()
             except Exception:
-                self.logger.error("Cannot obtain Tenable.io API key(s), skipping Tenable.io scan")
+                self.logger.error("Cannot obtain Tenable.io API key(s), skipping Tenable.io scan.")
                 return False
 
         # Here, we have the keys, either from SSM or from instantiation
