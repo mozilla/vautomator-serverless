@@ -14,15 +14,17 @@ class SSHObservatoryScanner():
         # Initiate the scan
         if self.api_url[-1] != "/":
             analyze_url = self.api_url + '/scan?target=' + hostname
+            results = {}
+            response = self.session.post(analyze_url, data=None).json()
+            print(response.content)
+            scan_id = self.session.post(analyze_url, data=None).json()['uuid']
+
+            # Wait for the scan to complete, polling every second
+            results['scan'] = self.__poll(scan_id)
+            results['host'] = hostname
+            return results
         else:
             raise Exception("Invalid API URL specified for Observatory.")
-        results = {}
-        scan_id = self.session.post(analyze_url, data=None).json()['uuid']
-
-        # Wait for the scan to complete, polling every second
-        results['scan'] = self.__poll(scan_id)
-        results['host'] = hostname
-        return results
 
     def __poll(self, scan_id):
         url = self.api_url + '/scan/results?uuid=' + str(scan_id)

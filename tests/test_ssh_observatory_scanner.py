@@ -29,6 +29,8 @@ class TestSSHObservatoryScanner():
         # Unstub env var for testing
         os.environ["SSHOBS_API_URL"] = ""
 
+    # NOTE: Temporary, as SSH Observatory API is broken
+    @pytest.mark.xfail(raises=Exception)
     def test_scan(self):
         # Stub env var for testing
         os.environ["SSHOBS_API_URL"] = "https://sshscan.rubidus.com/api/v1"
