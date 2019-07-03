@@ -1,6 +1,3 @@
-import time
-import os
-import boto3
 import logging
 
 
@@ -55,7 +52,7 @@ class Formatter(object):
                 )
 
         if "UNSUCCESSFUL" in str(body_summary):
-            warning_text = 'Not all scans successfully ran. You should run them manually.'
+            warning_text = 'Not all scans ran successfully. You should run them manually.'
 
         body_text = body_url_text + '\n'
         for summary in body_summary:

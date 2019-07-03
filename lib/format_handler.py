@@ -6,9 +6,6 @@ from lib.target import Target
 from lib.event import Event
 from lib.formatter import Formatter
 
-S3_BUCKET = os.environ.get('S3_BUCKET')
-SCAN_RESULTS_BASE_PATH = os.environ.get('SCAN_RESULTS_BASE_PATH')
-
 
 class FormatHandler(object):
 
