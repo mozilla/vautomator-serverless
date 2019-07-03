@@ -1,11 +1,12 @@
 import requests
 import time
 import os
+import logging
 
 
 class HTTPObservatoryScanner():
 
-    def __init__(self, poll_interval=1):
+    def __init__(self, poll_interval=1, logger=logging.getLogger(__name__)):
         self.session = requests.Session()
         self.poll_interval = poll_interval
         self.api_url = os.getenv('HTTPOBS_API_URL')

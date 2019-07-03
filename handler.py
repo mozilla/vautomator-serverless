@@ -143,19 +143,19 @@ def runScanFromQ(event, context):
                     message = item['body']
                     scan_type, target, uuid = message.split('|')
                     if scan_type == "httpobservatory":
-                        scanner = HTTPObservatoryScanner()
+                        scanner = HTTPObservatoryScanner(logger=logger)
                         scan_result = scanner.scan(target)
                         send_to_s3(target + "_httpobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "sshobservatory":
-                        scanner = SSHObservatoryScanner()
+                        scanner = SSHObservatoryScanner(logger=logger)
                         scan_result = scanner.scan(target)
                         send_to_s3(target + "_sshobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "tlsobservatory":
-                        scanner = TLSObservatoryScanner()
+                        scanner = TLSObservatoryScanner(logger=logger)
                         scan_result = scanner.scan(target)
                         send_to_s3(target + "_tlsobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "portscan":
-                        scanner = PortScanner(target)
+                        scanner = PortScanner(target, logger=logger)
                         nmap_scanner = scanner.scanTCP()
                         while nmap_scanner.still_scanning():
                             # Wait for 1 second after the end of the scan

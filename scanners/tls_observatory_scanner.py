@@ -1,11 +1,12 @@
 import requests
 import time
 import os
+import logging
 
 
 class TLSObservatoryScanner():
 
-    def __init__(self, poll_interval=1):
+    def __init__(self, poll_interval=1, logger=logging.getLogger(__name__)):
         self.session = requests.Session()
         self.poll_interval = poll_interval
         self.api_url = os.getenv('TLSOBS_API_URL')
@@ -35,5 +36,5 @@ class TLSObservatoryScanner():
                 return resp.json()
 
             time.sleep(self.poll_interval)
-            completion_percentage = resp['completion_perc']
+            completion_percentage = resp.json()['completion_perc']
         raise Exception("Unable to get results from TLS observatory API.")

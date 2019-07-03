@@ -1,6 +1,7 @@
 import nmap
 import boto3
 import os
+import logging
 from lib.s3_helper import send_to_s3
 from lib.utilities import sanitise_shell_cmd
 
@@ -10,7 +11,7 @@ S3_BUCKET = os.environ.get('S3_BUCKET')
 
 class PortScanner():
 
-    def __init__(self, hostname, arguments="-v -Pn -sT -sV --script=banner --top-ports 1000 --open -T4 --system-dns"):
+    def __init__(self, hostname, arguments="-v -Pn -sT -sV --script=banner --top-ports 1000 --open -T4 --system-dns", logger=logging.getLogger(__name__)):
         self.host = hostname
         self.arguments = "".join(sanitise_shell_cmd(arguments))
         self.privileged = False
