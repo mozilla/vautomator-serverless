@@ -1,7 +1,6 @@
 import pytest
 import boto3
 import time
-
 from lib.sshscan_handler import SSHScanHandler
 from lib.hosts import Hosts
 from moto import mock_sqs

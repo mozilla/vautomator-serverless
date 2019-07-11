@@ -7,6 +7,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   runtime: python3.6
   region: ${opt:region, 'us-west-2'}
+  versionFunctions: false
   stackTags:
     PRODUCT_NAME: "vautomator-serverless-app"
     SERVICE_NAME: "vautomator"
@@ -72,6 +73,7 @@ provider:
       Ref: S3BucketResults
     # Folder to save the scan results to, make sure it is located under /tmp
     SCAN_RESULTS_BASE_PATH: '/tmp/vautomator-serverless/results'
+    REGION: '#{AWS::Region}'
   apiKeys:
     - ${self:service}-api-key
 
@@ -270,6 +272,27 @@ functions:
           batchSize: 1
     tags:
       TYPE: async
+  runTenableScanFromStepFunc:
+    handler: handler.run_tenableioscan
+    description: Lambda to be triggered by a Step Function which would kick off a Tenable.io scan for a given host.
+    tags:
+      SCAN_TYPE: tenable.io
+  pollTenableScan:
+    handler: handler.check_tenableioscan
+    description: Lambda to be triggered to check and download Tenable scan result for a given host.
+    timeout: 60
+    tags:
+      SCAN_TYPE: tenableio
+  pollResults:
+    handler: handler.check_results
+    description: Lamdba to check if all scan output exists for a given host, and generate a download link if true.
+    tags:
+      TYPE: auxiliary
+  formatForSNSEmail:
+    handler: handler.formatMessage
+    description: Lambda to format a message to be delivered with SNS (email).
+    tags:
+      TYPE: auxiliary
   ingest:
     handler: handler.putInQueue
     description: This is a demo function that can be called manually, not called on an event.
@@ -292,7 +315,7 @@ stepFunctions:
         States:
           Tenablescan:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandTenableScan"
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-runTenableScanFromStepFunc"
             Next: Direnumscan
             ResultPath: $.responses.Tenablescan
           Direnumscan:
@@ -323,25 +346,53 @@ stepFunctions:
           Websearch:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
-            Next: Waitforresults
+            Next: Polltenableresults
             ResultPath: $.responses.Websearch
-          # Here we should do a basic wait state
-          Waitforresults:
-            Type: Wait
-            Seconds: 600
-            Next: Getresults
-          Getresults:
+          Polltenableresults:
             Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDownloadScanResults"
-            ResultPath: $.responses.Getresults
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
+            # TimeoutSeconds: 3600
             OutputPath: $
+            ResultPath: $.responses.Polltenableresults
+            Retry:
+              # The below configuration allows polling for up to approx. 1 hour
+              # This is generous but safe, most Tenable scans finish in 20-30 minutes
+              - ErrorEquals:
+                - TenableScanRunningException
+                IntervalSeconds: 120
+                MaxAttempts: 7
+                BackoffRate: 1.5
+              - ErrorEquals:
+                - TenableScanUnexpectedStateException
+                IntervalSeconds: 120
+                MaxAttempts: 3
+                BackoffRate: 1.5
+            Catch:            
+              - ErrorEquals:
+                - States.Timeout
+                Next: Generatedownloadlink
+              - ErrorEquals:
+                - TenableScanInterruptedException
+                Next: Generatedownloadlink
+            # If no exceptions ...
+            Next: Generatedownloadlink
+          Generatedownloadlink:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollResults"
+            ResultPath: $.responses.Generatedownloadlink
+            Next: Formatmessage
+          Formatmessage:
+            Type: Task
+            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-formatForSNSEmail"
+            ResultPath: $.responses.Formatmessage
+            OutputPath: $.responses.Formatmessage
             Next: PublishresultURL
           PublishresultURL:
             Type: Task
             Resource: arn:aws:states:::sns:publish
             Parameters:
-              Subject.$: "$.target"
-              Message.$: "$.responses.Getresults.body"
+              Subject.$: "$.subject"
+              Message.$: "$.body"
               TopicArn: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:${self:service}-${opt:stage}-vautomator-results-topic"
             End: true
 
@@ -350,6 +401,7 @@ plugins:
   - serverless-pseudo-parameters
   - serverless-apigw-binary
   - serverless-step-functions
+  - serverless-prune-plugin
 
 resources:
   Resources:
@@ -361,6 +413,10 @@ resources:
         Subscription:
           - Protocol: email
             Endpoint: culucenk@mozilla.com
+          - Protocol: email
+            Endpoint: jclaudius@gmail.com
+          - Protocol: email
+            Endpoint: gdestuynder@mozilla.com
     S3BucketResults:
       Type: AWS::S3::Bucket
       Properties:
@@ -385,6 +441,9 @@ resources:
               - Arn
           maxReceiveCount: 2
 custom:
+  prune:
+    automatic: true
+    number: 5
   cfg:
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"

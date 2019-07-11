@@ -12,6 +12,7 @@ from lib.tenableio_scan_handler import TIOScanHandler
 from lib.websearch_handler import WebSearchHandler
 from lib.direnum_scan_handler import DirectoryEnumScanHandler
 from lib.results_handler import ResultsHandler
+from lib.format_handler import FormatHandler
 from scanners.http_observatory_scanner import HTTPObservatoryScanner
 from scanners.ssh_observatory_scanner import SSHObservatoryScanner
 from scanners.tls_observatory_scanner import TLSObservatoryScanner
@@ -22,9 +23,10 @@ from scanners.direnum_scanner import DirectoryEnumScanner
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-SQS_CLIENT = boto3.client('sqs')
-S3_CLIENT = boto3.client('s3')
-S3_BUCKET = os.environ.get('S3_BUCKET')
+S3_BUCKET = os.getenv('S3_BUCKET')
+REGION = os.getenv('REGION', 'us-west-2')
+SQS_CLIENT = boto3.client('sqs', region_name=REGION)
+S3_CLIENT = boto3.client('s3', region_name=REGION)
 
 
 def queue_portscan(event, context):
@@ -77,6 +79,18 @@ def queue_tenableioscan(event, context):
     return response
 
 
+def run_tenableioscan(event, context):
+    tenableio_scan_handler = TIOScanHandler(sqs_client=SQS_CLIENT, logger=logger)
+    response = tenableio_scan_handler.runFromStepFunction(event, context)
+    return response
+
+
+def check_tenableioscan(event, context):
+    tenableio_scan_handler = TIOScanHandler(sqs_client=SQS_CLIENT, logger=logger)
+    response = tenableio_scan_handler.pollScanResults(event, context)
+    return response
+
+
 def queue_websearch(event, context):
     websearch_handler = WebSearchHandler(sqs_client=SQS_CLIENT, logger=logger)
     response = websearch_handler.queue(event, context)
@@ -96,7 +110,19 @@ def queue_scheduled_direnumscan(event, context):
 
 def download_results(event, context):
     results_handler = ResultsHandler(s3_client=S3_CLIENT, logger=logger)
-    response = results_handler.getResults(event, context)
+    response = results_handler.downloadResults(event, context)
+    return response
+
+
+def check_results(event, context):
+    results_handler = ResultsHandler(s3_client=S3_CLIENT, logger=logger)
+    response = results_handler.generateDownloadLink(event, context)
+    return response
+
+
+def formatMessage(event, context):
+    format_handler = FormatHandler(logger=logger)
+    response = format_handler.formatForSNS(event, context)
     return response
 
 
@@ -118,19 +144,19 @@ def runScanFromQ(event, context):
                     message = item['body']
                     scan_type, target, uuid = message.split('|')
                     if scan_type == "httpobservatory":
-                        scanner = HTTPObservatoryScanner()
+                        scanner = HTTPObservatoryScanner(logger=logger)
                         scan_result = scanner.scan(target)
                         send_to_s3(target + "_httpobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "sshobservatory":
-                        scanner = SSHObservatoryScanner()
+                        scanner = SSHObservatoryScanner(logger=logger)
                         scan_result = scanner.scan(target)
                         send_to_s3(target + "_sshobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "tlsobservatory":
-                        scanner = TLSObservatoryScanner()
+                        scanner = TLSObservatoryScanner(logger=logger)
                         scan_result = scanner.scan(target)
                         send_to_s3(target + "_tlsobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "portscan":
-                        scanner = PortScanner(target)
+                        scanner = PortScanner(target, logger=logger)
                         nmap_scanner = scanner.scanTCP()
                         while nmap_scanner.still_scanning():
                             # Wait for 1 second after the end of the scan

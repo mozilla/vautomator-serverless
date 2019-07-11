@@ -2,6 +2,10 @@
 Getting Ready to Dev / Deploy
 ******************************
 
+.. note:: If you are simply a consumer of the service, you DO NOT have to deploy your own instance.
+   Assuming you have the API key, you can use the already deployed instance at 
+   https://y2ippncfd1.execute-api.us-west-2.amazonaws.com.
+
 If you would like to deploy your own instance in your AWS environment, follow the below steps:
 
 1.  Install python3, node.js and

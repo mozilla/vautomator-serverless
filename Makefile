@@ -57,7 +57,8 @@ deploy:
 	npm install serverless-python-requirements --save-dev && \
 	npm install serverless-pseudo-parameters --save-dev && \
 	npm install serverless-apigw-binary --save-dev && \
-	npm install serverless-step-functions --save-dev
+	npm install serverless-step-functions --save-dev && \
+	npm install serverless-prune-plugin --save-dev
 	sls deploy --region $(AWS_REGION) --aws-profile $(AWS_PROFILE)
 
 .PHONY: test

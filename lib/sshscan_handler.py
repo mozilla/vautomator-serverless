@@ -8,13 +8,14 @@ from lib.response import Response
 from lib.hosts import Hosts
 from lib.event import Event
 
+REGION = os.getenv('REGION', 'us-west-2')
+
 
 class SSHScanHandler(object):
-    def __init__(self, sqs_client=boto3.client('sqs', region_name='us-west-2'), queueURL=os.getenv('SQS_URL'), logger=logging.getLogger(__name__), region='us-west-2'):
+    def __init__(self, sqs_client=boto3.client('sqs', region_name=REGION), queueURL=os.getenv('SQS_URL'), logger=logging.getLogger(__name__)):
         self.sqs_client = sqs_client
         self.logger = logger
         self.queueURL = queueURL
-        self.region = region
 
     def queue(self, event, context):
         # print("Event: {}, context: {}".format(event, context.invoked_function_arn))
