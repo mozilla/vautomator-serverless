@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 
 S3_BUCKET = os.getenv('S3_BUCKET')
 REGION = os.getenv('REGION', 'us-west-2')
-S3_CLIENT = boto3.client('s3', REGION)
+S3_CLIENT = boto3.client('s3', region_name=REGION)
 
 
 def send_to_s3(hostname, blob, client=S3_CLIENT, bucket=S3_BUCKET):

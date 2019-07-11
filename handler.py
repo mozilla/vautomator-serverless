@@ -23,9 +23,10 @@ from scanners.direnum_scanner import DirectoryEnumScanner
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-SQS_CLIENT = boto3.client('sqs')
-S3_CLIENT = boto3.client('s3')
-S3_BUCKET = os.environ.get('S3_BUCKET')
+S3_BUCKET = os.getenv('S3_BUCKET')
+REGION = os.getenv('REGION', 'us-west-2')
+SQS_CLIENT = boto3.client('sqs', region_name=REGION)
+S3_CLIENT = boto3.client('s3', region_name=REGION)
 
 
 def queue_portscan(event, context):

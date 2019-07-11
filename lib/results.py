@@ -15,7 +15,7 @@ class Results(object):
     def __init__(
         self,
         hostname,
-        s3_client=boto3.client('s3', region=REGION),
+        s3_client=boto3.client('s3', region_name=REGION),
         bucket=S3_BUCKET,
         results_path=SCAN_RESULTS_BASE_PATH,
         logger=logging.getLogger(__name__)
