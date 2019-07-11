@@ -15,10 +15,10 @@ class TestDirectoryEnumScanner():
         assert scanner.arguments == ['-f', '-w', '-S', '-r']
         assert scanner.wordlist == 'short'
 
-    @pytest.mark.xfail(raises=AssertionError)
     def test_invalid_wordlist(self):
-        # We are expecting a failure here with an assertion error
-        DirectoryEnumScanner(wordlist='invalid')
+        with pytest.raises(AssertionError):
+            # We are expecting a failure here with an assertion error
+            assert DirectoryEnumScanner(wordlist='invalid')
 
     # This will never succeed in Travis, because
     # it relies on dirb being installed/available

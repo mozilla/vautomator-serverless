@@ -16,8 +16,6 @@ class SSHObservatoryScanner():
         if self.api_url[-1] != "/":
             analyze_url = self.api_url + '/scan?target=' + hostname
             results = {}
-            response = self.session.post(analyze_url, data=None).json()
-            print(response.content)
             scan_id = self.session.post(analyze_url, data=None).json()['uuid']
 
             # Wait for the scan to complete, polling every second
