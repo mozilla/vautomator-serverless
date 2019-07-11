@@ -8,7 +8,7 @@ from lib.response import Response
 from lib.hosts import Hosts
 from lib.event import Event
 
-REGION = os.environ.get('REGION')
+REGION = os.getenv('REGION', 'us-west-2')
 
 
 class TLSObsScanHandler(object):

@@ -10,8 +10,8 @@ from tenable_io.exceptions import TenableIOApiException, TenableIOException
 from tenable_io.api.scans import ScanExportRequest
 from tenable_io.api.models import Scan
 
-REGION = os.environ.get('REGION')
-S3_BUCKET = os.environ.get('S3_BUCKET')
+REGION = os.getenv('REGION', 'us-west-2')
+S3_BUCKET = os.getenv('S3_BUCKET')
 
 
 class TIOScanner():

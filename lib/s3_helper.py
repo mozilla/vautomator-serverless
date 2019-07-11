@@ -4,8 +4,8 @@ import logging
 import os
 from botocore.exceptions import ClientError
 
-S3_BUCKET = os.environ.get('S3_BUCKET')
-REGION = os.environ.get('REGION')
+S3_BUCKET = os.getenv('S3_BUCKET')
+REGION = os.getenv('REGION', 'us-west-2')
 S3_CLIENT = boto3.client('s3', REGION)
 
 

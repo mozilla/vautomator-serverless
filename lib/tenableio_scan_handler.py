@@ -10,8 +10,8 @@ from lib.event import Event
 from scanners.tenable_io_scanner import TIOScanner
 from lib.s3_helper import send_to_s3
 
-REGION = os.environ.get('REGION')
-S3_BUCKET = os.environ.get('S3_BUCKET')
+REGION = os.getenv('REGION', 'us-west-2')
+S3_BUCKET = os.getenv('S3_BUCKET')
 S3_CLIENT = boto3.client('s3', region_name=REGION)
 
 

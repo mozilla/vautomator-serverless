@@ -5,8 +5,8 @@ import logging
 from lib.s3_helper import send_to_s3
 from lib.utilities import sanitise_shell_cmd
 
-S3_BUCKET = os.environ.get('S3_BUCKET')
-REGION = os.environ.get('REGION')
+S3_BUCKET = os.getenv('S3_BUCKET')
+REGION = os.getenv('REGION', 'us-west-2')
 S3_CLIENT = boto3.client('s3', region_name=REGION)
 
 

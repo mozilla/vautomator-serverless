@@ -9,8 +9,8 @@ from lib.response import Response
 from lib.results import Results
 from lib.event import Event
 
-S3_BUCKET = os.environ.get('S3_BUCKET')
-REGION = os.environ.get('REGION')
+S3_BUCKET = os.getenv('S3_BUCKET')
+REGION = os.getenv('REGION', 'us-west-2')
 SCAN_RESULTS_BASE_PATH = os.environ.get('SCAN_RESULTS_BASE_PATH')
 
 

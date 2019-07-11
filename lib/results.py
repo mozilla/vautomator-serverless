@@ -6,8 +6,8 @@ import logging
 from lib.s3_helper import search_s3, download_s3, send_to_s3, create_presigned_url
 from lib.utilities import package_results
 
-S3_BUCKET = os.environ.get('S3_BUCKET')
-REGION = os.environ.get('REGION')
+S3_BUCKET = os.getenv('S3_BUCKET')
+REGION = os.getenv('REGION', 'us-west-2')
 SCAN_RESULTS_BASE_PATH = os.environ.get('SCAN_RESULTS_BASE_PATH')
 
 

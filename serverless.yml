@@ -73,7 +73,7 @@ provider:
       Ref: S3BucketResults
     # Folder to save the scan results to, make sure it is located under /tmp
     SCAN_RESULTS_BASE_PATH: '/tmp/vautomator-serverless/results'
-    REGION: 'AWS::Region'
+    REGION: '#{AWS::Region}'
   apiKeys:
     - ${self:service}-api-key
 
@@ -351,7 +351,7 @@ stepFunctions:
           Polltenableresults:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
-            TimeoutSeconds: 3600
+            # TimeoutSeconds: 3600
             OutputPath: $
             ResultPath: $.responses.Polltenableresults
             Retry:
