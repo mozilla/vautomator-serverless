@@ -8,28 +8,26 @@ from lib.response import Response
 from lib.hosts import Hosts
 from lib.event import Event
 from scanners.tenable_io_scanner import TIOScanner
-# from lib.custom_exceptions import TenableScanCompleteException
 from lib.s3_helper import send_to_s3
 
-S3_CLIENT = boto3.client('s3', region_name='us-west-2')
+REGION = os.environ.get('REGION')
 S3_BUCKET = os.environ.get('S3_BUCKET')
+S3_CLIENT = boto3.client('s3', region_name=REGION)
 
 
 class TIOScanHandler(object):
     def __init__(
-        self, sqs_client=boto3.client('sqs', region_name='us-west-2'),
+        self, sqs_client=boto3.client('sqs', region_name=REGION),
         queueURL=os.getenv('SQS_URL'),
         s3_client=S3_CLIENT,
         bucket=S3_BUCKET,
         logger=logging.getLogger(__name__),
-        region='us-west-2'
     ):
         self.sqs_client = sqs_client
         self.queueURL = queueURL
         self.s3_client = s3_client
         self.s3_bucket = bucket
         self.logger = logger
-        self.region = region
 
     def queue(self, event, context):
         source_event = Event(event, context)

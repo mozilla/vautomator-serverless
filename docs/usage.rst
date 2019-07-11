@@ -82,7 +82,7 @@ Example
    {"executionArn":"<executionARN>:ScanAll:e9648493-9c01-11e9-85f4-874b479eba5f","startDate":1.561986763711E9}
 
 .. note:: This is an asynchronous endpoint. Behind the scenes, the host is processed 
-   by a state machine, which invokes a number of Lambda functions tp perform all scans 
+   by a state machine, which invokes a number of Lambda functions to perform all scans 
    on the host, and an email is sent to desired parties when all scans are completed 
    and results are available.
 

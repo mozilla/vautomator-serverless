@@ -7,6 +7,7 @@ from lib.s3_helper import search_s3, download_s3, send_to_s3, create_presigned_u
 from lib.utilities import package_results
 
 S3_BUCKET = os.environ.get('S3_BUCKET')
+REGION = os.environ.get('REGION')
 SCAN_RESULTS_BASE_PATH = os.environ.get('SCAN_RESULTS_BASE_PATH')
 
 
@@ -14,7 +15,7 @@ class Results(object):
     def __init__(
         self,
         hostname,
-        s3_client=boto3.client('s3'),
+        s3_client=boto3.client('s3', region=REGION),
         bucket=S3_BUCKET,
         results_path=SCAN_RESULTS_BASE_PATH,
         logger=logging.getLogger(__name__)

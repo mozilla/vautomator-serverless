@@ -10,22 +10,21 @@ from lib.results import Results
 from lib.event import Event
 
 S3_BUCKET = os.environ.get('S3_BUCKET')
+REGION = os.environ.get('REGION')
 SCAN_RESULTS_BASE_PATH = os.environ.get('SCAN_RESULTS_BASE_PATH')
 
 
 class ResultsHandler(object):
     def __init__(
         self,
-        s3_client=boto3.client('s3'),
+        s3_client=boto3.client('s3', region_name=REGION),
         bucket=S3_BUCKET,
         logger=logging.getLogger(__name__),
-        region='us-west-2',
         results_path=SCAN_RESULTS_BASE_PATH
     ):
         self.s3_client = s3_client
         self.bucket = bucket
         self.logger = logger
-        self.region = region
         self.base_results_path = results_path
 
     def downloadResults(self, event, context):

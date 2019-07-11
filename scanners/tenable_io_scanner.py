@@ -10,11 +10,14 @@ from tenable_io.exceptions import TenableIOApiException, TenableIOException
 from tenable_io.api.scans import ScanExportRequest
 from tenable_io.api.models import Scan
 
+REGION = os.environ.get('REGION')
+S3_BUCKET = os.environ.get('S3_BUCKET')
+
 
 class TIOScanner():
     def __init__(
         self, access_key=None, secret_key=None,
-        ssm_client=boto3.client('ssm', region_name='us-west-2'),
+        ssm_client=boto3.client('ssm', region_name=REGION),
         report_format="html",
         logger=logging.getLogger(__name__)
     ):

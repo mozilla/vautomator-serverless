@@ -73,6 +73,7 @@ provider:
       Ref: S3BucketResults
     # Folder to save the scan results to, make sure it is located under /tmp
     SCAN_RESULTS_BASE_PATH: '/tmp/vautomator-serverless/results'
+    REGION: 'AWS::Region'
   apiKeys:
     - ${self:service}-api-key
 
