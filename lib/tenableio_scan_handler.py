@@ -99,9 +99,11 @@ class TIOScanHandler(object):
 
             scanID = event['responses']['Tenablescan']['id']
             scanner = TIOScanner(logger=self.logger)
-            result = scanner.scanResult(scanID)
-            if result:
-                send_to_s3(target.name + "_tenablescan", result, client=self.s3_client, bucket=self.s3_bucket)
+            json_result = scanner.scanResult(scanID, result_format="json")
+            html_result = scanner.scanResult(scanID, result_format="html")
+            if json_result and html_result:
+                send_to_s3(target.name + "_tenablescan", json_result, client=self.s3_client, bucket=self.s3_bucket)
+                send_to_s3(target.name + "_tenablescan", html_result, client=self.s3_client, bucket=self.s3_bucket)
                 return {'statusCode': 200}
         else:
             self.logger.error("Unrecognized payload: {}".format(data))

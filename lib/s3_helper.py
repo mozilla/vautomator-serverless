@@ -13,6 +13,9 @@ def send_to_s3(hostname, blob, client=S3_CLIENT, bucket=S3_BUCKET):
     if isinstance(blob, dict):
         key = "{}.{}".format(hostname, "json")
         body = json.dumps(blob, indent=4, sort_keys=True)
+    elif isinstance(blob, bytes):
+        key = "{}.{}".format(hostname, "html")
+        body = blob
     else:
         key = "results/{}.{}".format(hostname, "tgz")
         body = blob

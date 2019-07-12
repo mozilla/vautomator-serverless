@@ -138,6 +138,11 @@ class TestTIOScanner():
         assert 'hosts' in result_as_json
         assert 'history' in result_as_json
         assert 'info' in result_as_json
+        result_as_html = scanner.scanResult(scan_id_completed, result_format="html")
+        assert type(result_as_html) is str
+        assert "html" in result_as_html
+        assert "tenable" in result_as_html
+        assert "plugin" in result_as_html
 
         with pytest.raises(TenableScanInterruptedException) as e:
             assert scanner.scanResult(scan_id_aborted)
