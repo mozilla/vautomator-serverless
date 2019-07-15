@@ -402,6 +402,7 @@ plugins:
   - serverless-apigw-binary
   - serverless-step-functions
   - serverless-prune-plugin
+  - serverless-domain-manager
 
 resources:
   Resources:
@@ -441,10 +442,18 @@ resources:
               - Arn
           maxReceiveCount: 2
 custom:
+  customDomain:
+    domainName: ${self:custom.cfg.customDomain}
+    endpointType: "regional"
+    certificateRegion: ${self:provider.region}
+    basePath: 'api'
+    stage: ${self:provider.stage}
+    createRoute53Record: true
   prune:
     automatic: true
     number: 5
   cfg:
+    customDomain: "vautomator.security.allizom.org"
     s3BucketName: "vautomator-results"
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
