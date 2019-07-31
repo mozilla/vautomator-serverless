@@ -6,6 +6,7 @@ import time
 import os
 import sys
 import boto3
+import argparse
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # This is an example of a long-running service/process which will monitor for
@@ -13,47 +14,29 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 # for a domain pattern we care about, we will immediately take action to task
 # port scans and observatory scans by calling our public REST API endpoints
 
-logging.basicConfig(format='[%(levelname)s:%(name)s] %(asctime)s - %(message)s', level=logging.INFO)
-# Can specify the profile/role in the code...
-AWS_PROFILE = ""
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-if not AWS_PROFILE:
-    try:
-        # ...or read from an environment variable
-        AWS_PROFILE = os.environ['AWS_PROFILE']
-    except KeyError:
-        logging.error("AWS profile not found. Either specify it as an environment variable"
-                      " (AWS_PROFILE) or change the AWS_PROFILE variable in the code.")
-        sys.exit(-1)
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--profile",
+    help="Provide the AWS Profile from your boto configuration",
+    default=os.environ.get("AWS_DEFAULT_PROFILE", None),
+)
+parser.add_argument("--region", help="Provide the AWS region manually", default="us-west-2")
+parser.add_argument("fqdn", type=str, help="The target to scan")
+args = parser.parse_args()
 
-# Establish a session with that profile
-session = boto3.Session(profile_name=AWS_PROFILE)
-# Programmatically obtain the API GW URL, and the REST API key
-apigw_client = session.client('apigateway')
-aws_response = apigw_client.get_api_keys(
-    nameQuery='vautomator-serverless',
-    includeValues=True)['items'][0]
-rest_api_id, stage_name = "".join(aws_response['stageKeys']).split('/')
-gwapi_key = aws_response['value']
-API_GW_URL = "https://{}.execute-api.{}.amazonaws.com/".format(rest_api_id, session.region_name)
-
-portscan_url = API_GW_URL + "{}/ondemand/portscan".format(stage_name)
-httpobs_scan_url = API_GW_URL + "{}/ondemand/httpobservatory".format(stage_name)
-tlsobs_scan_url = API_GW_URL + "{}/ondemand/tlsobservatory".format(stage_name)
-sshobs_scan_url = API_GW_URL + "{}/ondemand/sshobservatory".format(stage_name)
-tenableio_scan_url = API_GW_URL + "{}/ondemand/tenablescan".format(stage_name)
-direnum_scan_url = API_GW_URL + "{}/ondemand/direnum".format(stage_name)
-websearch_url = API_GW_URL + "{}/ondemand/websearch".format(stage_name)
-
-scan_types = {
-    'port': portscan_url,
-    'httpobservatory': httpobs_scan_url,
-    'tlsobservatory': tlsobs_scan_url,
-    'sshobservatory': sshobs_scan_url,
-    'websearch': websearch_url,
-    'tenable': tenableio_scan_url,
-    'direnum': direnum_scan_url
-}
+# Establish a session with that profile if given
+session = boto3.Session(profile_name=args.profile, region_name=args.region)
+# Programmatically obtain the REST API key
+apigw_client = session.client("apigateway")
+aws_response = apigw_client.get_api_keys(nameQuery="vautomator-serverless", includeValues=True)["items"][0]
+rest_api_id, stage_name = "".join(aws_response["stageKeys"]).split("/")
+gwapi_key = aws_response["value"]
+# We are now using a custom domain to host the API
+custom_domain = "vautomator.security.allizom.org"
+# Using the REST endpoint exposed by the step function
+scan_all_url = "https://{}".format(custom_domain) + "/api/scan"
 
 
 def print_callback(message, context):
@@ -72,24 +55,15 @@ def print_callback(message, context):
             for domain_pattern in domain_patterns:
                 # We want all legit FDQNs, but we can't scan wild-cards
                 if fqdn.endswith(domain_pattern) and ('*' not in fqdn):
-
                     session = requests.Session()
-                    session.headers.update(
-                        {
-                            'X-Api-Key': gwapi_key,
-                            'Content-Type': 'application/json'
-                        }
-                    )
-                    for scan, scan_url in scan_types.items():
-                        logging.info("Sending POST to {}".format(scan_url))
-                        response = session.post(scan_url, data="{\"target\":\"" + fqdn + "\"}")
-                        if response.status_code == 200 and 'uuid' in response.json():
-                            logging.info("Triggered a {} scan of: {}".format(scan, fqdn))
-                            time.sleep(1)
+                    session.headers.update({"X-Api-Key": gwapi_key, "Content-Type": "application/json"})
+                    logging.info("Sending POST to {}".format(scan_all_url))
+                    response = session.post(scan_all_url, data='{"target":"' + fqdn + '"}')
+                    if response.status_code == 200 and 'executionArn' in response.json() and 'startDate' in response.json():
+                        logging.info("Triggered scan of: {}".format(fqdn))
+                        time.sleep(1)
                     session.close()
-                    logging.info(
-                        "Scans kicked off for {}. Run \"download_results.py\" to have the scan results.".format(fqdn)
-                    )
+                    logging.info("Results will be emailed to your inbox when all scans run.")
 
 
 certstream.listen_for_events(print_callback, url='wss://certstream.calidog.io/')
