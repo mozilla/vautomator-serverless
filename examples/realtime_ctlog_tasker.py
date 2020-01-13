@@ -76,6 +76,5 @@ def print_callback(message, context):
                         logging.error("Something went wrong. Ensure you have the correct API key and the service is operational.")
                         sys.exit(127)
                     session.close()
-                    
 
 certstream.listen_for_events(print_callback, url='wss://certstream.calidog.io/')
