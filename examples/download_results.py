@@ -8,6 +8,7 @@ import boto3
 import shutil
 import tarfile
 import argparse
+import getpass
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from lib.target import Target
 from lib.utilities import uppath
@@ -28,13 +29,18 @@ parser.add_argument("-x", "--extract", help="Auto extract results", action="stor
 parser.add_argument("--results", help="Specify a results directory", default=os.path.join(os.getcwd(), "results/"))
 args = parser.parse_args()
 
-# Establish a session with that profile if given
-session = boto3.Session(profile_name=args.profile, region_name=args.region)
-# Programmatically obtain the REST API key
-apigw_client = session.client("apigateway")
-aws_response = apigw_client.get_api_keys(nameQuery="vautomator-serverless", includeValues=True)["items"][0]
-rest_api_id, stage_name = "".join(aws_response["stageKeys"]).split("/")
-gwapi_key = aws_response["value"]
+if args.profile:
+    # Establish a session with that profile if given
+    session = boto3.Session(profile_name=args.profile, region_name=args.region)
+    # Programmatically obtain the REST API key
+    apigw_client = session.client("apigateway")
+    aws_response = apigw_client.get_api_keys(nameQuery="vautomator-serverless", includeValues=True)["items"][0]
+    rest_api_id, stage_name = "".join(aws_response["stageKeys"]).split("/")
+    gwapi_key = aws_response["value"]
+else:
+    # Prompt the user for the API key
+    gwapi_key = getpass.getpass(prompt='API key: ')
+
 # We are now using a custom domain to host the API
 custom_domain = "vautomator.security.allizom.org"
 
@@ -73,6 +79,8 @@ if (
         with tarfile.open(path) as tar:
             tar.extractall(path=tdirpath)
             logging.info("Scan results for {} are extracted in the results folder.".format(target.name))
+elif response.status_code == 403:
+    logging.error("Invalid API key.")
 else:
     logging.error("No results found for: {}".format(target.name))
 
