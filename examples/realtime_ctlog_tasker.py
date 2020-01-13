@@ -77,4 +77,5 @@ def print_callback(message, context):
                         sys.exit(127)
                     session.close()
 
+
 certstream.listen_for_events(print_callback, url='wss://certstream.calidog.io/')
