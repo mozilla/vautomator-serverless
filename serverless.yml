@@ -18,7 +18,7 @@ provider:
        - "s3:PutObject"
        - "s3:PutObjectAcl"
        - "s3:GetObjectAcl"
-     Resource: 
+     Resource:
       Fn::Join:
         - ""
         - - Fn::GetAtt:
@@ -28,7 +28,7 @@ provider:
    - Effect: "Allow"
      Action:
        - "s3:ListBucket"
-     Resource: 
+     Resource:
       Fn::Join:
         - ""
         - - Fn::GetAtt:
@@ -143,21 +143,21 @@ functions:
     tags:
       TYPE: ondemand
       SCAN_TYPE: tls-observatory
-  onDemandTenableScan:
-    handler: handler.queue_tenableioscan
-    description: API endpoint which consumes a host and adds it to the scan queue for Tenable.io scan.
-    events:
-      - http:
-          path: ondemand/tenablescan
-          method: POST
-          cors: true
-          private: ${self:custom.cfg.private} # Never remove this as it's an intrusive end-point
-    tags:
-      TYPE: ondemand
-      SCAN_TYPE: tenableio
+  # onDemandTenableScan:
+  #   handler: handler.queue_tenableioscan
+  #   description: API endpoint which consumes a host and adds it to the scan queue for Tenable.io scan.
+  #   events:
+  #     - http:
+  #         path: ondemand/tenablescan
+  #         method: POST
+  #         cors: true
+  #         private: ${self:custom.cfg.private} # Never remove this as it's an intrusive end-point
+  #   tags:
+  #     TYPE: ondemand
+  #     SCAN_TYPE: tenableio
   onDemandWebSearch:
     handler: handler.queue_websearch
-    description: API endpoint which consumes a host and adds it to the scan queue for a Google search of a host. 
+    description: API endpoint which consumes a host and adds it to the scan queue for a Google search of a host.
     events:
       - http:
           path: ondemand/websearch
@@ -200,7 +200,7 @@ functions:
     events:
       # Invoke Lambda function once a week
       # Run at 6 PM UTC every Wednesday once
-      - schedule: 
+      - schedule:
           rate: cron(0 18 ? * WED *)
           # Not enabling this by default as it is intrusive in nature
           enabled: false
@@ -214,9 +214,10 @@ functions:
     events:
       # Invoke Lambda function once a day
       # Run at 4 PM UTC every day
-      - schedule: 
+      # Update: Disabling scheduled scans by default
+      - schedule:
           rate: cron(0 16 * * ? *)
-          enabled: true
+          enabled: false
     tags:
       TYPE: cron
       SCAN_TYPE: http-observatory
@@ -227,9 +228,10 @@ functions:
     events:
       # Invoke Lambda function once a day
       # Run at 4 PM UTC every day
+      # Update: Disabling scheduled scans by default
       - schedule:
           rate: cron(0 16 * * ? *)
-          enabled: true
+          enabled: false
     tags:
       TYPE: cron
       SCAN_TYPE: tls-observatory
@@ -240,9 +242,10 @@ functions:
     events:
       # Invoke Lambda function once a day
       # Run at 4 PM UTC every day
-      - schedule: 
+      # Update: Disabling scheduled scans by default
+      - schedule:
           rate: cron(0 16 * * ? *)
-          enabled: true
+          enabled: false
     tags:
       TYPE: cron
       SCAN_TYPE: ssh-observatory
@@ -253,7 +256,7 @@ functions:
     events:
       # Invoke Lambda function once a week
       # Run at 6 PM UTC every Thursday once
-      - schedule: 
+      - schedule:
           rate: cron(0 18 ? * THU *)
           # Not enabling this by default as it is intrusive in nature
           enabled: false
@@ -272,17 +275,17 @@ functions:
           batchSize: 1
     tags:
       TYPE: async
-  runTenableScanFromStepFunc:
-    handler: handler.run_tenableioscan
-    description: Lambda to be triggered by a Step Function which would kick off a Tenable.io scan for a given host.
-    tags:
-      SCAN_TYPE: tenable.io
-  pollTenableScan:
-    handler: handler.check_tenableioscan
-    description: Lambda to be triggered to check and download Tenable scan result for a given host.
-    timeout: 60
-    tags:
-      SCAN_TYPE: tenableio
+  # runTenableScanFromStepFunc:
+  #   handler: handler.run_tenableioscan
+  #   description: Lambda to be triggered by a Step Function which would kick off a Tenable.io scan for a given host.
+  #   tags:
+  #     SCAN_TYPE: tenable.io
+  # pollTenableScan:
+  #   handler: handler.check_tenableioscan
+  #   description: Lambda to be triggered to check and download Tenable scan result for a given host.
+  #   timeout: 60
+  #   tags:
+  #     SCAN_TYPE: tenableio
   pollResults:
     handler: handler.check_results
     description: Lamdba to check if all scan output exists for a given host, and generate a download link if true.
@@ -309,7 +312,7 @@ stepFunctions:
            cors: true
            private: ${self:custom.cfg.private}
       name: 'ScanAll'
-      definition: 
+      definition:
         Comment: This step function consumes a host and runs all scan types subsequently.
         StartAt: Tenablescan
         States:
@@ -367,7 +370,7 @@ stepFunctions:
                 IntervalSeconds: 120
                 MaxAttempts: 3
                 BackoffRate: 1.5
-            Catch:            
+            Catch:
               - ErrorEquals:
                 - States.Timeout
                 Next: Generatedownloadlink
