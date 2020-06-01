@@ -1,4 +1,3 @@
-
 service: vautomator-serverless
 frameworkVersion: ">=1.2.0 <2.0.0"
 
@@ -48,17 +47,17 @@ provider:
         - ReceiverDeadLetterQueue
         - Arn
      # Required to use SSM for secrets
-   - Effect: "Allow"
-     Action:
-      - ssm:GetParameter
-      - ssm:GetParameters
-     Resource:
-      - "arn:#{AWS::Partition}:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:custom.cfg.ssmAKey}"
-      - "arn:#{AWS::Partition}:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:custom.cfg.ssmSKey}"
-   - Effect: "Allow"
-     Action:
-      - kms:Decrypt
-     Resource: "arn:aws:kms:#{AWS::Region}:#{AWS::AccountId}:key/${self:custom.cfg.ssmKms}"
+  #  - Effect: "Allow"
+  #    Action:
+  #     - ssm:GetParameter
+  #     - ssm:GetParameters
+  #    Resource:
+  #     - "arn:#{AWS::Partition}:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:custom.cfg.ssmAKey}"
+  #     - "arn:#{AWS::Partition}:ssm:#{AWS::Region}:#{AWS::AccountId}:parameter/${self:custom.cfg.ssmSKey}"
+  #  - Effect: "Allow"
+  #    Action:
+  #     - kms:Decrypt
+  #    Resource: "arn:aws:kms:#{AWS::Region}:#{AWS::AccountId}:key/${self:custom.cfg.ssmKms}"
 
   environment:
     HTTPOBS_API_URL: 'https://http-observatory.security.mozilla.org/api/v1'
@@ -463,9 +462,9 @@ custom:
     vautomatorQ: "vautomator-SQS"
     vautomatorDLQ: "vautomator-DLQ"
     vautomatorSNS: "Vulnerability Assessment Results"
-    ssmKms: beaede06-f6f5-4183-90bf-64a13edcea15
-    ssmAKey: TENABLEIO_ACCESS_KEY
-    ssmSKey: TENABLEIO_SECRET_KEY
+    # ssmKms: beaede06-f6f5-4183-90bf-64a13edcea15
+    # ssmAKey: TENABLEIO_ACCESS_KEY
+    # ssmSKey: TENABLEIO_SECRET_KEY
     private: true # Change to 'false' to disable api-key authorization
   pythonRequirements:
     dockerizePip: true

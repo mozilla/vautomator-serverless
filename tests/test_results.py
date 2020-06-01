@@ -72,7 +72,6 @@ class TestResults():
         client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_tcpscan.json'.format(target))
         client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_websearch.json'.format(target))
         client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_sshobservatory.json'.format(target))
-        client.put_object(Bucket=bucket_name, Body=b'XYZ', Key='{}_tenablescan.json'.format(target))
 
         success_result = Results(target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
         status, output_dict, success_200 = success_result.generateURL()
@@ -82,7 +81,7 @@ class TestResults():
         assert False not in output_dict.values()
 
         # Remove an object from the mocked bucket, this is the success 202 case
-        client.delete_object(Bucket=bucket_name, Key='{}_tenablescan.json'.format(target))
+        client.delete_object(Bucket=bucket_name, Key='{}_direnum.json'.format(target))
 
         success_result = Results(target, s3_client=client, bucket=bucket_name, results_path=TEST_SCAN_RESULTS_BASE_PATH)
         status, output_dict, success_202 = success_result.generateURL()

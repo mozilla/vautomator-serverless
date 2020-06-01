@@ -1,10 +1,10 @@
 ROOT_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-AWS_REGION	:= 
-AWS_PROFILE := 
-TENABLE_IO := 
-KMS_POLICY_FILE := 
-KMS_KEYID := 
-CUSTOM_DOMAIN := 
+AWS_REGION	:=
+AWS_PROFILE :=
+TENABLE_IO := N
+KMS_POLICY_FILE :=
+KMS_KEYID :=
+CUSTOM_DOMAIN :=
 
 ifeq ($(TENABLE_IO), Y)
   $(info Tenable.io support enabled, make sure you passed API keys as variables!)
@@ -53,7 +53,7 @@ else
 	--value $(TENABLE_SECRET_KEY) --type SecureString --key-id $(KMS_KEYID) --overwrite
   endif
 endif
-	
+
 .PHONY: validate
 validate: export AWS_SDK_LOAD_CONFIG=true
 validate:

@@ -26,7 +26,6 @@ class Results(object):
         self.scan_output_list = []
         self.scan_output_dict = {
             'tcpscan': False,
-            'tenablescan': False,
             'direnum': False,
             'sshobservatory': False,
             'httpobservatory': False,
@@ -95,7 +94,6 @@ class Results(object):
         else:
             # At this stage we know there are scan output files for the host
             output_mapping = self.scan_output_dict.copy()
-            print(self.scan_output_list)
             for file in self.scan_output_list:
                 hostname, output_type = file.split('_')
                 del hostname
@@ -104,7 +102,6 @@ class Results(object):
                         output_mapping.update({key: True})
 
             if False in output_mapping.values():
-                print(key, value)
                 self.logger.warning("Not all scan output exists for {} ".format(self.hostname))
                 return output_mapping, self.scan_output_list, 202
             else:

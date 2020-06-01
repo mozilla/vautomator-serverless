@@ -44,7 +44,6 @@ class TestResultsHandler():
         client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_httpobservatory.json'.format(target))
         client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_tlsobservatory.json'.format(target))
         client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_sshobservatory.json'.format(target))
-        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_tenablescan.json'.format(target))
 
         test_apigw_event = {"body": '{"target": "' + target + '"}'}
         test_context = None
@@ -129,7 +128,6 @@ class TestResultsHandler():
         client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_httpobservatory.json'.format(target))
         client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_tlsobservatory.json'.format(target))
         client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_sshobservatory.json'.format(target))
-        client.put_object(ACL='authenticated-read', Bucket=bucket_name, Body=b'ABCD', Key='{}_tenablescan.json'.format(target))
 
         test_stepf_event = {"target": target}
         test_context = None
