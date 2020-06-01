@@ -34,9 +34,6 @@ node_modules
 package-lock.json
 .vscode/
 
-Pipfile
-Pipfile.lock
-
 # Sphinx stuff
 _build
 _static
