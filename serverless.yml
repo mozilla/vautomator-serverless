@@ -314,13 +314,14 @@ stepFunctions:
       name: 'ScanAll'
       definition:
         Comment: This step function consumes a host and runs all scan types subsequently.
-        StartAt: Tenablescan
+        # StartAt: Tenablescan
+        StartAt: Direnumscan
         States:
-          Tenablescan:
-            Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-runTenableScanFromStepFunc"
-            Next: Direnumscan
-            ResultPath: $.responses.Tenablescan
+          # Tenablescan:
+          #   Type: Task
+          #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-runTenableScanFromStepFunc"
+          #   Next: Direnumscan
+          #   ResultPath: $.responses.Tenablescan
           Direnumscan:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandDirectoryEnumeration"
@@ -349,36 +350,37 @@ stepFunctions:
           Websearch:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
-            Next: Polltenableresults
-            ResultPath: $.responses.Websearch
-          Polltenableresults:
-            Type: Task
-            Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
-            # TimeoutSeconds: 3600
-            OutputPath: $
-            ResultPath: $.responses.Polltenableresults
-            Retry:
-              # The below configuration allows polling for up to approx. 1 hour
-              # This is generous but safe, most Tenable scans finish in 20-30 minutes
-              - ErrorEquals:
-                - TenableScanRunningException
-                IntervalSeconds: 120
-                MaxAttempts: 7
-                BackoffRate: 1.5
-              - ErrorEquals:
-                - TenableScanUnexpectedStateException
-                IntervalSeconds: 120
-                MaxAttempts: 3
-                BackoffRate: 1.5
-            Catch:
-              - ErrorEquals:
-                - States.Timeout
-                Next: Generatedownloadlink
-              - ErrorEquals:
-                - TenableScanInterruptedException
-                Next: Generatedownloadlink
-            # If no exceptions ...
+            # Next: Polltenableresults
             Next: Generatedownloadlink
+            ResultPath: $.responses.Websearch
+          # Polltenableresults:
+          #   Type: Task
+          #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
+          #   # TimeoutSeconds: 3600
+          #   OutputPath: $
+          #   ResultPath: $.responses.Polltenableresults
+          #   Retry:
+          #     # The below configuration allows polling for up to approx. 1 hour
+          #     # This is generous but safe, most Tenable scans finish in 20-30 minutes
+          #     - ErrorEquals:
+          #       - TenableScanRunningException
+          #       IntervalSeconds: 120
+          #       MaxAttempts: 7
+          #       BackoffRate: 1.5
+          #     - ErrorEquals:
+          #       - TenableScanUnexpectedStateException
+          #       IntervalSeconds: 120
+          #       MaxAttempts: 3
+          #       BackoffRate: 1.5
+          #   Catch:
+          #     - ErrorEquals:
+          #       - States.Timeout
+          #       Next: Generatedownloadlink
+          #     - ErrorEquals:
+          #       - TenableScanInterruptedException
+          #       Next: Generatedownloadlink
+          #   # If no exceptions ...
+          #   Next: Generatedownloadlink
           Generatedownloadlink:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollResults"
