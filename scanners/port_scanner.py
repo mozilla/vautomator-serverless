@@ -16,8 +16,10 @@ class PortScanner():
         self.host = hostname
         self.arguments = "".join(sanitise_shell_cmd(arguments))
         self.privileged = False
+        self.logger = logger
 
     def scanTCP(self, callback_function=None):
+        self.logger.info("Running TCP port  scan on {}...".format(self.host))
         nma = nmap.PortScannerAsync()
         if not callback_function:
             nma.scan(self.host, arguments=self.arguments,

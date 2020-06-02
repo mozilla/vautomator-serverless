@@ -10,6 +10,7 @@ class TLSObservatoryScanner():
         self.session = requests.Session()
         self.poll_interval = poll_interval
         self.api_url = os.getenv('TLSOBS_API_URL')
+        self.logger = logger
 
     def scan(self, hostname):
         # Initiate the scan
@@ -17,6 +18,7 @@ class TLSObservatoryScanner():
             scan_url = self.api_url + '/scan?target=' + hostname
         else:
             raise Exception("Invalid API URL specified for TLS Observatory.")
+        self.logger.info("Running TLS Observatory scan on {}...".format(hostname))
         results = {}
         scan_id = self.session.post(scan_url, data=None).json()['scan_id']
 

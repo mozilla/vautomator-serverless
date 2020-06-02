@@ -10,11 +10,13 @@ class SSHObservatoryScanner():
         self.session = requests.Session()
         self.poll_interval = poll_interval
         self.api_url = os.getenv('SSHOBS_API_URL')
+        self.logger = logger
 
     def scan(self, hostname):
         # Initiate the scan
         if self.api_url[-1] != "/":
             analyze_url = self.api_url + '/scan?target=' + hostname
+            self.logger.info("Running SSH Observatory scan on {}...".format(hostname))
             results = {}
             scan_id = self.session.post(analyze_url, data=None).json()['uuid']
 
@@ -36,4 +38,4 @@ class SSHObservatoryScanner():
 
             time.sleep(self.poll_interval)
             count += 1
-        raise Exception("Unable to get results within 60 seconds")
+        raise Exception("Unable to get results within {} seconds".format(count))

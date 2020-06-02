@@ -17,6 +17,7 @@ class HTTPObservatoryScanner():
             analyze_url = self.api_url + '/analyze?host=' + hostname
         else:
             raise Exception("Invalid API URL specified for Observatory.")
+        self.logger.info("Running HTTP Observatory scan on {}...".format(hostname))
         results = {}
         results['scan'] = self.session.post(analyze_url, data=None).json()
 
@@ -28,7 +29,7 @@ class HTTPObservatoryScanner():
     def __poll(self, scan_id):
         url = self.api_url + '/getScanResults?scan=' + str(scan_id)
         count = 0
-        while count < 60:
+        while count < 120:
             resp = self.session.get(url).json()
             # This means we got our results back, so return them!
             if 'content-security-policy' in resp:
@@ -36,4 +37,4 @@ class HTTPObservatoryScanner():
 
             time.sleep(self.poll_interval)
             count += 1
-        raise Exception("Unable to get results within 60 seconds")
+        raise Exception("Unable to get results within {} seconds".format(count))

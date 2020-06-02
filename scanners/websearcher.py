@@ -16,7 +16,7 @@ class WebSearcher(object):
         results['search'] = search_results
         results['host'] = hostname
 
-        self.logger.info("[+] Running a web search on {}...".format(hostname))
+        self.logger.info("Running a web search on {}...".format(hostname))
         for m in googlesearch.search(
             query="{} security -site:{}".format(hostname, hostname), num=15
         ):
@@ -27,4 +27,4 @@ class WebSearcher(object):
         if len(results['search']) > 0:
             return results
         else:
-            self.logger.error("[-] No results from web search for {}".format(hostname))
+            self.logger.error("No results from web search for {}".format(hostname))

@@ -56,7 +56,7 @@ class DirectoryEnumScanner():
         if self.tool == "dirb":
             # Assume here that standalone dirb binary is in the PATH
             # This is done in the main handler file
-            self.logger.info("[+] Running dirb scan on {}".format(hostname))
+            self.logger.info("Running dirb scan on {}...".format(hostname))
 
             results = {}
             results['host'] = hostname
