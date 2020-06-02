@@ -8,7 +8,6 @@ provider:
   region: ${opt:region, 'us-west-2'}
   versionFunctions: false
   stackTags:
-    PRODUCT_NAME: "vautomator-serverless-app"
     SERVICE_NAME: "vautomator"
   # To use the bucket specified, we will need permissions
   iamRoleStatements:
@@ -423,22 +422,30 @@ resources:
         DisplayName: ${self:custom.cfg.vautomatorSNS}
         TopicName: ${self:service}-${self:provider.stage}-vautomator-results-topic
         Subscription:
-          - Protocol: email
-            Endpoint: culucenk@mozilla.com
-          - Protocol: email
-            Endpoint: jclaudius@gmail.com
-          - Protocol: email
-            Endpoint: gdestuynder@mozilla.com
+        # TODO: Change these later
+          - Endpoint: culucenk@mozilla.com
+            Protocol: email
+          - Endpoint: cag@mozilla.com
+            Protocol: email
+        Tags:
+          - Key: "SERVICE_NAME"
+            Value: "vautomator"
     S3BucketResults:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.cfg.s3BucketName}
+        Tags:
+          - Key: "SERVICE_NAME"
+            Value: "vautomator"
     # Define a dead letter queue here
     ReceiverDeadLetterQueue:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: ${self:custom.cfg.vautomatorDLQ}
         MessageRetentionPeriod: 120
+        Tags:
+          - Key: "SERVICE_NAME"
+            Value: "vautomator"
     SQSQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -452,6 +459,9 @@ resources:
               - ReceiverDeadLetterQueue
               - Arn
           maxReceiveCount: 2
+        Tags:
+          - Key: "SERVICE_NAME"
+            Value: "vautomator"
 custom:
   customDomain:
     domainName: ${self:custom.cfg.customDomain}

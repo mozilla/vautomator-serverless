@@ -30,7 +30,7 @@ class HTTPObservatoryScanner():
     def __poll(self, scan_id):
         url = self.api_url + '/getScanResults?scan=' + str(scan_id)
         count = 0
-        while count < 120:
+        while count < 300:
             resp = self.session.get(url).json()
             # This means we got our results back, so return them!
             if 'content-security-policy' in resp:
