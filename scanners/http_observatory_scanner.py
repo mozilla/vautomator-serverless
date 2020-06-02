@@ -10,6 +10,7 @@ class HTTPObservatoryScanner():
         self.session = requests.Session()
         self.poll_interval = poll_interval
         self.api_url = os.getenv('HTTPOBS_API_URL')
+        self.logger = logger
 
     def scan(self, hostname):
         # Initiate the scan

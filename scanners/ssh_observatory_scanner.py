@@ -30,7 +30,7 @@ class SSHObservatoryScanner():
     def __poll(self, scan_id):
         url = self.api_url + '/scan/results?uuid=' + str(scan_id)
         count = 0
-        while count < 60:
+        while count < 30:
             resp = self.session.get(url).json()
             # This means we got our results back, so return them!
             if 'ssh_scan_version' in resp:
@@ -38,4 +38,6 @@ class SSHObservatoryScanner():
 
             time.sleep(self.poll_interval)
             count += 1
-        raise Exception("Unable to get results within {} seconds".format(count))
+        self.logger.warning(
+            "Unable to get SSH Observatory scan results within {} seconds, or SSH service is not running on target ".format(count)
+        )
