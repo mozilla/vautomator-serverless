@@ -1,6 +1,6 @@
 ROOT_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-AWS_REGION	:=
-AWS_PROFILE :=
+AWS_REGION	:= us-west-2
+AWS_PROFILE := infosec-dev-MAWS-Admin
 TENABLE_IO := N
 KMS_POLICY_FILE :=
 KMS_KEYID :=

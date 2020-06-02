@@ -4,7 +4,7 @@ frameworkVersion: ">=1.2.0 <2.0.0"
 provider:
   name: aws
   stage: ${opt:stage, 'dev'}
-  runtime: python3.6
+  runtime: python3.7
   region: ${opt:region, 'us-west-2'}
   versionFunctions: false
   stackTags:
@@ -350,8 +350,15 @@ stepFunctions:
             Type: Task
             Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-onDemandWebSearch"
             # Next: Polltenableresults
-            Next: Generatedownloadlink
+            Next: WaitForScans
             ResultPath: $.responses.Websearch
+          WaitForScans:
+            Type: Wait
+            # Wait for other scans to complete for 12 minutes
+            # 12 is selected here as lambdas can run for max. 15 minutes
+            Seconds: 720
+            OutputPath: $
+            Next: Generatedownloadlink
           # Polltenableresults:
           #   Type: Task
           #   Resource: "arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-pollTenableScan"
