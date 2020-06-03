@@ -2,62 +2,18 @@
 Usage
 ############
 
-On-demand scans are performed by invoking a handful of REST APIs. At this time, the request 
-and response formats for most of the APIs are very simple - they expect a host as input, and
-return a UUID for the scan (if the host is valid). Valid host types are: FQDN, IPv4. 
+On-demand scans are performed by invoking a handful of REST APIs. At this time, the request and response formats for most of the APIs are very simple - they expect a host as input, and return a UUID for the scan (if the host is valid). Valid host types are: FQDN, IPv4. 
+
 The REST API supports JSON.
 
-The recommended method to use these APIs in a vulnerability assessment is to
-use the example clients under the ``examples`` directory. These are very simple clients 
-written in Python, and are provided as samples (feel free to write your own, or you could 
-use another tool such as ``curl`` to invoke them).
+The recommended method to use vautomator-serverless APIs in a vulnerability assessment is to use the `vautomator-client <https://github.com/mozilla/vautomator-client>`__.
+
+You could use another tool such as ``curl`` to invoke them (see the REST API section below).
 
 .. note:: At this time, all REST API endpoints are protected with an API key, which
-   must be specified in an ``X-Api-Key HTTP`` header. If you opt to use the sample clients,
-   ensure to specify your AWS profile either in the code or as an environment variable
-   (``AWS_PROFILE``), and the clients will retrieve the API key for you.
+   must be specified in an ``X-Api-Key HTTP`` header. If using the ``vautomator-client``, this key will be retrieved by the client, provided that you are using the same AWS profile/role used to deploy ``vautomator-serverless``. If not, the client will prompt you to enter an API key.
 
-There are 3 clients:
-
-*   ``ondemand_tasker.py`` is an interactive client which takes a host as input and 
-    sequentially invokes all API endpoints detailed below. Basically this clients automates
-    a typical vulnerability assessment process for a given host. Below is the output from
-    a sample run:
-
-    .. parsed-literal::
-
-       Provide the FQDN (Fully Qualified Domain Name) you want to scan: www.mozilla.org
-       INFO:root:Sending POST to https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/portscan
-       INFO:root:Triggered a port scan of: www.mozilla.org
-       INFO:root:Sending POST to https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/httpobservatory
-       INFO:root:Triggered a httpobservatory scan of: www.mozilla.org
-       INFO:root:Sending POST to https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/tlsobservatory
-       INFO:root:Triggered a tlsobservatory scan of: www.mozilla.org
-       INFO:root:Sending POST to https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/sshobservatory
-       INFO:root:Triggered a sshobservatory scan of: www.mozilla.org
-       INFO:root:Sending POST to https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/websearch
-       INFO:root:Triggered a websearch scan of: www.mozilla.org
-       INFO:root:Sending POST to https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/tenablescan
-       INFO:root:Triggered a tenable scan of: www.mozilla.org
-       INFO:root:Sending POST to https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/direnum
-       INFO:root:Triggered a direnum scan of: www.mozilla.org
-       INFO:root:Scans kicked off for www.mozilla.org. Run "download_results.py" in 15 minutes to have the scan results.
-
-*   ``realtime_ctlog_tasker.py`` is a client which monitors/streams the Certificate
-    Transparency logs for a hard-coded list of domains of interest. If a subdomain of these
-    domains appear in the CT logs, the client sequentially invokes all API endpoints detailed
-    below. Note that this is not an interactive client, by nature it works more like a daemon.
-    Access to CT logs is provided by `certstream <https://github.com/CaliDog/certstream-python>`_.
-*   ``download_results.py`` is an interactive client which takes a host as input and
-    invokes the ``/results`` endpoint to download the scan results. Results are downloaded in
-    compressed format. Below is the output from a sample run:
-
-    .. parsed-literal::
-
-       Provide the FQDN (Fully Qualified Domain Name) you want the results for: www.mozilla.org
-       INFO:root:Sending POST to https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/results
-       INFO:root:Downloaded scan results for: www.mozilla.org, saving to disk...
-       INFO:root:Scan results for www.mozilla.org are saved in the results folder.
+For a detailed usage of ``vautomator-client``, refer to: https://github.com/mozilla/vautomator-client/blob/master/README.md
 
 REST API
 ===========
@@ -76,7 +32,7 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/scan' \
+   curl -X POST 'https://vautomator.security.allizom.org/scan' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
 
    {"executionArn":"<executionARN>:ScanAll:e9648493-9c01-11e9-85f4-874b479eba5f","startDate":1.561986763711E9}
@@ -102,7 +58,7 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/portscan' \
+   curl -X POST 'https://vautomator.security.allizom.org/ondemand/portscan' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
 
    {"uuid": "ac90f64c-3516-4449-bf4e-040d2f18fdc9"}
@@ -127,7 +83,7 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/httpobservatory' \
+   curl -X POST 'https://vautomator.security.allizom.org/ondemand/httpobservatory' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
 
    {"uuid": "6dd38a01-4d2d-4781-8db1-3ab65b63e1fb"}
@@ -149,7 +105,7 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/tlsobservatory' \
+   curl -X POST 'https://vautomator.security.allizom.org/ondemand/tlsobservatory' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
 
    {"uuid": "31c1f82e-83e2-4ccf-b245-8907d0a9eee8"}
@@ -171,7 +127,7 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/sshobservatory' \
+   curl -X POST 'https://vautomator.security.allizom.org/ondemand/sshobservatory' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
 
    {"uuid": "be32e717-c72e-41d9-806f-fd4de805aae4"}
@@ -193,7 +149,7 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/websearch' \
+   curl -X POST 'https://vautomator.security.allizom.org/ondemand/websearch' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
 
    {"uuid": "0b9e2375-1e8a-4921-8bb4-1e82f695d1dc"}
@@ -215,7 +171,7 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/direnum' \
+   curl -X POST 'https://vautomator.security.allizom.org/ondemand/direnum' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
 
    {"uuid": "1c124924-2938-423b-a42a-489e2dc8ac64"}
@@ -241,7 +197,7 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/ondemand/tenablescan' \
+   curl -X POST 'https://vautomator.security.allizom.org/ondemand/tenablescan' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678'
 
    {"uuid": "a778ada0-051f-464f-bf18-599d051f0fac"}
@@ -266,6 +222,6 @@ Output
 Example
 ++++++++
 .. parsed-literal::
-   curl -X POST 'https://y2ippncfd1.execute-api.us-west-2.amazonaws.com/dev/results' \
+   curl -X POST 'https://vautomator.security.allizom.org/results' \
    -d '{"target": "www.mozilla.org"}' -H 'X-Api-Key: abcdefgh12345678' \
    -H 'Accept: application/gzip' > www.mozilla.org__results.tgz

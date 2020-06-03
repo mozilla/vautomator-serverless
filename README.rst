@@ -5,32 +5,29 @@ vautomator-serverless
 This project uses serverless framework and attempts to create a
 serverless environment that could be used to automate vulnerability
 assessment tasks from multiple ingestion points, such as on-demand
-submission of a host via a REST API, regular scanning of a known list of
-hosts, and opportunistically scanning of hosts appearing in Certificate
-Transparency logs.
+submission of a host via a REST API, regular scanning of a known list of hosts, and opportunistically scanning of hosts appearing in Certificate Transparency logs.
 
 This is under development with more features being added as different
 branches. The tool currently supports:
 
-*   A single API endpoint (``/scan``) which performs all scans on a given host, and emails the results to desired mailbox(es).
+*   A single API endpoint (``/scan``) which performs all scans on a given host, and emails the results to desired email address(es).
 *   Addition of a target to the scan queue for port scan by an API endpoint (``/ondemand/portscan``). 
 *   Addition of a target to the scan queue for HTTP Observatory scan by an API endpoint (``/ondemand/httpobservatory``) 
 *   Addition of a target to the scan queue for TLS Observatory scan by an API endpoint (``/ondemand/tlsobservatory``) 
 *   Addition of a target to the scan queue for SSH Observatory scan by an API endpoint (``/ondemand/sshobservatory``)
 *   Addition of a target to the scan queue for a directory enumeration scan (currently with ``dirb``) by an API endpoint (``/ondemand/direnum``)
 *   Addition of a target to the scan queue for a Google web search by an API endpoint (``/ondemand/websearch``)
-*   *[OPTIONAL]* Addition of a target to the scan queue for a Tenable.io scan by an API endpoint (``/ondemand/tenablescan``)
+*   [OPTIONAL] Addition of a target to the scan queue for a Tenable.io scan by an API endpoint (``/ondemand/tenablescan``)
 *   Performing requested scan type (port, HTTP Observatory, TLS Observatory or SSH Observatory) on hosts in the queue
 *   Scheduled port scans from a hard-coded list of hosts (disabled by default)
 *   Scheduled directory enumeration scans (via ``dirb``) from a hard-coded list of hosts (disabled by default)
-*   Scheduled HTTP Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
-*   Scheduled TLS Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
-*   Scheduled SSH Observatory scans from a hard-coded list of hosts (for PoC purposes, runs once a day)
+*   Scheduled HTTP Observatory scans from a hard-coded list of hosts (disabled by default)
+*   Scheduled TLS Observatory scans from a hard-coded list of hosts (disabled by default)
+*   Scheduled SSH Observatory scans from a hard-coded list of hosts (disabled by default)
 *   An endpoint to retrieve the scan results for a given host (``/results``)
 *   Manually add a host to the scan queue (for PoC purposes).
 
-All API endpoints are currently protected by an API key. This will be
-replaced with SSO integration.
+All API endpoints are currently protected by an API key. Ideally this should be replaced with SSO integration.
 
 Results from all scans are placed in an S3 bucket specified in
 ``serverless.yml``.
