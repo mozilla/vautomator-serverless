@@ -17,7 +17,7 @@ class Event():
                 # If we are here, the event source is a step function
                 self.type = "step-function"
             else:
-                self.logger.error("Cannot parse event: '{}, context: {}, exception: ".format(str(self.event), self.context.function_name, e))
+                self.logger.error("Cannot parse event: '{}, context: {}, exception: {}".format(str(self.event), self.context.function_name, e))
                 self.type = "invalid"
                 return False
         except Exception as e:

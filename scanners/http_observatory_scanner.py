@@ -33,9 +33,12 @@ class HTTPObservatoryScanner():
         while count < 300:
             resp = self.session.get(url).json()
             # This means we got our results back, so return them!
-            if 'content-security-policy' in resp:
+            if 'state' in resp and resp['state'] == "FINISHED":
                 return resp
 
             time.sleep(self.poll_interval)
             count += 1
-        raise Exception("Unable to get results within {} seconds".format(count))
+        self.logger.warning(
+            "Unable to get HTTP Observatory scan results within {} seconds, returning partial results.".format(count)
+        )
+        return resp

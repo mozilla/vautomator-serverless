@@ -150,7 +150,8 @@ def runScanFromQ(event, context):
                     elif scan_type == "sshobservatory":
                         scanner = SSHObservatoryScanner(logger=logger)
                         scan_result = scanner.scan(target)
-                        send_to_s3(target + "_sshobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
+                        if scan_result['scan']:
+                            send_to_s3(target + "_sshobservatory", scan_result, client=S3_CLIENT, bucket=S3_BUCKET)
                     elif scan_type == "tlsobservatory":
                         scanner = TLSObservatoryScanner(logger=logger)
                         scan_result = scanner.scan(target)
