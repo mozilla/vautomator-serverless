@@ -33,8 +33,8 @@ class Formatter(object):
             if "ssh" in scan:
                 scan_type_summary = 'SSH Observatory scan is '
                 body_summary.append(
-                    scan_type_summary + 'SUCCESSFUL.' if success else scan_type_summary + \
-                    'N/A (likely the host did not have SSH service running).')
+                    scan_type_summary + 'SUCCESSFUL.' if success else scan_type_summary
+                    + 'N/A (likely the host did not have SSH service running).')
             if "tls" in scan:
                 scan_type_summary = 'TLS Observatory scan is '
                 body_summary.append(

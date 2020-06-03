@@ -1,6 +1,6 @@
 ROOT_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-AWS_REGION	:= us-west-2
-AWS_PROFILE := infosec-dev-MAWS-Admin
+AWS_REGION	:=
+AWS_PROFILE :=
 TENABLE_IO := N
 KMS_POLICY_FILE :=
 KMS_KEYID :=
@@ -79,7 +79,6 @@ flake8:
 	flake8 ./*py
 	flake8 lib/*py
 	flake8 scanners/*py
-	flake8 examples/*py
 	flake8 tests/*py
 
 .PHONY: clean
