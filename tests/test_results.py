@@ -22,7 +22,8 @@ class TestResults():
         s3_client = boto3.client('s3', 'us-west-2')
         test_bucket_name = "test-results"
         test_bucket = s3_client.create_bucket(
-            Bucket=test_bucket_name
+            Bucket=test_bucket_name,
+            CreateBucketConfiguration={'LocationConstraint': 'us-west-2'}
         )
         # Add objects to the mocked bucket
         s3_client.put_object(Bucket=test_bucket_name, Body=b'XYZ', Key='{}_httpobservatory.json'.format(target))

@@ -24,7 +24,8 @@ class TestResultsHandler():
         test_bucket_name = "test-results-handler"
         test_bucket = s3_client.create_bucket(
             Bucket=test_bucket_name,
-            ACL='public-read'
+            ACL='public-read',
+            CreateBucketConfiguration={'LocationConstraint': 'us-west-2'}
         )
 
         yield (s3_client, test_bucket, test_bucket_name)
