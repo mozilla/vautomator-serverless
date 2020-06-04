@@ -421,12 +421,12 @@ resources:
       Properties:
         DisplayName: ${self:custom.cfg.vautomatorSNS}
         TopicName: ${self:service}-${self:provider.stage}-vautomator-results-topic
-        Subscription:
-        # TODO: Change these later
-          - Endpoint: culucenk@mozilla.com
-            Protocol: email
-          - Endpoint: cag@mozilla.com
-            Protocol: email
+        # Subscription:
+        # # TODO: Change these later
+        #   - Endpoint: culucenk@mozilla.com
+        #     Protocol: email
+        #   - Endpoint: cag@mozilla.com
+        #     Protocol: email
         Tags:
           - Key: "SERVICE_NAME"
             Value: "vautomator"
