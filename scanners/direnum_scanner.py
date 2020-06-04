@@ -59,6 +59,9 @@ class DirectoryEnumScanner():
             self.logger.info("Running dirb scan on {}...".format(hostname))
 
             results = {}
+            lines = []
+            trimmed_results = []
+            results['output'] = trimmed_results
             results['host'] = hostname
             process_args = [dirb, "https://" + hostname, wordlist_options[self.wordlist]]
             process_args.extend(self.arguments)
@@ -85,11 +88,17 @@ class DirectoryEnumScanner():
                     self.logger.warning("[!] Directory enum timed out, killing process.")
                     p.kill()
                     dirb_out, dirb_err = p.communicate()
-                    results['output'] = dirb_out
+                    lines = dirb_out.split('\n')
+                    for line in lines:
+                        if line.startswith("URL") or line.startswith("WORDLIST") or "http" in line:
+                            results['output'].append(line)
                     results['errors'] = dirb_err.join(' (TIMEDOUT)')
                 else:
                     # No exception, dirb ran and finished on time
-                    results['output'] = dirb_out
+                    lines = dirb_out.split('\n')
+                    for line in lines:
+                        if line.startswith("URL") or line.startswith("WORDLIST") or "http" in line:
+                            results['output'].append(line)
                     results['errors'] = dirb_err
                 finally:
                     return p.returncode, results
