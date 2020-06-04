@@ -21,6 +21,8 @@ from scanners.port_scanner import PortScanner
 from scanners.websearcher import WebSearcher
 from scanners.direnum_scanner import DirectoryEnumScanner
 
+logformatstr = "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s"
+logging.basicConfig(format=logformatstr, datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 S3_BUCKET = os.getenv('S3_BUCKET')
