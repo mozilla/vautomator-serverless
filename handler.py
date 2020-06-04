@@ -22,9 +22,9 @@ from scanners.websearcher import WebSearcher
 from scanners.direnum_scanner import DirectoryEnumScanner
 
 logformatstr = "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s"
-logging.basicConfig(format=logformatstr, datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+logging.basicConfig(format=logformatstr, datefmt="%H:%M:%S")
 S3_BUCKET = os.getenv('S3_BUCKET')
 REGION = os.getenv('REGION', 'us-west-2')
 SQS_CLIENT = boto3.client('sqs', region_name=REGION)

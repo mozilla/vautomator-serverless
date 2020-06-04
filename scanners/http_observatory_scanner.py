@@ -20,25 +20,22 @@ class HTTPObservatoryScanner():
             raise Exception("Invalid API URL specified for Observatory.")
         self.logger.info("Running HTTP Observatory scan on {}...".format(hostname))
         results = {}
-        results['scan'] = self.session.post(analyze_url, data=None).json()
 
         # Wait for the scan to complete, polling every second
-        results['tests'] = self.__poll(results['scan']['scan_id'])
-        results['host'] = hostname
-        return results
-
-    def __poll(self, scan_id):
-        url = self.api_url + '/getScanResults?scan=' + str(scan_id)
         count = 0
         while count < 300:
-            resp = self.session.get(url).json()
+            results['scan'] = self.session.post(analyze_url, data=None).json()
             # This means we got our results back, so return them!
-            if 'state' in resp and resp['state'] == "FINISHED":
-                return resp
-
+            if results['scan']['status_code'] == 200 and results['scan']['state'] == "FINISHED" and results['scan']['grade'] is not None:
+                break
             time.sleep(self.poll_interval)
             count += 1
-        self.logger.warning(
-            "Unable to get HTTP Observatory scan results within {} seconds, returning partial results.".format(count)
-        )
-        return resp
+        if count == 300:
+            self.logger.warning(
+                "Unable to get HTTP Observatory scan results within {} seconds, returning partial results.".format(count)
+            )
+
+        detail_url = self.api_url + '/getScanResults?scan=' + str(results['scan']['scan_id'])
+        results['tests'] = self.session.get(detail_url).json()
+        results['host'] = hostname
+        return results
