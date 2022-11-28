@@ -413,6 +413,7 @@ plugins:
   - serverless-step-functions
   - serverless-prune-plugin
   - serverless-domain-manager
+  - serverless-plugin-log-retention
 
 resources:
   Resources:
@@ -488,3 +489,4 @@ custom:
   apigwBinary:
     types:
       - 'application/gzip'
+  logRetentionInDays: 30
