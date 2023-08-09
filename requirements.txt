@@ -7,5 +7,5 @@ python_nmap==0.6.1
 google==2.0.2
 pytest==5.4.2
 responses==0.10.14
-tenable_io==1.13.1
+# tenable_io==1.13.1
 certstream==1.10
