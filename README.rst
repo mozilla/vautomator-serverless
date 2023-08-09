@@ -1,8 +1,16 @@
 **************************
-vautomator-serverless
+vautomator-serverless : deprecated
 **************************
 
-This project uses serverless framework and attempts to create a
+vautomator-serverless is no longer supported. The Python package that the tool used to interact with the Tenable.io
+API, `tenable-io <https://github.com/tenable/Tenable.io-SDK-for-Python>`_, was deprecated in 2020. In order
+to fork this project and get it working, you'd need to update vautomator-serverless to use a different
+Python package for interacting with Tenable.io
+
+Original README
+===========
+
+This project used serverless framework and attempted to create a
 serverless environment that could be used to automate vulnerability
 assessment tasks from multiple ingestion points, such as on-demand
 submission of a host via a REST API, regular scanning of a known list of hosts, and opportunistically scanning of hosts appearing in Certificate Transparency logs.
